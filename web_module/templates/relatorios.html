@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios - SIIP{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Relatórios e Análises</h1>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            Visualize estatísticas e gere relatórios do sistema ALPR
+        </p>
+    </div>
+
+    <!-- Report Types -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Relatório de Acessos -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6 hover:shadow-subtle-md transition-shadow cursor-pointer">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+                        <i class="bi bi-file-earmark-text text-blue-600 dark:text-blue-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Acessos Diários</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Relatório de entradas e saídas</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="gerarRelatorio('acessos')" class="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm">
+                <i class="bi bi-file-earmark-arrow-down mr-2"></i>Gerar Relatório
+            </button>
+        </div>
+
+        <!-- Relatório de Veículos -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6 hover:shadow-subtle-md transition-shadow cursor-pointer">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-lg p-3">
+                        <i class="bi bi-car-front text-green-600 dark:text-green-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Veículos</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Cadastro e estatísticas</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="gerarRelatorio('veiculos')" class="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm">
+                <i class="bi bi-file-earmark-arrow-down mr-2"></i>Gerar Relatório
+            </button>
+        </div>
+
+        <!-- Relatório de Proprietários -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6 hover:shadow-subtle-md transition-shadow cursor-pointer">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-purple-100 dark:bg-purple-900/30 rounded-lg p-3">
+                        <i class="bi bi-people text-purple-600 dark:text-purple-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Proprietários</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Lista e análise</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="gerarRelatorio('proprietarios')" class="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm">
+                <i class="bi bi-file-earmark-arrow-down mr-2"></i>Gerar Relatório
+            </button>
+        </div>
+
+        <!-- Relatório Mensal -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6 hover:shadow-subtle-md transition-shadow cursor-pointer">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg p-3">
+                        <i class="bi bi-calendar-month text-yellow-600 dark:text-yellow-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Mensal</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Resumo do mês</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="gerarRelatorio('mensal')" class="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm">
+                <i class="bi bi-file-earmark-arrow-down mr-2"></i>Gerar Relatório
+            </button>
+        </div>
+
+        <!-- Relatório de Detecções -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6 hover:shadow-subtle-md transition-shadow cursor-pointer">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-red-100 dark:bg-red-900/30 rounded-lg p-3">
+                        <i class="bi bi-camera text-red-600 dark:text-red-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Detecções</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Precisão do OCR</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="gerarRelatorio('deteccoes')" class="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm">
+                <i class="bi bi-file-earmark-arrow-down mr-2"></i>Gerar Relatório
+            </button>
+        </div>
+
+        <!-- Relatório Personalizado -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6 hover:shadow-subtle-md transition-shadow cursor-pointer">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-primary-100 dark:bg-primary-900/30 rounded-lg p-3">
+                        <i class="bi bi-gear text-primary-800 dark:text-primary-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Personalizado</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Configure filtros</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="gerarRelatorio('custom')" class="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm">
+                <i class="bi bi-sliders mr-2"></i>Configurar
+            </button>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Acessos por Hora -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Acessos por Hora (Hoje)</h3>
+            <div class="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                <div class="text-center">
+                    <i class="bi bi-bar-chart text-4xl mb-2 block"></i>
+                    <p>Gráfico será exibido aqui</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tipos de Veículos -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Distribuição por Tipo</h3>
+            <div class="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                <div class="text-center">
+                    <i class="bi bi-pie-chart text-4xl mb-2 block"></i>
+                    <p>Gráfico será exibido aqui</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acessos Semanais -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Acessos nos Últimos 7 Dias</h3>
+            <div class="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                <div class="text-center">
+                    <i class="bi bi-graph-up text-4xl mb-2 block"></i>
+                    <p>Gráfico será exibido aqui</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Veículos -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top 10 Veículos</h3>
+            <div class="space-y-3">
+                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <i class="bi bi-trophy text-4xl mb-2 block"></i>
+                    <p>Estatísticas serão exibidas aqui</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Options -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Opções de Exportação</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button class="flex items-center justify-center px-4 py-3 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-800 dark:text-green-400 rounded-lg transition-colors">
+                <i class="bi bi-file-earmark-excel text-2xl mr-3"></i>
+                <span class="font-medium">Exportar Excel</span>
+            </button>
+            <button class="flex items-center justify-center px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-800 dark:text-red-400 rounded-lg transition-colors">
+                <i class="bi bi-file-earmark-pdf text-2xl mr-3"></i>
+                <span class="font-medium">Exportar PDF</span>
+            </button>
+            <button class="flex items-center justify-center px-4 py-3 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded-lg transition-colors">
+                <i class="bi bi-filetype-csv text-2xl mr-3"></i>
+                <span class="font-medium">Exportar CSV</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function gerarRelatorio(tipo) {
+    alert(`Gerando relatório de ${tipo}...\nEsta funcionalidade será implementada.`);
+}
+</script>
+{% endblock %}

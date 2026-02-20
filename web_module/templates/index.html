@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema ALPR UNIPIAGET{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
+            <p class="text-muted">Visão geral do sistema ALPR</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="carregarDashboard()">
+                <i class="bi bi-arrow-clockwise"></i> Atualizar
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Veículos Cadastrados</h6>
+                            <h2 class="mb-0" id="totalVeiculos">-</h2>
+                        </div>
+                        <div class="bg-primary text-white rounded p-3">
+                            <i class="bi bi-car-front fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-success shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Proprietários Ativos</h6>
+                            <h2 class="mb-0" id="totalProprietarios">-</h2>
+                        </div>
+                        <div class="bg-success text-white rounded p-3">
+                            <i class="bi bi-people fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-info shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">No Campus Agora</h6>
+                            <h2 class="mb-0" id="veiculosNoCampus">-</h2>
+                        </div>
+                        <div class="bg-info text-white rounded p-3">
+                            <i class="bi bi-pin-map fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-warning shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Registros Hoje</h6>
+                            <h2 class="mb-0" id="registrosHoje">-</h2>
+                        </div>
+                        <div class="bg-warning text-white rounded p-3">
+                            <i class="bi bi-clock-history fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Registros por Hora -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Registros por Hora (Últimas 24h)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartRegistrosPorHora"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribuição por Categoria -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Por Categoria</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartCategorias"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Veículos no Campus & Atividade Recente -->
+    <div class="row mb-4">
+        <!-- Veículos no Campus -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-pin-map"></i> Veículos no Campus</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Placa</th>
+                                    <th>Proprietário</th>
+                                    <th>Categoria</th>
+                                    <th>Tempo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaVeiculosNoCampus">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        <i class="bi bi-hourglass-split"></i> Carregando...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Atividade Recente -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Atividade Recente</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Hora</th>
+                                    <th>Placa</th>
+                                    <th>Movimento</th>
+                                    <th>Proprietário</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaAtividadeRecente">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        <i class="bi bi-hourglass-split"></i> Carregando...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Alertas</h5>
+                </div>
+                <div class="card-body">
+                    <div id="alertasContainer">
+                        <p class="text-muted text-center">
+                            <i class="bi bi-hourglass-split"></i> Carregando alertas...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let chartRegistrosHora = null;
+    let chartCategorias = null;
+
+    // Carrega dashboard ao abrir página
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarDashboard();
+
+        // Atualiza a cada 30 segundos
+        setInterval(carregarDashboard, 30000);
+    });
+
+    async function carregarDashboard() {
+        await Promise.all([
+            carregarEstatisticas(),
+            carregarVeiculosNoCampus(),
+            carregarAtividadeRecente(),
+            carregarAlertas()
+        ]);
+    }
+
+    async function carregarEstatisticas() {
+        try {
+            const response = await apiRequest('/dashboard/estatisticas');
+            if (!response) return;
+
+            // Atualiza KPIs
+            document.getElementById('totalVeiculos').textContent = response.total_veiculos_cadastrados;
+            document.getElementById('totalProprietarios').textContent = response.total_proprietarios;
+            document.getElementById('veiculosNoCampus').textContent = response.veiculos_no_campus;
+            document.getElementById('registrosHoje').textContent = response.total_registros_hoje;
+
+            // Gráfico de registros por hora
+            atualizarGraficoRegistrosPorHora(response.registros_por_hora);
+
+            // Gráfico de categorias
+            atualizarGraficoCategorias(response.registros_por_categoria);
+
+        } catch (error) {
+            console.error('Erro ao carregar estatísticas:', error);
+        }
+    }
+
+    function atualizarGraficoRegistrosPorHora(dados) {
+        const ctx = document.getElementById('chartRegistrosPorHora');
+
+        // Prepara dados (0-23 horas)
+        const labels = [];
+        const totais = [];
+
+        for (let i = 0; i < 24; i++) {
+            labels.push(`${i}h`);
+            const registro = dados.find(d => d.hora === i);
+            totais.push(registro ? registro.total : 0);
+        }
+
+        if (chartRegistrosHora) {
+            chartRegistrosHora.destroy();
+        }
+
+        chartRegistrosHora = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Registros',
+                    data: totais,
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function atualizarGraficoCategorias(dados) {
+        const ctx = document.getElementById('chartCategorias');
+
+        const labels = Object.keys(dados);
+        const values = Object.values(dados);
+
+        const colors = [
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)'
+        ];
+
+        if (chartCategorias) {
+            chartCategorias.destroy();
+        }
+
+        chartCategorias = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    async function carregarVeiculosNoCampus() {
+        try {
+            const response = await apiRequest('/dashboard/veiculos-no-campus');
+            if (!response) return;
+
+            const tbody = document.getElementById('tabelaVeiculosNoCampus');
+
+            if (response.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nenhum veículo no campus</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = response.map(item => `
+                <tr>
+                    <td><strong>${item.veiculo.placa}</strong></td>
+                    <td>${item.veiculo.proprietario.nome}</td>
+                    <td><span class="badge bg-info">${item.veiculo.proprietario.categoria}</span></td>
+                    <td><small>${item.tempo_formatado}</small></td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Erro ao carregar veículos no campus:', error);
+        }
+    }
+
+    async function carregarAtividadeRecente() {
+        try {
+            const response = await apiRequest('/dashboard/atividade-recente?limite=10');
+            if (!response) return;
+
+            const tbody = document.getElementById('tabelaAtividadeRecente');
+
+            if (response.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nenhuma atividade recente</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = response.map(reg => {
+                const hora = new Date(reg.data_hora).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+                const badgeClass = reg.tipo_movimento === 'entrada' ? 'success' : 'danger';
+                const icon = reg.tipo_movimento === 'entrada' ? 'arrow-right' : 'arrow-left';
+                const proprietario = reg.veiculo ? reg.veiculo.proprietario.nome : 'Desconhecido';
+
+                return `
+                    <tr>
+                        <td><small>${hora}</small></td>
+                        <td><strong>${reg.placa_detectada}</strong></td>
+                        <td>
+                            <span class="badge bg-${badgeClass}">
+                                <i class="bi bi-${icon}"></i> ${reg.tipo_movimento}
+                            </span>
+                        </td>
+                        <td><small>${proprietario}</small></td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Erro ao carregar atividade recente:', error);
+        }
+    }
+
+    async function carregarAlertas() {
+        try {
+            const response = await apiRequest('/dashboard/alertas');
+            if (!response) return;
+
+            const container = document.getElementById('alertasContainer');
+
+            if (response.length === 0) {
+                container.innerHTML = '<p class="text-success text-center mb-0"><i class="bi bi-check-circle"></i> Nenhum alerta no momento</p>';
+                return;
+            }
+
+            container.innerHTML = response.map(alerta => {
+                const severidadeClass = {
+                    'baixa': 'warning',
+                    'media': 'warning',
+                    'alta': 'danger'
+                }[alerta.severidade];
+
+                return `
+                    <div class="alert alert-${severidadeClass} alert-dismissible fade show mb-2" role="alert">
+                        <strong><i class="bi bi-exclamation-triangle"></i> ${alerta.proprietario.nome}</strong>
+                        <br><small>${alerta.descricao}</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Erro ao carregar alertas:', error);
+        }
+    }
+</script>
+{% endblock %}

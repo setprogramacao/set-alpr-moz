@@ -1,0 +1,574 @@
+{% extends "base.html" %}
+
+{% block title %}Proprietários - Sistema ALPR{% endblock %}
+{% block page_title %}Proprietários{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Proprietários</h1>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Gestão de proprietários de veículos
+            </p>
+        </div>
+        <button onclick="abrirModalNovo()" class="inline-flex items-center px-4 py-2 bg-primary-800 hover:bg-primary-900 dark:bg-primary-700 dark:hover:bg-primary-600 text-white rounded-lg shadow-subtle transition-colors">
+            <i class="bi bi-plus-circle mr-2"></i>
+            Novo Proprietário
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-primary-100 dark:bg-primary-900/30 rounded-lg p-3">
+                    <i class="bi bi-people-fill text-primary-800 dark:text-primary-400 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white" id="totalProprietarios">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+                    <i class="bi bi-mortarboard text-blue-600 dark:text-blue-400 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Alunos</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white" id="totalAlunos">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-lg p-3">
+                    <i class="bi bi-person-workspace text-green-600 dark:text-green-400 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Docente/Técnico</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white" id="totalFuncionarios">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-purple-100 dark:bg-purple-900/30 rounded-lg p-3">
+                    <i class="bi bi-person-lines-fill text-purple-600 dark:text-purple-400 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Visitantes</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white" id="totalVisitantes">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Buscar por nome
+                </label>
+                <input type="text" id="searchNome" placeholder="Digite o nome..." class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-800 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Categoria
+                </label>
+                <select id="filterCategoria" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-800 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <option value="">Todas</option>
+                    <option value="aluno">Aluno</option>
+                    <option value="docente">Docente</option>
+                    <option value="tecnico">Técnico</option>
+                    <option value="visitante">Visitante</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button onclick="filtrarProprietarios()" class="w-full px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors">
+                    <i class="bi bi-funnel mr-2"></i>Filtrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Nome
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Categoria
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Departamento
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Contato
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Ações
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="proprietariosTableBody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                            <i class="bi bi-hourglass-split text-4xl mb-2 block animate-spin"></i>
+                            <p>Carregando proprietários...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="bg-white dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Mostrando <span id="showingCount">0</span> de <span id="totalCount">0</span> proprietários
+                </div>
+                <div class="flex gap-2">
+                    <button id="prevBtn" onclick="previousPage()" class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Anterior
+                    </button>
+                    <button id="nextBtn" onclick="nextPage()" class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Próximo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Criar/Editar -->
+<div id="modalProprietario" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 dark:text-white">Novo Proprietário</h3>
+                <button onclick="fecharModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    <i class="bi bi-x-lg text-2xl"></i>
+                </button>
+            </div>
+
+            <form id="formProprietario" class="space-y-4">
+                <input type="hidden" id="proprietarioId">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Nome Completo <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="inputNome" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-800 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Categoria <span class="text-red-500">*</span>
+                        </label>
+                        <select id="inputCategoria" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-800 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            <option value="">Selecione...</option>
+                            <option value="aluno">Aluno</option>
+                            <option value="docente">Docente</option>
+                            <option value="tecnico">Técnico</option>
+                            <option value="visitante">Visitante</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Departamento
+                        </label>
+                        <input type="text" id="inputDepartamento" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-800 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Telefone
+                        </label>
+                        <input type="tel" id="inputTelefone" placeholder="+258XXXXXXXXX" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-800 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Formato: +258XXXXXXXXX</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Email
+                        </label>
+                        <input type="email" id="inputEmail" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-800 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" onclick="fecharModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-primary-800 hover:bg-primary-900 dark:bg-primary-700 dark:hover:bg-primary-600 text-white rounded-lg transition-colors">
+                        <i class="bi bi-save mr-2"></i>
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Estado da aplicação
+let currentPage = 0;
+let limit = 10;
+let proprietarios = [];
+let filtrosAtivos = {};
+
+// Token de autenticação
+const getToken = () => localStorage.getItem('token') || '';
+
+// Verifica autenticação - redireciona para login se não houver token
+function verificarAuth() {
+    const token = getToken();
+    if (!token) {
+        console.warn('⚠️ Sem token de autenticação. Redirecionando para login...');
+        window.location.href = '/login';
+        return false;
+    }
+    return true;
+}
+
+// Headers para requisições
+const headers = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${getToken()}`
+});
+
+// Tratamento de resposta - redireciona em caso de 401
+async function fetchComAuth(url, options = {}) {
+    const response = await fetch(url, { ...options, headers: headers() });
+    if (response.status === 401) {
+        console.warn('⚠️ Token expirado ou inválido. Redirecionando para login...');
+        localStorage.removeItem('token');
+        localStorage.removeItem('usuario');
+        window.location.href = '/login';
+        throw new Error('Não autenticado');
+    }
+    return response;
+}
+
+// Carregar dados iniciais
+async function carregarDados() {
+    if (!verificarAuth()) return;
+    await Promise.all([
+        carregarProprietarios(),
+        carregarEstatisticas()
+    ]);
+}
+
+// Carregar proprietários
+async function carregarProprietarios() {
+    try {
+        const params = new URLSearchParams({
+            skip: currentPage * limit,
+            limit: limit,
+            ...filtrosAtivos
+        });
+
+        const response = await fetchComAuth(`/api/v1/proprietarios?${params}`);
+
+        if (!response.ok) throw new Error('Erro ao carregar proprietários');
+
+        proprietarios = await response.json();
+        renderizarTabela();
+        atualizarPaginacao();
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarErro('Erro ao carregar proprietários');
+    }
+}
+
+// Renderizar tabela
+function renderizarTabela() {
+    const tbody = document.getElementById('proprietariosTableBody');
+
+    if (proprietarios.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <i class="bi bi-inbox text-4xl mb-2 block"></i>
+                    <p>Nenhum proprietário encontrado</p>
+                    <button onclick="abrirModalNovo()" class="mt-4 text-primary-800 dark:text-primary-400 hover:underline">
+                        Cadastrar primeiro proprietário
+                    </button>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = proprietarios.map(p => `
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <td class="px-6 py-4">
+                <div>
+                    <p class="font-medium text-gray-900 dark:text-white">${p.nome}</p>
+                    ${p.email ? `<p class="text-sm text-gray-500 dark:text-gray-400">${p.email}</p>` : ''}
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                ${getCategoriaBadge(p.categoria)}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                ${p.departamento || '-'}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                ${p.telefone || '-'}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                ${p.ativo ?
+                    '<span class="px-2 py-1 text-xs font-semibold rounded-lg bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">Ativo</span>' :
+                    '<span class="px-2 py-1 text-xs font-semibold rounded-lg bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400">Inativo</span>'
+                }
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
+                <button onclick="editarProprietario(${p.id})" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button onclick="deletarProprietario(${p.id}, '${p.nome}')" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Badge de categoria
+function getCategoriaBadge(categoria) {
+    const badges = {
+        'aluno': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400',
+        'docente': 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400',
+        'tecnico': 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400',
+        'visitante': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400'
+    };
+    const icones = {
+        'aluno': 'mortarboard',
+        'docente': 'person-workspace',
+        'tecnico': 'tools',
+        'visitante': 'person-badge'
+    };
+    return `<span class="px-2 py-1 text-xs font-semibold rounded-lg ${badges[categoria] || ''}">
+        <i class="bi bi-${icones[categoria] || 'person'} mr-1"></i>
+        ${categoria.charAt(0).toUpperCase() + categoria.slice(1)}
+    </span>`;
+}
+
+// Carregar estatísticas
+async function carregarEstatisticas() {
+    try {
+        const [totalResp, categoriasResp] = await Promise.all([
+            fetchComAuth('/api/v1/proprietarios/count/total'),
+            fetchComAuth('/api/v1/proprietarios/categorias/listar')
+        ]);
+
+        if (totalResp.ok) {
+            const total = await totalResp.json();
+            document.getElementById('totalProprietarios').textContent = total.total_proprietarios || 0;
+        }
+
+        if (categoriasResp.ok) {
+            const categorias = await categoriasResp.json();
+            // Verifica se é um array antes de usar reduce
+            if (Array.isArray(categorias)) {
+                const cats = categorias.reduce((acc, c) => ({ ...acc, [c.categoria]: c.total }), {});
+                document.getElementById('totalAlunos').textContent = cats.aluno || 0;
+                document.getElementById('totalFuncionarios').textContent = (cats.docente || 0) + (cats.tecnico || 0);
+                document.getElementById('totalVisitantes').textContent = cats.visitante || 0;
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+    }
+}
+
+// Filtrar
+function filtrarProprietarios() {
+    const nome = document.getElementById('searchNome').value;
+    const categoria = document.getElementById('filterCategoria').value;
+
+    filtrosAtivos = {};
+    if (nome) filtrosAtivos.nome = nome;
+    if (categoria) filtrosAtivos.categoria = categoria;
+
+    currentPage = 0;
+    carregarProprietarios();
+}
+
+// Paginação
+function atualizarPaginacao() {
+    document.getElementById('showingCount').textContent = proprietarios.length;
+    document.getElementById('prevBtn').disabled = currentPage === 0;
+    document.getElementById('nextBtn').disabled = proprietarios.length < limit;
+}
+
+function previousPage() {
+    if (currentPage > 0) {
+        currentPage--;
+        carregarProprietarios();
+    }
+}
+
+function nextPage() {
+    if (proprietarios.length >= limit) {
+        currentPage++;
+        carregarProprietarios();
+    }
+}
+
+// Modal
+function abrirModalNovo() {
+    document.getElementById('modalTitle').textContent = 'Novo Proprietário';
+    document.getElementById('formProprietario').reset();
+    document.getElementById('proprietarioId').value = '';
+    document.getElementById('modalProprietario').classList.remove('hidden');
+    document.getElementById('modalProprietario').classList.add('flex');
+}
+
+async function editarProprietario(id) {
+    try {
+        const response = await fetchComAuth(`/api/v1/proprietarios/${id}`);
+        if (!response.ok) throw new Error('Erro ao carregar proprietário');
+
+        const prop = await response.json();
+
+        document.getElementById('modalTitle').textContent = 'Editar Proprietário';
+        document.getElementById('proprietarioId').value = prop.id;
+        document.getElementById('inputNome').value = prop.nome;
+        document.getElementById('inputCategoria').value = prop.categoria;
+        document.getElementById('inputDepartamento').value = prop.departamento || '';
+        document.getElementById('inputTelefone').value = prop.telefone || '';
+        document.getElementById('inputEmail').value = prop.email || '';
+
+        document.getElementById('modalProprietario').classList.remove('hidden');
+        document.getElementById('modalProprietario').classList.add('flex');
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarErro('Erro ao carregar dados do proprietário');
+    }
+}
+
+function fecharModal() {
+    document.getElementById('modalProprietario').classList.add('hidden');
+    document.getElementById('modalProprietario').classList.remove('flex');
+}
+
+// Salvar
+document.getElementById('formProprietario').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const id = document.getElementById('proprietarioId').value;
+    const dados = {
+        nome: document.getElementById('inputNome').value,
+        categoria: document.getElementById('inputCategoria').value,
+        departamento: document.getElementById('inputDepartamento').value || null,
+        telefone: document.getElementById('inputTelefone').value || null,
+        email: document.getElementById('inputEmail').value || null
+    };
+
+    try {
+        const url = id ? `/api/v1/proprietarios/${id}` : '/api/v1/proprietarios';
+        const method = id ? 'PUT' : 'POST';
+
+        const response = await fetchComAuth(url, {
+            method,
+            body: JSON.stringify(dados)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Erro ao salvar proprietário');
+        }
+
+        mostrarSucesso(`Proprietário ${id ? 'atualizado' : 'cadastrado'} com sucesso!`);
+        fecharModal();
+        carregarDados();
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarErro(error.message);
+    }
+});
+
+// Deletar
+async function deletarProprietario(id, nome) {
+    if (!confirm(`Tem certeza que deseja deletar o proprietário "${nome}"?\n\nEsta ação NÃO pode ser desfeita e irá deletar também todos os veículos e registros associados.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetchComAuth(`/api/v1/proprietarios/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error('Erro ao deletar proprietário');
+
+        mostrarSucesso('Proprietário deletado com sucesso!');
+        carregarDados();
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarErro('Erro ao deletar proprietário');
+    }
+}
+
+// Notificações
+function mostrarSucesso(mensagem) {
+    const alertsContainer = document.getElementById('alertsContainer');
+    const alert = document.createElement('div');
+    alert.className = 'mb-4 p-4 rounded-lg border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 shadow-subtle';
+    alert.innerHTML = `
+        <div class="flex items-center justify-between">
+            <span><i class="bi bi-check-circle mr-2"></i>${mensagem}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-green-600 dark:text-green-400 hover:text-green-800">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+    `;
+    alertsContainer.appendChild(alert);
+    setTimeout(() => alert.remove(), 5000);
+}
+
+function mostrarErro(mensagem) {
+    const alertsContainer = document.getElementById('alertsContainer');
+    const alert = document.createElement('div');
+    alert.className = 'mb-4 p-4 rounded-lg border bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 shadow-subtle';
+    alert.innerHTML = `
+        <div class="flex items-center justify-between">
+            <span><i class="bi bi-exclamation-circle mr-2"></i>${mensagem}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-red-600 dark:text-red-400 hover:text-red-800">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+    `;
+    alertsContainer.appendChild(alert);
+    setTimeout(() => alert.remove(), 5000);
+}
+
+// Filtro Enter
+document.getElementById('searchNome').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') filtrarProprietarios();
+});
+
+// Carregar ao iniciar
+document.addEventListener('DOMContentLoaded', carregarDados);
+</script>
+{% endblock %}
