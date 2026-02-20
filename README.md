@@ -175,8 +175,8 @@ Sistema híbrido (Desktop + Web) que detecta, reconhece, registra e gera relató
 ### Passo 1: Clonar Repositório
 
 ```bash
-git clone https://github.com/seu-usuario/alpr_ujpm.git
-cd alpr_ujpm
+git clone https://github.com/setprogramacao/set-alpr-moz.git
+cd set-alpr-moz
 ```
 
 ### Passo 2: Criar Ambiente Virtual
@@ -311,7 +311,7 @@ python desktop_module/main.py
 ### Workflow Recomendado
 
 1. **Cadastrar Proprietários** via Dashboard Web
-2. **Cadastrar Veículos** com placas no formato XXX000XX
+2. **Cadastrar Veículos** com placas no formato AAA000BB
 3. **Iniciar Desktop Module** e começar detecção
 4. **Apontar placa para câmera**
 5. **Verificar registros** no Dashboard Web
@@ -437,11 +437,11 @@ GET    /api/v1/dashboard/atividade-recente    # Últimas detecções
 
 ## 🚦 Formato de Placas Moçambicanas
 
-### Formato Válido: `XXX000XX`
+### Formato Válido: `AAA000BB`
 
-- **XXX**: 3 letras (província/categoria)
-- **000**: 3 números (série)
-- **XX**: 2 letras (final)
+- **AAA**: 3 letras 
+- **000**: 3 números 
+- **BB**: 2 letras 
 
 ### Exemplos Válidos
 ```
@@ -616,15 +616,16 @@ TESSERACT_CMD=tesseract
 ## 📄 Licença
 
 Este projeto é desenvolvido como trabalho académico para a Universidade Jean Piaget de Moçambique.
+Para a publicação esta sob a MIT LICENSE
 
 ---
 
 ## 👥 Autores
 
-**Sistema ALPR UNIPIAGET**
-Engenharia Electrónica e de Telecomunicações
-Universidade Jean Piaget de Moçambique
-2026
+**Nome:** Salvador Eduardo Tomoecene
+**Curso:** Licenciateura em Engenharia Electrónica e de Telecomunicações
+**Escola:** Universidade Jean Piaget de Moçambique
+**Ano:** 2026
 
 ---
 
@@ -639,8 +640,8 @@ Universidade Jean Piaget de Moçambique
 ## 📞 Suporte
 
 Para questões e sugestões:
-- **Issues**: https://github.com/seu-usuario/alpr_ujpm/issues
-- **Email**: suporte@unipiaget.ac.mz
+- **Issues**: https://github.com/setprogramacao/set-alpr-moz/issues
+- **Email**: setprogramacao01@gmail.com
 
 ---
 
