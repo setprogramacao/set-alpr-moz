@@ -103,6 +103,30 @@ def verificar_admin(usuario_atual: Usuario = Depends(obter_usuario_atual)) -> Us
     return usuario_atual
 
 
+def verificar_gestor(usuario_atual: Usuario = Depends(obter_usuario_atual)) -> Usuario:
+    """
+    Dependency para verificar se usuário é Gestor de Sistema ou Admin.
+
+    Gestor de Sistema (operador) e Admin têm acesso a gestão de usuários,
+    veículos e proprietários.
+
+    Args:
+        usuario_atual: Usuario autenticado
+
+    Returns:
+        Usuario se é gestor ou admin
+
+    Raises:
+        HTTPException: Se nível insuficiente
+    """
+    if usuario_atual.nivel_acesso not in ["admin", "operador"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso negado. Requer nível de Gestor de Sistema ou superior."
+        )
+    return usuario_atual
+
+
 # ============================================================================
 # ROTAS DE AUTENTICAÇÃO
 # ============================================================================
@@ -210,7 +234,7 @@ def criar_novo_usuario(
 @router.get("/usuarios", response_model=list[UsuarioResponse])
 def listar_usuarios(
     db: Session = Depends(get_db),
-    usuario_atual: Usuario = Depends(obter_usuario_atual),
+    usuario_atual: Usuario = Depends(verificar_gestor),
     skip: int = 0,
     limit: int = 100,
     ativo: Optional[bool] = None

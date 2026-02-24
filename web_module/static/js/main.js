@@ -51,7 +51,14 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
         const result = await response.json();
 
         if (!response.ok) {
-            throw new Error(result.detail || 'Erro na requisição');
+            // Pydantic pode retornar detail como array de objetos de validação
+            let detail = result.detail;
+            if (Array.isArray(detail)) {
+                detail = detail.map(e => e.msg || e.message || JSON.stringify(e)).join(' | ');
+            } else if (typeof detail === 'object' && detail !== null) {
+                detail = JSON.stringify(detail);
+            }
+            throw new Error(detail || 'Erro na requisição');
         }
 
         return result;
@@ -78,22 +85,59 @@ function checkAuth() {
 }
 
 /**
- * Carrega informações do usuário na navbar
+ * Carrega informações do usuário na navbar e controla visibilidade por role
  */
 function loadUserInfo() {
     const usuarioStr = localStorage.getItem('usuario');
-
     if (!usuarioStr) return;
 
     try {
         const usuario = JSON.parse(usuarioStr);
-        const userNameElement = document.getElementById('userName');
 
-        if (userNameElement) {
-            userNameElement.textContent = usuario.nome_completo;
+        // Nome do usuário
+        const userNameEl = document.getElementById('userName');
+        if (userNameEl) userNameEl.textContent = usuario.nome_completo || usuario.username;
+
+        // Inicial do avatar
+        const userInitialEl = document.getElementById('userInitial');
+        if (userInitialEl) {
+            const name = usuario.nome_completo || usuario.username || '?';
+            userInitialEl.textContent = name.charAt(0).toUpperCase();
         }
+
+        // Papel do usuário (display name)
+        const roleMap = {
+            admin: 'Admin',
+            operador: 'Gestor de Sistema',
+            visualizador: 'Visualizador'
+        };
+        const userRoleEl = document.getElementById('userRole');
+        if (userRoleEl) userRoleEl.textContent = roleMap[usuario.nivel_acesso] || usuario.nivel_acesso;
+
+        // Mostra menu "Usuários" apenas para admin e operador (Gestor de Sistema)
+        if (usuario.nivel_acesso === 'admin' || usuario.nivel_acesso === 'operador') {
+            const navUsuarios = document.getElementById('nav-usuarios');
+            if (navUsuarios) navUsuarios.classList.remove('hidden');
+        }
+
+        // Guarda role no window para uso nas páginas
+        window.currentUserRole = usuario.nivel_acesso;
+
     } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
+    }
+}
+
+/**
+ * Retorna o nível de acesso do usuário logado
+ * @returns {string} - 'admin', 'operador' ou 'visualizador'
+ */
+function getUserRole() {
+    try {
+        const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+        return usuario.nivel_acesso || 'visualizador';
+    } catch {
+        return 'visualizador';
     }
 }
 
@@ -113,34 +157,47 @@ async function logout() {
 }
 
 /**
- * Exibe toast de notificação
+ * Exibe toast de notificação (Tailwind)
  * @param {string} message - Mensagem a exibir
  * @param {string} type - Tipo do alerta (success, danger, warning, info)
  */
 function showToast(message, type = 'info') {
     const alertsContainer = document.getElementById('alertsContainer');
-
     if (!alertsContainer) {
         console.warn('Container de alertas não encontrado');
         return;
     }
 
+    const colorMap = {
+        success: 'bg-green-50 border-green-400 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+        danger:  'bg-red-50 border-red-400 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+        warning: 'bg-yellow-50 border-yellow-400 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+        info:    'bg-blue-50 border-blue-400 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+    };
+    const iconMap = {
+        success: 'bi-check-circle-fill',
+        danger:  'bi-x-circle-fill',
+        warning: 'bi-exclamation-triangle-fill',
+        info:    'bi-info-circle-fill',
+    };
+
     const alertId = `alert-${Date.now()}`;
-    const alertHTML = `
-        <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    const cls = colorMap[type] || colorMap.info;
+    const icon = iconMap[type] || iconMap.info;
+
+    alertsContainer.insertAdjacentHTML('beforeend', `
+        <div id="${alertId}" class="flex items-center gap-3 p-4 mb-3 border-l-4 rounded-lg shadow-subtle ${cls}">
+            <i class="bi ${icon} text-lg flex-shrink-0"></i>
+            <span class="flex-1 text-sm font-medium">${message}</span>
+            <button onclick="document.getElementById('${alertId}').remove()" class="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity">
+                <i class="bi bi-x-lg text-sm"></i>
+            </button>
         </div>
-    `;
+    `);
 
-    alertsContainer.insertAdjacentHTML('beforeend', alertHTML);
-
-    // Auto remove após 5 segundos
     setTimeout(() => {
-        const alertElement = document.getElementById(alertId);
-        if (alertElement) {
-            alertElement.remove();
-        }
+        const el = document.getElementById(alertId);
+        if (el) el.remove();
     }, 5000);
 }
 

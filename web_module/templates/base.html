@@ -150,6 +150,15 @@
                     <i class="bi bi-file-earmark-bar-graph text-xl flex-shrink-0"></i>
                     <span class="sidebar-text font-medium whitespace-nowrap">Relatórios</span>
                 </a>
+
+                <!-- Separador -->
+                <div class="border-t border-gray-100 dark:border-gray-700 my-2"></div>
+
+                <!-- Menu Usuários — visível apenas para Admin e Gestor de Sistema (controlado via JS) -->
+                <a id="nav-usuarios" href="/usuarios" class="hidden flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group {% if '/usuarios' in request.path %}bg-primary-50 dark:bg-primary-900/20 text-primary-800 dark:text-primary-400{% else %}text-gray-700 dark:text-gray-300{% endif %}">
+                    <i class="bi bi-people-fill text-xl flex-shrink-0"></i>
+                    <span class="sidebar-text font-medium whitespace-nowrap">Usuários</span>
+                </a>
             </nav>
 
             <!-- Bottom Section -->
@@ -190,11 +199,12 @@
                 <!-- User -->
                 <div class="flex items-center space-x-3 px-3 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-700/50">
                     <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary-800 dark:bg-primary-700 flex items-center justify-center">
-                        <span class="text-white text-sm font-semibold">A</span>
+                        <span id="userInitial" class="text-white text-sm font-semibold">?</span>
                     </div>
                     <div class="sidebar-text flex-1 min-w-0">
-                        <p class="text-sm font-medium truncate">Admin</p>
-                        <a href="/logout" class="text-xs text-gray-600 dark:text-gray-400 hover:text-primary-800 dark:hover:text-primary-400">Sair</a>
+                        <p id="userName" class="text-sm font-medium truncate">Carregando...</p>
+                        <p id="userRole" class="text-xs text-gray-500 dark:text-gray-400 truncate">-</p>
+                        <button onclick="logout()" class="text-xs text-gray-600 dark:text-gray-400 hover:text-primary-800 dark:hover:text-primary-400 transition-colors">Sair</button>
                     </div>
                 </div>
             </div>
@@ -378,6 +388,17 @@
             themeIcon.className = 'bi bi-moon-stars text-xl flex-shrink-0';
         }
         updateCheckmarks();
+    </script>
+
+    <!-- Main JS (auth, API helpers, toast) -->
+    <script src="/static/js/main.js"></script>
+
+    <script>
+        // Verifica autenticação e carrega info do usuário em todas as páginas
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadUserInfo();
+        });
     </script>
 
     {% block extra_js %}{% endblock %}

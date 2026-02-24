@@ -1,195 +1,196 @@
 {% extends "base.html" %}
 
 {% block title %}Dashboard - Sistema ALPR UNIPIAGET{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col">
-            <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
-            <p class="text-muted">Visão geral do sistema ALPR</p>
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Visão Geral</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Monitoramento em tempo real do campus universitário</p>
+    </div>
+    <button onclick="carregarDashboard()" class="flex items-center gap-2 px-4 py-2 bg-primary-800 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors shadow-subtle">
+        <i class="bi bi-arrow-clockwise"></i>
+        Atualizar
+    </button>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+
+    <!-- Veículos Cadastrados -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-subtle border border-gray-100 dark:border-gray-700 hover:shadow-subtle-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Veículos Cadastrados</p>
+                <p id="totalVeiculos" class="text-3xl font-bold text-gray-900 dark:text-white mt-1">-</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                <i class="bi bi-car-front text-2xl text-blue-600 dark:text-blue-400"></i>
+            </div>
         </div>
-        <div class="col-auto">
-            <button class="btn btn-primary" onclick="carregarDashboard()">
-                <i class="bi bi-arrow-clockwise"></i> Atualizar
-            </button>
+        <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+            <i class="bi bi-database"></i>
+            <span>Total registado no sistema</span>
         </div>
     </div>
 
-    <!-- KPI Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card border-primary shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-2">Veículos Cadastrados</h6>
-                            <h2 class="mb-0" id="totalVeiculos">-</h2>
-                        </div>
-                        <div class="bg-primary text-white rounded p-3">
-                            <i class="bi bi-car-front fs-3"></i>
-                        </div>
-                    </div>
-                </div>
+    <!-- Proprietários Ativos -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-subtle border border-gray-100 dark:border-gray-700 hover:shadow-subtle-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Proprietários Ativos</p>
+                <p id="totalProprietarios" class="text-3xl font-bold text-gray-900 dark:text-white mt-1">-</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+                <i class="bi bi-people text-2xl text-green-600 dark:text-green-400"></i>
             </div>
         </div>
-
-        <div class="col-md-3">
-            <div class="card border-success shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-2">Proprietários Ativos</h6>
-                            <h2 class="mb-0" id="totalProprietarios">-</h2>
-                        </div>
-                        <div class="bg-success text-white rounded p-3">
-                            <i class="bi bi-people fs-3"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card border-info shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-2">No Campus Agora</h6>
-                            <h2 class="mb-0" id="veiculosNoCampus">-</h2>
-                        </div>
-                        <div class="bg-info text-white rounded p-3">
-                            <i class="bi bi-pin-map fs-3"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card border-warning shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-2">Registros Hoje</h6>
-                            <h2 class="mb-0" id="registrosHoje">-</h2>
-                        </div>
-                        <div class="bg-warning text-white rounded p-3">
-                            <i class="bi bi-clock-history fs-3"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+            <i class="bi bi-person-check"></i>
+            <span>Com cadastro ativo</span>
         </div>
     </div>
 
-    <!-- Charts Row -->
-    <div class="row mb-4">
-        <!-- Registros por Hora -->
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Registros por Hora (Últimas 24h)</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="chartRegistrosPorHora"></canvas>
-                </div>
+    <!-- No Campus Agora -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-subtle border-2 border-primary-200 dark:border-primary-800 hover:shadow-subtle-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">No Campus Agora</p>
+                <p id="veiculosNoCampus" class="text-3xl font-bold text-primary-800 dark:text-primary-400 mt-1">-</p>
+            </div>
+            <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center">
+                <i class="bi bi-pin-map text-2xl text-primary-800 dark:text-primary-400"></i>
             </div>
         </div>
-
-        <!-- Distribuição por Categoria -->
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Por Categoria</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="chartCategorias"></canvas>
-                </div>
-            </div>
+        <div class="mt-3 pt-3 border-t border-primary-100 dark:border-primary-900/30 flex items-center gap-1.5 text-xs text-primary-700 dark:text-primary-400">
+            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse inline-block"></span>
+            <span>Atualização em tempo real</span>
         </div>
     </div>
 
-    <!-- Veículos no Campus & Atividade Recente -->
-    <div class="row mb-4">
-        <!-- Veículos no Campus -->
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="bi bi-pin-map"></i> Veículos no Campus</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive" style="max-height: 400px;">
-                        <table class="table table-sm table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Placa</th>
-                                    <th>Proprietário</th>
-                                    <th>Categoria</th>
-                                    <th>Tempo</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelaVeiculosNoCampus">
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted">
-                                        <i class="bi bi-hourglass-split"></i> Carregando...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <!-- Registros Hoje -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-subtle border border-gray-100 dark:border-gray-700 hover:shadow-subtle-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Registros Hoje</p>
+                <p id="registrosHoje" class="text-3xl font-bold text-gray-900 dark:text-white mt-1">-</p>
+            </div>
+            <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
+                <i class="bi bi-clock-history text-2xl text-orange-600 dark:text-orange-400"></i>
             </div>
         </div>
+        <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3 text-xs">
+            <span class="flex items-center gap-1 text-green-600 dark:text-green-400">
+                <i class="bi bi-arrow-right-circle-fill"></i>
+                <span id="entradasHoje">-</span> entradas
+            </span>
+            <span class="flex items-center gap-1 text-red-600 dark:text-red-400">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+                <span id="saidasHoje">-</span> saídas
+            </span>
+        </div>
+    </div>
+</div>
 
-        <!-- Atividade Recente -->
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Atividade Recente</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive" style="max-height: 400px;">
-                        <table class="table table-sm table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Hora</th>
-                                    <th>Placa</th>
-                                    <th>Movimento</th>
-                                    <th>Proprietário</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelaAtividadeRecente">
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted">
-                                        <i class="bi bi-hourglass-split"></i> Carregando...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+<!-- Charts Row -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
+
+    <!-- Bar Chart — Registros por Hora -->
+    <div class="xl:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-subtle border border-gray-100 dark:border-gray-700">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <i class="bi bi-bar-chart text-primary-800 dark:text-primary-400"></i>
+                Registros por Hora — Últimas 24h
+            </h3>
+            <span class="text-xs text-gray-400 dark:text-gray-500">Entradas + Saídas</span>
+        </div>
+        <div class="p-4">
+            <canvas id="chartRegistrosPorHora" height="110"></canvas>
         </div>
     </div>
 
-    <!-- Alertas -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Alertas</h5>
-                </div>
-                <div class="card-body">
-                    <div id="alertasContainer">
-                        <p class="text-muted text-center">
-                            <i class="bi bi-hourglass-split"></i> Carregando alertas...
-                        </p>
-                    </div>
-                </div>
-            </div>
+    <!-- Doughnut — Por Categoria -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-subtle border border-gray-100 dark:border-gray-700">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+            <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <i class="bi bi-pie-chart text-primary-800 dark:text-primary-400"></i>
+                Distribuição por Categoria
+            </h3>
         </div>
+        <div class="p-4 flex items-center justify-center">
+            <canvas id="chartCategorias" height="180"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Tables Row -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
+
+    <!-- Veículos no Campus -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-subtle border border-gray-100 dark:border-gray-700">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <i class="bi bi-pin-map text-primary-800 dark:text-primary-400"></i>
+                Veículos no Campus
+            </h3>
+            <span id="badgeNoCampus" class="text-xs px-2.5 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full font-semibold">0</span>
+        </div>
+        <div style="max-height: 300px; overflow-y: auto;">
+            <table class="w-full text-sm">
+                <thead class="sticky top-0 bg-gray-50 dark:bg-gray-700/80 backdrop-blur">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Placa</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Proprietário</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Categoria</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tempo</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaVeiculosNoCampus" class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tr><td colspan="4" class="px-4 py-8 text-center text-gray-400 text-sm"><i class="bi bi-hourglass-split"></i> Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Atividade Recente -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-subtle border border-gray-100 dark:border-gray-700">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+            <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <i class="bi bi-clock-history text-primary-800 dark:text-primary-400"></i>
+                Atividade Recente
+            </h3>
+        </div>
+        <div style="max-height: 300px; overflow-y: auto;">
+            <table class="w-full text-sm">
+                <thead class="sticky top-0 bg-gray-50 dark:bg-gray-700/80 backdrop-blur">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hora</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Placa</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Proprietário</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaAtividadeRecente" class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tr><td colspan="4" class="px-4 py-8 text-center text-gray-400 text-sm"><i class="bi bi-hourglass-split"></i> Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Alertas -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-subtle border border-gray-100 dark:border-gray-700">
+    <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <i class="bi bi-exclamation-triangle text-amber-500"></i>
+            Alertas do Sistema
+        </h3>
+        <span id="badgeAlertas" class="hidden text-xs px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full font-semibold">0</span>
+    </div>
+    <div id="alertasDashboard" class="p-4">
+        <p class="text-center text-gray-400 text-sm py-4"><i class="bi bi-hourglass-split"></i> Carregando alertas...</p>
     </div>
 </div>
 {% endblock %}
@@ -199,12 +200,9 @@
     let chartRegistrosHora = null;
     let chartCategorias = null;
 
-    // Carrega dashboard ao abrir página
     document.addEventListener('DOMContentLoaded', function() {
         carregarDashboard();
-
-        // Atualiza a cada 30 segundos
-        setInterval(carregarDashboard, 30000);
+        setInterval(carregarDashboard, 30000); // Atualiza a cada 30s
     });
 
     async function carregarDashboard() {
@@ -218,70 +216,66 @@
 
     async function carregarEstatisticas() {
         try {
-            const response = await apiRequest('/dashboard/estatisticas');
-            if (!response) return;
+            const data = await apiRequest('/dashboard/estatisticas');
+            if (!data) return;
 
-            // Atualiza KPIs
-            document.getElementById('totalVeiculos').textContent = response.total_veiculos_cadastrados;
-            document.getElementById('totalProprietarios').textContent = response.total_proprietarios;
-            document.getElementById('veiculosNoCampus').textContent = response.veiculos_no_campus;
-            document.getElementById('registrosHoje').textContent = response.total_registros_hoje;
+            document.getElementById('totalVeiculos').textContent = data.total_veiculos_cadastrados;
+            document.getElementById('totalProprietarios').textContent = data.total_proprietarios;
+            document.getElementById('veiculosNoCampus').textContent = data.veiculos_no_campus;
+            document.getElementById('registrosHoje').textContent = data.total_registros_hoje;
+            document.getElementById('entradasHoje').textContent = data.entradas_hoje;
+            document.getElementById('saidasHoje').textContent = data.saidas_hoje;
 
-            // Gráfico de registros por hora
-            atualizarGraficoRegistrosPorHora(response.registros_por_hora);
-
-            // Gráfico de categorias
-            atualizarGraficoCategorias(response.registros_por_categoria);
-
-        } catch (error) {
-            console.error('Erro ao carregar estatísticas:', error);
+            atualizarGraficoHoras(data.registros_por_hora);
+            atualizarGraficoCategorias(data.registros_por_categoria);
+        } catch (e) {
+            console.error('Erro ao carregar estatísticas:', e);
         }
     }
 
-    function atualizarGraficoRegistrosPorHora(dados) {
-        const ctx = document.getElementById('chartRegistrosPorHora');
+    function isDarkMode() {
+        return document.documentElement.classList.contains('dark');
+    }
 
-        // Prepara dados (0-23 horas)
+    function atualizarGraficoHoras(dados) {
+        const ctx = document.getElementById('chartRegistrosPorHora');
+        const dark = isDarkMode();
+        const gridColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+        const textColor = dark ? '#9ca3af' : '#6b7280';
+
         const labels = [];
         const totais = [];
-
         for (let i = 0; i < 24; i++) {
-            labels.push(`${i}h`);
-            const registro = dados.find(d => d.hora === i);
-            totais.push(registro ? registro.total : 0);
+            labels.push(`${String(i).padStart(2, '0')}h`);
+            const r = dados.find(d => d.hora === i);
+            totais.push(r ? r.total : 0);
         }
 
-        if (chartRegistrosHora) {
-            chartRegistrosHora.destroy();
-        }
+        if (chartRegistrosHora) chartRegistrosHora.destroy();
 
         chartRegistrosHora = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels,
                 datasets: [{
                     label: 'Registros',
                     data: totais,
-                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
+                    backgroundColor: 'rgba(184, 57, 71, 0.75)',
+                    borderColor: 'rgba(155, 44, 58, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    borderSkipped: false,
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
+                plugins: { legend: { display: false }, tooltip: { callbacks: {
+                    label: ctx => ` ${ctx.parsed.y} registro(s)`
+                }}},
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
+                    y: { beginAtZero: true, ticks: { stepSize: 1, color: textColor }, grid: { color: gridColor } },
+                    x: { ticks: { color: textColor, maxRotation: 0 }, grid: { display: false } }
                 }
             }
         });
@@ -289,20 +283,20 @@
 
     function atualizarGraficoCategorias(dados) {
         const ctx = document.getElementById('chartCategorias');
+        const dark = isDarkMode();
+        const textColor = dark ? '#9ca3af' : '#6b7280';
+        const borderColor = dark ? '#1f2937' : '#ffffff';
 
         const labels = Object.keys(dados);
         const values = Object.values(dados);
-
         const colors = [
-            'rgba(255, 99, 132, 0.8)',
-            'rgba(54, 162, 235, 0.8)',
-            'rgba(255, 206, 86, 0.8)',
-            'rgba(75, 192, 192, 0.8)'
+            'rgba(184,57,71,0.85)',
+            'rgba(59,130,246,0.85)',
+            'rgba(245,158,11,0.85)',
+            'rgba(16,185,129,0.85)',
         ];
 
-        if (chartCategorias) {
-            chartCategorias.destroy();
-        }
+        if (chartCategorias) chartCategorias.destroy();
 
         chartCategorias = new Chart(ctx, {
             type: 'doughnut',
@@ -311,8 +305,9 @@
                 datasets: [{
                     data: values,
                     backgroundColor: colors,
-                    borderWidth: 2,
-                    borderColor: '#fff'
+                    borderWidth: 3,
+                    borderColor,
+                    hoverOffset: 6,
                 }]
             },
             options: {
@@ -320,7 +315,8 @@
                 maintainAspectRatio: true,
                 plugins: {
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: { color: textColor, padding: 14, font: { size: 12 } }
                     }
                 }
             }
@@ -329,94 +325,142 @@
 
     async function carregarVeiculosNoCampus() {
         try {
-            const response = await apiRequest('/dashboard/veiculos-no-campus');
-            if (!response) return;
+            const data = await apiRequest('/dashboard/veiculos-no-campus');
+            if (!data) return;
+
+            const badge = document.getElementById('badgeNoCampus');
+            if (badge) badge.textContent = data.length;
 
             const tbody = document.getElementById('tabelaVeiculosNoCampus');
-
-            if (response.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nenhum veículo no campus</td></tr>';
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-400 text-sm">Nenhum veículo no campus de momento</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = response.map(item => `
-                <tr>
-                    <td><strong>${item.veiculo.placa}</strong></td>
-                    <td>${item.veiculo.proprietario.nome}</td>
-                    <td><span class="badge bg-info">${item.veiculo.proprietario.categoria}</span></td>
-                    <td><small>${item.tempo_formatado}</small></td>
-                </tr>
-            `).join('');
-        } catch (error) {
-            console.error('Erro ao carregar veículos no campus:', error);
+            const catColors = { docente: 'blue', tecnico: 'green', visitante: 'amber', aluno: 'purple' };
+            tbody.innerHTML = data.map(item => {
+                const cat = item.veiculo.proprietario.categoria;
+                const color = catColors[cat] || 'gray';
+                return `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                        <td class="px-4 py-3">
+                            <span class="font-mono font-bold text-gray-900 dark:text-white tracking-widest text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">${item.veiculo.placa}</span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300 text-sm">${item.veiculo.proprietario.nome}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 text-xs font-medium rounded-full
+                                ${color === 'blue'   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : ''}
+                                ${color === 'green'  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : ''}
+                                ${color === 'amber'  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : ''}
+                                ${color === 'purple' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : ''}
+                                ${color === 'gray'   ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400' : ''}
+                            ">${cat}</span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">${item.tempo_formatado}</td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) {
+            console.error('Erro ao carregar veículos no campus:', e);
         }
     }
 
     async function carregarAtividadeRecente() {
         try {
-            const response = await apiRequest('/dashboard/atividade-recente?limite=10');
-            if (!response) return;
+            const data = await apiRequest('/dashboard/atividade-recente?limite=10');
+            if (!data) return;
 
             const tbody = document.getElementById('tabelaAtividadeRecente');
-
-            if (response.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nenhuma atividade recente</td></tr>';
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-400 text-sm">Nenhuma atividade recente</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = response.map(reg => {
-                const hora = new Date(reg.data_hora).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
-                const badgeClass = reg.tipo_movimento === 'entrada' ? 'success' : 'danger';
-                const icon = reg.tipo_movimento === 'entrada' ? 'arrow-right' : 'arrow-left';
+            tbody.innerHTML = data.map(reg => {
+                const hora = new Date(reg.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const isEntrada = reg.tipo_movimento === 'entrada';
                 const proprietario = reg.veiculo ? reg.veiculo.proprietario.nome : 'Desconhecido';
-
                 return `
-                    <tr>
-                        <td><small>${hora}</small></td>
-                        <td><strong>${reg.placa_detectada}</strong></td>
-                        <td>
-                            <span class="badge bg-${badgeClass}">
-                                <i class="bi bi-${icon}"></i> ${reg.tipo_movimento}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                        <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs font-mono">${hora}</td>
+                        <td class="px-4 py-3">
+                            <span class="font-mono font-bold text-gray-900 dark:text-white text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded tracking-widest">${reg.placa_detectada}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full
+                                ${isEntrada ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}">
+                                <i class="bi bi-arrow-${isEntrada ? 'right' : 'left'}"></i>
+                                ${reg.tipo_movimento}
                             </span>
                         </td>
-                        <td><small>${proprietario}</small></td>
+                        <td class="px-4 py-3 text-gray-600 dark:text-gray-300 text-sm truncate max-w-[120px]">${proprietario}</td>
                     </tr>
                 `;
             }).join('');
-        } catch (error) {
-            console.error('Erro ao carregar atividade recente:', error);
+        } catch (e) {
+            console.error('Erro ao carregar atividade recente:', e);
         }
     }
 
     async function carregarAlertas() {
         try {
-            const response = await apiRequest('/dashboard/alertas');
-            if (!response) return;
+            const data = await apiRequest('/dashboard/alertas');
+            if (!data) return;
 
-            const container = document.getElementById('alertasContainer');
+            const container = document.getElementById('alertasDashboard');
+            const badge = document.getElementById('badgeAlertas');
 
-            if (response.length === 0) {
-                container.innerHTML = '<p class="text-success text-center mb-0"><i class="bi bi-check-circle"></i> Nenhum alerta no momento</p>';
+            if (data.length === 0) {
+                if (badge) badge.classList.add('hidden');
+                container.innerHTML = `
+                    <div class="flex items-center gap-2 text-green-600 dark:text-green-400 text-sm py-2">
+                        <i class="bi bi-check-circle-fill text-lg"></i>
+                        <span>Nenhum alerta ativo. Sistema a operar normalmente.</span>
+                    </div>
+                `;
                 return;
             }
 
-            container.innerHTML = response.map(alerta => {
-                const severidadeClass = {
-                    'baixa': 'warning',
-                    'media': 'warning',
-                    'alta': 'danger'
-                }[alerta.severidade];
+            if (badge) {
+                badge.textContent = data.length;
+                badge.classList.remove('hidden');
+            }
 
+            const sevConfig = {
+                baixa:  { color: 'yellow', label: 'Baixa' },
+                media:  { color: 'orange', label: 'Média' },
+                alta:   { color: 'red',    label: 'Alta'  },
+            };
+
+            container.innerHTML = data.map(alerta => {
+                const sev = sevConfig[alerta.severidade] || sevConfig.baixa;
+                const colorMap = {
+                    yellow: 'bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700',
+                    orange: 'bg-orange-50 border-orange-300 dark:bg-orange-900/20 dark:border-orange-700',
+                    red:    'bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-700',
+                };
+                const textMap = {
+                    yellow: 'text-yellow-700 dark:text-yellow-400',
+                    orange: 'text-orange-700 dark:text-orange-400',
+                    red:    'text-red-700 dark:text-red-400',
+                };
                 return `
-                    <div class="alert alert-${severidadeClass} alert-dismissible fade show mb-2" role="alert">
-                        <strong><i class="bi bi-exclamation-triangle"></i> ${alerta.proprietario.nome}</strong>
-                        <br><small>${alerta.descricao}</small>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <div class="flex items-start gap-3 p-3 mb-2 border rounded-lg ${colorMap[sev.color]}">
+                        <i class="bi bi-exclamation-triangle ${textMap[sev.color]} mt-0.5 flex-shrink-0 text-lg"></i>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white">${alerta.proprietario.nome}</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">${alerta.descricao}</p>
+                        </div>
+                        <span class="text-xs px-2 py-0.5 rounded-full font-medium ${textMap[sev.color]}
+                            ${sev.color === 'yellow' ? 'bg-yellow-100 dark:bg-yellow-900/30' : ''}
+                            ${sev.color === 'orange' ? 'bg-orange-100 dark:bg-orange-900/30' : ''}
+                            ${sev.color === 'red'    ? 'bg-red-100 dark:bg-red-900/30' : ''}
+                        ">${sev.label}</span>
                     </div>
                 `;
             }).join('');
-        } catch (error) {
-            console.error('Erro ao carregar alertas:', error);
+        } catch (e) {
+            console.error('Erro ao carregar alertas:', e);
         }
     }
 </script>

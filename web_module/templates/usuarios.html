@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+
+{% block title %}Usuários - Sistema ALPR UNIPIAGET{% endblock %}
+{% block page_title %}Gestão de Usuários{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Usuários do Sistema</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestão de contas e permissões de acesso</p>
+    </div>
+    <!-- Botão visível apenas para admin -->
+    <button id="btnNovoUsuario" onclick="abrirModalCriar()"
+        class="hidden items-center gap-2 px-4 py-2 bg-primary-800 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors shadow-subtle">
+        <i class="bi bi-person-plus-fill"></i>
+        Novo Usuário
+    </button>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-subtle border border-gray-100 dark:border-gray-700 flex items-center gap-4">
+        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+            <i class="bi bi-people text-blue-600 dark:text-blue-400 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Total de Usuários</p>
+            <p id="statTotal" class="text-2xl font-bold text-gray-900 dark:text-white">-</p>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-subtle border border-gray-100 dark:border-gray-700 flex items-center gap-4">
+        <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+            <i class="bi bi-person-check text-green-600 dark:text-green-400 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Ativos</p>
+            <p id="statAtivos" class="text-2xl font-bold text-gray-900 dark:text-white">-</p>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-subtle border border-gray-100 dark:border-gray-700 flex items-center gap-4">
+        <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+            <i class="bi bi-person-x text-red-600 dark:text-red-400 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Inactivos</p>
+            <p id="statInativos" class="text-2xl font-bold text-gray-900 dark:text-white">-</p>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Usuários -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-subtle border border-gray-100 dark:border-gray-700">
+    <!-- Cabeçalho da Tabela -->
+    <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+        <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <i class="bi bi-people-fill text-primary-800 dark:text-primary-400"></i>
+            Lista de Usuários
+        </h3>
+        <!-- Filtro por estado -->
+        <div class="flex items-center gap-2">
+            <select id="filtroAtivo" onchange="carregarUsuarios()"
+                class="text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <option value="">Todos</option>
+                <option value="true">Activos</option>
+                <option value="false">Inactivos</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Utilizador</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Username</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nível de Acesso</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cadastrado em</th>
+                    <th id="colAcoes" class="hidden px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaUsuarios" class="divide-y divide-gray-100 dark:divide-gray-700">
+                <tr><td colspan="7" class="px-5 py-10 text-center text-gray-400"><i class="bi bi-hourglass-split"></i> Carregando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- MODAL — Criar Usuário                                        -->
+<!-- ============================================================ -->
+<div id="modalCriar" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg">
+        <!-- Header do modal -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <i class="bi bi-person-plus-fill text-primary-800 dark:text-primary-400"></i>
+                Novo Usuário
+            </h3>
+            <button onclick="fecharModalCriar()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                <i class="bi bi-x-lg text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Formulário -->
+        <form id="formCriar" onsubmit="submeterCriar(event)" class="px-6 py-5 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome Completo *</label>
+                <input type="text" id="criarNome" required placeholder="Ex: João da Silva"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username *</label>
+                <input type="text" id="criarUsername" required placeholder="Ex: joao.silva"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email *</label>
+                <input type="email" id="criarEmail" required placeholder="Ex: joao.silva@unipiaget.ac.mz"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nível de Acesso *</label>
+                <select id="criarNivel" required
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                    <option value="">Selecionar nível...</option>
+                    <option value="visualizador">Visualizador — Apenas leitura</option>
+                    <option value="operador">Gestor de Sistema — Pode gerir veículos e proprietários</option>
+                    <option value="admin">Admin — Acesso total ao sistema</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha *</label>
+                <div class="relative">
+                    <input type="password" id="criarSenha" required placeholder="Ex: Admin@2025"
+                        class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 pr-10">
+                    <button type="button" onclick="toggleSenhaVisibilidade('criarSenha', this)"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="bi bi-eye text-sm"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    <i class="bi bi-info-circle"></i>
+                    Mínimo 8 caracteres, com pelo menos uma maiúscula, uma minúscula e um número.
+                </p>
+            </div>
+
+            <!-- Ações do formulário -->
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="fecharModalCriar()"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit"
+                    class="px-5 py-2 text-sm font-medium bg-primary-800 hover:bg-primary-700 text-white rounded-lg transition-colors flex items-center gap-2">
+                    <i class="bi bi-check-lg"></i>
+                    Criar Usuário
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- MODAL — Editar Usuário                                       -->
+<!-- ============================================================ -->
+<div id="modalEditar" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <i class="bi bi-pencil-fill text-primary-800 dark:text-primary-400"></i>
+                Editar Usuário
+            </h3>
+            <button onclick="fecharModalEditar()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                <i class="bi bi-x-lg text-xl"></i>
+            </button>
+        </div>
+
+        <form id="formEditar" onsubmit="submeterEditar(event)" class="px-6 py-5 space-y-4">
+            <input type="hidden" id="editarId">
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome Completo</label>
+                <input type="text" id="editarNome" placeholder="Nome completo"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                <input type="email" id="editarEmail" placeholder="Email"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nível de Acesso</label>
+                <select id="editarNivel"
+                    class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                    <option value="visualizador">Visualizador</option>
+                    <option value="operador">Gestor de Sistema</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nova Senha <span class="text-gray-400 font-normal">(deixar em branco para não alterar)</span></label>
+                <div class="relative">
+                    <input type="password" id="editarSenha" placeholder="Nova senha (opcional)"
+                        class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-10">
+                    <button type="button" onclick="toggleSenhaVisibilidade('editarSenha', this)"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="bi bi-eye text-sm"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <input type="checkbox" id="editarAtivo" class="w-4 h-4 rounded accent-primary-800">
+                <label for="editarAtivo" class="text-sm font-medium text-gray-700 dark:text-gray-300">Usuário activo</label>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="fecharModalEditar()"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit"
+                    class="px-5 py-2 text-sm font-medium bg-primary-800 hover:bg-primary-700 text-white rounded-lg transition-colors flex items-center gap-2">
+                    <i class="bi bi-check-lg"></i>
+                    Guardar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const ROLE_LABELS = { admin: 'Admin', operador: 'Gestor de Sistema', visualizador: 'Visualizador' };
+    const ROLE_COLORS = {
+        admin:       'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+        operador:    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+        visualizador:'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    };
+
+    let isAdmin = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const role = getUserRole();
+        isAdmin = role === 'admin';
+
+        // Mostra botão "Novo Usuário" e coluna Ações apenas para admin
+        if (isAdmin) {
+            document.getElementById('btnNovoUsuario').classList.remove('hidden');
+            document.getElementById('btnNovoUsuario').classList.add('flex');
+            document.getElementById('colAcoes').classList.remove('hidden');
+        }
+
+        // Redireciona se não tiver permissão (visualizador não acede a esta página)
+        if (role === 'visualizador') {
+            showToast('Acesso negado. Sem permissão para aceder a esta página.', 'danger');
+            setTimeout(() => window.location.href = '/', 2000);
+            return;
+        }
+
+        carregarUsuarios();
+    });
+
+    async function carregarUsuarios() {
+        const filtro = document.getElementById('filtroAtivo').value;
+        let endpoint = '/usuarios';
+        if (filtro !== '') endpoint += `?ativo=${filtro}`;
+
+        try {
+            const data = await apiRequest(endpoint);
+            if (!data) return;
+
+            // Atualiza stats
+            const total = data.length;
+            const ativos = data.filter(u => u.ativo).length;
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statAtivos').textContent = ativos;
+            document.getElementById('statInativos').textContent = total - ativos;
+
+            renderizarTabela(data);
+        } catch (e) {
+            console.error('Erro ao carregar usuários:', e);
+            showToast('Erro ao carregar lista de usuários', 'danger');
+        }
+    }
+
+    function renderizarTabela(usuarios) {
+        const tbody = document.getElementById('tabelaUsuarios');
+
+        if (usuarios.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="px-5 py-10 text-center text-gray-400 text-sm">Nenhum usuário encontrado</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = usuarios.map(u => {
+            const roleLabel = ROLE_LABELS[u.nivel_acesso] || u.nivel_acesso;
+            const roleColor = ROLE_COLORS[u.nivel_acesso] || 'bg-gray-100 text-gray-700';
+            const ativoHtml = u.ativo
+                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><i class="bi bi-circle-fill text-[6px]"></i> Activo</span>`
+                : `<span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"><i class="bi bi-circle-fill text-[6px]"></i> Inactivo</span>`;
+
+            const inicial = (u.nome_completo || u.username || '?').charAt(0).toUpperCase();
+            const dataFormatada = u.data_cadastro ? new Date(u.data_cadastro).toLocaleDateString('pt-BR') : '-';
+
+            const acoesHtml = isAdmin ? `
+                <td class="px-5 py-3 text-right">
+                    <div class="flex items-center justify-end gap-1">
+                        <button onclick="abrirModalEditar(${JSON.stringify(u).replace(/"/g, '&quot;')})"
+                            title="Editar"
+                            class="p-1.5 text-gray-400 hover:text-primary-800 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                            <i class="bi bi-pencil text-sm"></i>
+                        </button>
+                        <button onclick="toggleAtivo(${u.id}, ${u.ativo}, '${u.username}')"
+                            title="${u.ativo ? 'Desactivar' : 'Activar'}"
+                            class="p-1.5 ${u.ativo ? 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20' : 'text-green-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'} rounded-lg transition-colors">
+                            <i class="bi bi-${u.ativo ? 'person-x' : 'person-check'} text-sm"></i>
+                        </button>
+                    </div>
+                </td>
+            ` : '';
+
+            return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors ${!u.ativo ? 'opacity-60' : ''}">
+                    <td class="px-5 py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-primary-800 dark:bg-primary-700 flex items-center justify-center flex-shrink-0">
+                                <span class="text-white text-xs font-semibold">${inicial}</span>
+                            </div>
+                            <span class="font-medium text-gray-900 dark:text-white text-sm">${u.nome_completo || '-'}</span>
+                        </div>
+                    </td>
+                    <td class="px-5 py-3 text-gray-600 dark:text-gray-300 text-sm font-mono">${u.username}</td>
+                    <td class="px-5 py-3 text-gray-500 dark:text-gray-400 text-sm">${u.email || '-'}</td>
+                    <td class="px-5 py-3">
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-full ${roleColor}">${roleLabel}</span>
+                    </td>
+                    <td class="px-5 py-3">${ativoHtml}</td>
+                    <td class="px-5 py-3 text-gray-400 dark:text-gray-500 text-xs">${dataFormatada}</td>
+                    ${acoesHtml}
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // ----------------------------------------------------------------
+    // Modal Criar
+    // ----------------------------------------------------------------
+    function abrirModalCriar() {
+        document.getElementById('formCriar').reset();
+        document.getElementById('modalCriar').classList.remove('hidden');
+    }
+
+    function fecharModalCriar() {
+        document.getElementById('modalCriar').classList.add('hidden');
+    }
+
+    async function submeterCriar(e) {
+        e.preventDefault();
+
+        const payload = {
+            nome_completo: document.getElementById('criarNome').value.trim(),
+            username:      document.getElementById('criarUsername').value.trim(),
+            email:         document.getElementById('criarEmail').value.trim(),
+            nivel_acesso:  document.getElementById('criarNivel').value,
+            senha:         document.getElementById('criarSenha').value,
+        };
+
+        if (payload.senha.length < 8) {
+            showToast('A senha deve ter pelo menos 8 caracteres', 'warning');
+            return;
+        }
+        if (!/[A-Z]/.test(payload.senha)) {
+            showToast('A senha deve conter pelo menos uma letra maiúscula (ex: A, B, C...)', 'warning');
+            return;
+        }
+        if (!/[a-z]/.test(payload.senha)) {
+            showToast('A senha deve conter pelo menos uma letra minúscula (ex: a, b, c...)', 'warning');
+            return;
+        }
+        if (!/\d/.test(payload.senha)) {
+            showToast('A senha deve conter pelo menos um número (ex: 1, 2, 3...)', 'warning');
+            return;
+        }
+
+        try {
+            await apiRequest('/usuarios', 'POST', payload);
+            showToast('Usuário criado com sucesso!', 'success');
+            fecharModalCriar();
+            carregarUsuarios();
+        } catch (e) {
+            showToast(`Erro ao criar usuário: ${e.message}`, 'danger');
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // Modal Editar
+    // ----------------------------------------------------------------
+    function abrirModalEditar(usuario) {
+        document.getElementById('editarId').value    = usuario.id;
+        document.getElementById('editarNome').value  = usuario.nome_completo || '';
+        document.getElementById('editarEmail').value = usuario.email || '';
+        document.getElementById('editarNivel').value = usuario.nivel_acesso;
+        document.getElementById('editarAtivo').checked = usuario.ativo;
+        document.getElementById('editarSenha').value = '';
+        document.getElementById('modalEditar').classList.remove('hidden');
+    }
+
+    function fecharModalEditar() {
+        document.getElementById('modalEditar').classList.add('hidden');
+    }
+
+    async function submeterEditar(e) {
+        e.preventDefault();
+
+        const id = document.getElementById('editarId').value;
+        const senha = document.getElementById('editarSenha').value;
+
+        const payload = {
+            nome_completo: document.getElementById('editarNome').value.trim() || null,
+            email:         document.getElementById('editarEmail').value.trim() || null,
+            nivel_acesso:  document.getElementById('editarNivel').value,
+            ativo:         document.getElementById('editarAtivo').checked,
+        };
+        if (senha) {
+            if (senha.length < 8) {
+                showToast('A senha deve ter pelo menos 8 caracteres', 'warning');
+                return;
+            }
+            payload.senha = senha;
+        }
+
+        try {
+            await apiRequest(`/usuarios/${id}`, 'PUT', payload);
+            showToast('Usuário actualizado com sucesso!', 'success');
+            fecharModalEditar();
+            carregarUsuarios();
+        } catch (e) {
+            showToast(`Erro ao actualizar usuário: ${e.message}`, 'danger');
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // Activar / Desactivar
+    // ----------------------------------------------------------------
+    async function toggleAtivo(id, ativoAtual, username) {
+        const acao = ativoAtual ? 'desactivar' : 'activar';
+        if (!confirm(`Tem certeza que deseja ${acao} o usuário "${username}"?`)) return;
+
+        try {
+            await apiRequest(`/usuarios/${id}`, 'PUT', { ativo: !ativoAtual });
+            showToast(`Usuário ${acao}do com sucesso!`, 'success');
+            carregarUsuarios();
+        } catch (e) {
+            showToast(`Erro ao ${acao} usuário: ${e.message}`, 'danger');
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // Utilitário: mostrar/ocultar senha
+    // ----------------------------------------------------------------
+    function toggleSenhaVisibilidade(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash text-sm';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye text-sm';
+        }
+    }
+
+    // Fecha modais ao clicar fora
+    document.getElementById('modalCriar').addEventListener('click', function(e) {
+        if (e.target === this) fecharModalCriar();
+    });
+    document.getElementById('modalEditar').addEventListener('click', function(e) {
+        if (e.target === this) fecharModalEditar();
+    });
+</script>
+{% endblock %}

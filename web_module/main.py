@@ -130,6 +130,12 @@ async def relatorios_page(request: Request):
     return templates.TemplateResponse("relatorios.html", {"request": request})
 
 
+@app.get("/usuarios", response_class=HTMLResponse, tags=["Web"])
+async def usuarios_page(request: Request):
+    """Página de gestão de usuários (admin e gestor de sistema)"""
+    return templates.TemplateResponse("usuarios.html", {"request": request})
+
+
 # ============================================================================
 # EVENTOS DO CICLO DE VIDA
 # ============================================================================

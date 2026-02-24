@@ -1,198 +1,564 @@
 {% extends "base.html" %}
 
-{% block title %}Relatórios - SIIP{% endblock %}
+{% block title %}Relatórios{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
+
     <!-- Header -->
     <div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Relatórios e Análises</h1>
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Visualize estatísticas e gere relatórios do sistema ALPR
-        </p>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Visualize estatísticas e exporte dados do sistema ALPR</p>
     </div>
 
-    <!-- Report Types -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Relatório de Acessos -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6 hover:shadow-subtle-md transition-shadow cursor-pointer">
-            <div class="flex items-start justify-between">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
-                        <i class="bi bi-file-earmark-text text-blue-600 dark:text-blue-400 text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Acessos Diários</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Relatório de entradas e saídas</p>
-                    </div>
-                </div>
+    <!-- Period Selector -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+        <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+            <i class="bi bi-calendar-range mr-1.5"></i>Período de Análise
+        </h3>
+        <div class="flex flex-wrap items-end gap-4">
+            <div>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Data Início</label>
+                <input id="periodoInicio" type="date"
+                    class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent">
             </div>
-            <button onclick="gerarRelatorio('acessos')" class="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm">
-                <i class="bi bi-file-earmark-arrow-down mr-2"></i>Gerar Relatório
-            </button>
-        </div>
-
-        <!-- Relatório de Veículos -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6 hover:shadow-subtle-md transition-shadow cursor-pointer">
-            <div class="flex items-start justify-between">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-lg p-3">
-                        <i class="bi bi-car-front text-green-600 dark:text-green-400 text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Veículos</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Cadastro e estatísticas</p>
-                    </div>
-                </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Data Fim</label>
+                <input id="periodoFim" type="date"
+                    class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent">
             </div>
-            <button onclick="gerarRelatorio('veiculos')" class="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm">
-                <i class="bi bi-file-earmark-arrow-down mr-2"></i>Gerar Relatório
+            <button onclick="aplicarPeriodo()"
+                class="px-5 py-2 bg-primary-800 hover:bg-primary-900 dark:bg-primary-700 dark:hover:bg-primary-600 text-white rounded-lg transition-colors text-sm font-medium">
+                <i class="bi bi-bar-chart mr-1.5"></i>Gerar Resumo
             </button>
-        </div>
-
-        <!-- Relatório de Proprietários -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6 hover:shadow-subtle-md transition-shadow cursor-pointer">
-            <div class="flex items-start justify-between">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-purple-100 dark:bg-purple-900/30 rounded-lg p-3">
-                        <i class="bi bi-people text-purple-600 dark:text-purple-400 text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Proprietários</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Lista e análise</p>
-                    </div>
-                </div>
+            <div class="flex gap-2 ml-auto flex-wrap">
+                <button onclick="atalhoUltimos(7)"
+                    class="px-3 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs transition-colors">
+                    7 dias
+                </button>
+                <button onclick="atalhoUltimos(30)"
+                    class="px-3 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs transition-colors">
+                    30 dias
+                </button>
+                <button onclick="atalhoMesAtual()"
+                    class="px-3 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs transition-colors">
+                    Mês atual
+                </button>
             </div>
-            <button onclick="gerarRelatorio('proprietarios')" class="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm">
-                <i class="bi bi-file-earmark-arrow-down mr-2"></i>Gerar Relatório
-            </button>
-        </div>
-
-        <!-- Relatório Mensal -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6 hover:shadow-subtle-md transition-shadow cursor-pointer">
-            <div class="flex items-start justify-between">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg p-3">
-                        <i class="bi bi-calendar-month text-yellow-600 dark:text-yellow-400 text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Mensal</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Resumo do mês</p>
-                    </div>
-                </div>
-            </div>
-            <button onclick="gerarRelatorio('mensal')" class="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm">
-                <i class="bi bi-file-earmark-arrow-down mr-2"></i>Gerar Relatório
-            </button>
-        </div>
-
-        <!-- Relatório de Detecções -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6 hover:shadow-subtle-md transition-shadow cursor-pointer">
-            <div class="flex items-start justify-between">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-red-100 dark:bg-red-900/30 rounded-lg p-3">
-                        <i class="bi bi-camera text-red-600 dark:text-red-400 text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Detecções</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Precisão do OCR</p>
-                    </div>
-                </div>
-            </div>
-            <button onclick="gerarRelatorio('deteccoes')" class="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm">
-                <i class="bi bi-file-earmark-arrow-down mr-2"></i>Gerar Relatório
-            </button>
-        </div>
-
-        <!-- Relatório Personalizado -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6 hover:shadow-subtle-md transition-shadow cursor-pointer">
-            <div class="flex items-start justify-between">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-primary-100 dark:bg-primary-900/30 rounded-lg p-3">
-                        <i class="bi bi-gear text-primary-800 dark:text-primary-400 text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Personalizado</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Configure filtros</p>
-                    </div>
-                </div>
-            </div>
-            <button onclick="gerarRelatorio('custom')" class="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm">
-                <i class="bi bi-sliders mr-2"></i>Configurar
-            </button>
         </div>
     </div>
 
-    <!-- Charts Section -->
+    <!-- Resumo Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <div id="rTotal" class="text-2xl font-bold text-gray-900 dark:text-white">-</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Total Registros</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <div id="rEntradas" class="text-2xl font-bold text-green-600 dark:text-green-400">-</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Entradas</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <div id="rSaidas" class="text-2xl font-bold text-red-600 dark:text-red-400">-</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Saídas</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <div id="rVeiculos" class="text-2xl font-bold text-blue-600 dark:text-blue-400">-</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Veículos Únicos</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <div id="rConfianca" class="text-2xl font-bold text-purple-600 dark:text-purple-400">-</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Confiança Média</div>
+        </div>
+    </div>
+
+    <!-- Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Acessos por Hora -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Acessos por Hora (Hoje)</h3>
-            <div class="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                <div class="text-center">
-                    <i class="bi bi-bar-chart text-4xl mb-2 block"></i>
-                    <p>Gráfico será exibido aqui</p>
+        <!-- Acessos por hora -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Acessos por Hora</h3>
+                <span class="text-xs text-gray-500 dark:text-gray-400">Últimas 24 horas</span>
+            </div>
+            <div class="relative h-64">
+                <canvas id="chartHora"></canvas>
+                <div id="chartHoraLoading" class="absolute inset-0 flex items-center justify-center">
+                    <div class="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Tipos de Veículos -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Distribuição por Tipo</h3>
-            <div class="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                <div class="text-center">
-                    <i class="bi bi-pie-chart text-4xl mb-2 block"></i>
-                    <p>Gráfico será exibido aqui</p>
-                </div>
+        <!-- Por categoria -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Distribuição por Categoria</h3>
+                <span id="labelPeriodo" class="text-xs text-gray-500 dark:text-gray-400">–</span>
             </div>
-        </div>
-
-        <!-- Acessos Semanais -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Acessos nos Últimos 7 Dias</h3>
-            <div class="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                <div class="text-center">
-                    <i class="bi bi-graph-up text-4xl mb-2 block"></i>
-                    <p>Gráfico será exibido aqui</p>
+            <div class="relative h-64 flex items-center justify-center">
+                <canvas id="chartCategoria"></canvas>
+                <div id="chartCatLoading" class="absolute inset-0 flex items-center justify-center">
+                    <div class="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Top Veículos -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top 10 Veículos</h3>
-            <div class="space-y-3">
-                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <i class="bi bi-trophy text-4xl mb-2 block"></i>
-                    <p>Estatísticas serão exibidas aqui</p>
+                <div id="chartCatEmpty" class="hidden text-center text-gray-500 dark:text-gray-400">
+                    <i class="bi bi-pie-chart text-4xl mb-2 block opacity-30"></i>
+                    <p class="text-sm">Sem dados no período</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Export Options -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-subtle border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Opções de Exportação</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button class="flex items-center justify-center px-4 py-3 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-800 dark:text-green-400 rounded-lg transition-colors">
-                <i class="bi bi-file-earmark-excel text-2xl mr-3"></i>
-                <span class="font-medium">Exportar Excel</span>
-            </button>
-            <button class="flex items-center justify-center px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-800 dark:text-red-400 rounded-lg transition-colors">
-                <i class="bi bi-file-earmark-pdf text-2xl mr-3"></i>
-                <span class="font-medium">Exportar PDF</span>
-            </button>
-            <button class="flex items-center justify-center px-4 py-3 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded-lg transition-colors">
-                <i class="bi bi-filetype-csv text-2xl mr-3"></i>
-                <span class="font-medium">Exportar CSV</span>
-            </button>
+    <!-- Top 10 Veículos -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Top 10 Veículos por Acessos</h3>
+                <p id="topVeiculosPeriodo" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">No período selecionado</p>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900/50">
+                    <tr>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">#</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Placa</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Veículo</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Proprietário</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Categoria</th>
+                        <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
+                        <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Entradas</th>
+                        <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Saídas</th>
+                    </tr>
+                </thead>
+                <tbody id="topVeiculosBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr>
+                        <td colspan="8" class="px-5 py-10 text-center text-gray-500 dark:text-gray-400">
+                            <div class="flex justify-center mb-2">
+                                <div class="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                            <p>Carregando...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
+
+    <!-- Export -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-1">Exportar Dados</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">Os arquivos CSV são gerados com o período selecionado acima (padrão: últimos 30 dias)</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- Registros CSV -->
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-lg p-3">
+                        <i class="bi bi-file-earmark-spreadsheet text-green-600 dark:text-green-400 text-2xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-900 dark:text-white">Registros de Acesso</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-4">
+                            Histórico completo com veículo, proprietário, tipo e confiança OCR
+                        </p>
+                        <div class="flex gap-2 flex-wrap">
+                            <select id="exportTipoMovimento"
+                                class="text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                <option value="">Todos</option>
+                                <option value="entrada">Entradas</option>
+                                <option value="saida">Saídas</option>
+                            </select>
+                            <button onclick="exportarRegistrosCSV()"
+                                class="flex items-center gap-2 px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors">
+                                <i class="bi bi-download"></i> Baixar CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proprietários CSV -->
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+                        <i class="bi bi-people text-blue-600 dark:text-blue-400 text-2xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-900 dark:text-white">Relatório de Proprietários</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-4">
+                            Estatísticas por proprietário: entradas, saídas, dias presentes e permanência
+                        </p>
+                        <div class="flex gap-2 flex-wrap">
+                            <select id="exportCategoria"
+                                class="text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                <option value="">Todas categorias</option>
+                                <option value="docente">Docentes</option>
+                                <option value="tecnico">Técnicos</option>
+                                <option value="aluno">Alunos</option>
+                                <option value="visitante">Visitantes</option>
+                            </select>
+                            <button onclick="exportarProprietariosCSV()"
+                                class="flex items-center gap-2 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+                                <i class="bi bi-download"></i> Baixar CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-function gerarRelatorio(tipo) {
-    alert(`Gerando relatório de ${tipo}...\nEsta funcionalidade será implementada.`);
+let chartHora     = null;
+let chartCategoria= null;
+
+// ─── Period helpers ───────────────────────────────────────────────────────────
+function atalhoUltimos(dias) {
+    const fim    = new Date();
+    const inicio = new Date();
+    inicio.setDate(inicio.getDate() - dias);
+    document.getElementById('periodoInicio').value = inicio.toISOString().slice(0,10);
+    document.getElementById('periodoFim').value    = fim.toISOString().slice(0,10);
+}
+
+function atalhoMesAtual() {
+    const now    = new Date();
+    const inicio = new Date(now.getFullYear(), now.getMonth(), 1);
+    document.getElementById('periodoInicio').value = inicio.toISOString().slice(0,10);
+    document.getElementById('periodoFim').value    = now.toISOString().slice(0,10);
+}
+
+function getPeriodo() {
+    const inicio = document.getElementById('periodoInicio').value;
+    const fim    = document.getElementById('periodoFim').value;
+    return {
+        data_inicio: inicio ? inicio + 'T00:00:00' : null,
+        data_fim:    fim    ? fim    + 'T23:59:59' : null,
+        inicio_str:  inicio,
+        fim_str:     fim,
+    };
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+    atalhoUltimos(30);
+    await Promise.all([
+        carregarChartHora(),
+        carregarResumo(),
+        carregarTopVeiculos(),
+    ]);
+});
+
+// ─── Apply period ─────────────────────────────────────────────────────────────
+async function aplicarPeriodo() {
+    await Promise.all([
+        carregarResumo(),
+        carregarTopVeiculos(),
+    ]);
+}
+
+// ─── Resumo ───────────────────────────────────────────────────────────────────
+async function carregarResumo() {
+    const { data_inicio, data_fim } = getPeriodo();
+    const p = new URLSearchParams();
+    if (data_inicio) p.append('data_inicio', data_inicio);
+    if (data_fim)    p.append('data_fim',    data_fim);
+
+    try {
+        const data = await apiRequest(`/relatorios/resumo${p.toString() ? '?' + p : ''}`);
+        document.getElementById('rTotal').textContent     = data.totais.registros;
+        document.getElementById('rEntradas').textContent  = data.totais.entradas;
+        document.getElementById('rSaidas').textContent    = data.totais.saidas;
+        document.getElementById('rVeiculos').textContent  = data.totais.veiculos_unicos;
+        document.getElementById('rConfianca').textContent = (data.qualidade.confianca_media_ocr * 100).toFixed(1) + '%';
+        document.getElementById('labelPeriodo').textContent = `${data.periodo.dias} dia${data.periodo.dias !== 1 ? 's' : ''}`;
+        renderChartCategoria(data.por_categoria);
+    } catch (e) {
+        showToast('Erro ao gerar resumo', 'danger');
+    }
+}
+
+// ─── Chart: Hora ─────────────────────────────────────────────────────────────
+async function carregarChartHora() {
+    document.getElementById('chartHoraLoading').classList.remove('hidden');
+    try {
+        const data = await apiRequest('/registros/ultimos/por-hora?horas=24');
+
+        // Build 24-hour slots (oldest first)
+        const agora = new Date();
+        const slots = [];
+        for (let i = 23; i >= 0; i--) {
+            const h = new Date(agora);
+            h.setHours(agora.getHours() - i, 0, 0, 0);
+            slots.push({
+                label:    h.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                horaKey:  h.toISOString().slice(0, 13),  // "2024-01-15T14"
+                entradas: 0,
+                saidas:   0,
+            });
+        }
+
+        // The API returns hora as "2024-01-15 14:00:00" → normalize
+        data.forEach(item => {
+            const key = item.hora.replace(' ', 'T').slice(0, 13);
+            const slot = slots.find(s => s.horaKey === key);
+            if (slot) { slot.entradas = item.entradas || 0; slot.saidas = item.saidas || 0; }
+        });
+
+        const isDark     = document.documentElement.classList.contains('dark');
+        const gridColor  = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+        const labelColor = isDark ? '#9ca3af' : '#6b7280';
+
+        if (chartHora) chartHora.destroy();
+        const ctx = document.getElementById('chartHora').getContext('2d');
+        chartHora = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: slots.map(s => s.label),
+                datasets: [
+                    {
+                        label: 'Entradas',
+                        data: slots.map(s => s.entradas),
+                        backgroundColor: 'rgba(34,197,94,0.75)',
+                        borderColor:     'rgb(34,197,94)',
+                        borderWidth: 1,
+                        borderRadius: 3,
+                    },
+                    {
+                        label: 'Saídas',
+                        data: slots.map(s => s.saidas),
+                        backgroundColor: 'rgba(239,68,68,0.75)',
+                        borderColor:     'rgb(239,68,68)',
+                        borderWidth: 1,
+                        borderRadius: 3,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: labelColor, boxWidth: 12, font: { size: 12 } } } },
+                scales: {
+                    x: { stacked: true, ticks: { color: labelColor, maxRotation: 45, font: { size: 10 } }, grid: { color: gridColor } },
+                    y: { stacked: true, ticks: { color: labelColor, font: { size: 11 } }, grid: { color: gridColor }, beginAtZero: true },
+                },
+            },
+        });
+    } catch (e) {
+        console.error('Erro ao carregar chart hora:', e);
+    } finally {
+        document.getElementById('chartHoraLoading').classList.add('hidden');
+    }
+}
+
+// ─── Chart: Categoria ────────────────────────────────────────────────────────
+function renderChartCategoria(porCategoria) {
+    document.getElementById('chartCatLoading').classList.add('hidden');
+
+    const labels = Object.keys(porCategoria);
+    const values = Object.values(porCategoria);
+
+    if (!labels.length) {
+        if (chartCategoria) { chartCategoria.destroy(); chartCategoria = null; }
+        document.getElementById('chartCategoria').style.display = 'none';
+        document.getElementById('chartCatEmpty').classList.remove('hidden');
+        return;
+    }
+
+    document.getElementById('chartCategoria').style.display = '';
+    document.getElementById('chartCatEmpty').classList.add('hidden');
+
+    const colorMap = {
+        docente:   ['rgba(59,130,246,0.8)',  'rgb(59,130,246)'],
+        tecnico:   ['rgba(34,197,94,0.8)',   'rgb(34,197,94)'],
+        aluno:     ['rgba(168,85,247,0.8)',  'rgb(168,85,247)'],
+        visitante: ['rgba(251,191,36,0.8)',  'rgb(251,191,36)'],
+    };
+    const fallback = [
+        ['rgba(75,192,192,0.8)', 'rgb(75,192,192)'],
+        ['rgba(255,159,64,0.8)', 'rgb(255,159,64)'],
+        ['rgba(201,203,207,0.8)','rgb(201,203,207)'],
+    ];
+
+    const bgColors = labels.map((l, i) => (colorMap[l] || fallback[i % fallback.length])[0]);
+    const bdColors = labels.map((l, i) => (colorMap[l] || fallback[i % fallback.length])[1]);
+
+    const isDark    = document.documentElement.classList.contains('dark');
+    const lblColor  = isDark ? '#9ca3af' : '#6b7280';
+
+    if (chartCategoria) chartCategoria.destroy();
+    const ctx = document.getElementById('chartCategoria').getContext('2d');
+    chartCategoria = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+            datasets: [{
+                data: values,
+                backgroundColor: bgColors,
+                borderColor:     bdColors,
+                borderWidth: 2,
+                hoverOffset: 6,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { color: lblColor, padding: 14, font: { size: 12 }, boxWidth: 14 },
+                },
+            },
+        },
+    });
+}
+
+// ─── Top Veículos ─────────────────────────────────────────────────────────────
+async function carregarTopVeiculos() {
+    const { data_inicio, data_fim, inicio_str, fim_str } = getPeriodo();
+    const tbody = document.getElementById('topVeiculosBody');
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="8" class="px-5 py-10 text-center text-gray-500 dark:text-gray-400">
+                <div class="flex justify-center mb-2">
+                    <div class="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <p>Carregando...</p>
+            </td>
+        </tr>`;
+
+    try {
+        const body = {};
+        if (data_inicio) body.data_inicio = data_inicio;
+        if (data_fim)    body.data_fim    = data_fim;
+
+        const relatorios = await apiRequest('/relatorios/veiculos', 'POST', body);
+        const top10      = relatorios.slice(0, 10);
+
+        if (!top10.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="px-5 py-10 text-center text-gray-500 dark:text-gray-400">
+                        <i class="bi bi-inbox text-3xl mb-2 block opacity-40"></i>
+                        <p>Nenhum dado no período selecionado</p>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        const maxAcessos = top10[0].total_acessos;
+        const catClasses = {
+            docente:   'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+            tecnico:   'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+            aluno:     'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+            visitante: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+        };
+
+        tbody.innerHTML = top10.map((r, i) => {
+            const v      = r.veiculo;
+            const prop   = v?.proprietario;
+            const placa  = v?.placa || '-';
+            const placaFmt = placa.length === 8
+                ? `${placa.slice(0,3)}-${placa.slice(3,6)}-${placa.slice(6)}`
+                : placa;
+            const pct    = maxAcessos > 0 ? Math.round((r.total_acessos / maxAcessos) * 100) : 0;
+            const cat    = prop?.categoria;
+
+            return `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${i < 3 ? 'bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'}">
+                        ${i + 1}
+                    </span>
+                </td>
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                    <span class="font-mono px-2 py-0.5 text-sm font-semibold rounded bg-primary-50 dark:bg-primary-900/20 text-primary-800 dark:text-primary-300 border border-primary-200 dark:border-primary-800/40">
+                        ${placaFmt}
+                    </span>
+                </td>
+                <td class="px-5 py-3.5 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">${v?.modelo || '–'}</td>
+                <td class="px-5 py-3.5 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">${prop?.nome || '<span class="italic text-gray-400">—</span>'}</td>
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                    ${cat ? `<span class="px-2 py-0.5 text-xs rounded-full ${catClasses[cat] || 'bg-gray-100 text-gray-600'}">${cat}</span>` : '–'}
+                </td>
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                    <div class="flex items-center justify-center gap-2">
+                        <div class="flex-1 max-w-[70px] bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                            <div class="bg-primary-600 h-1.5 rounded-full" style="width:${pct}%"></div>
+                        </div>
+                        <span class="font-semibold text-sm text-gray-900 dark:text-white w-8 text-right">${r.total_acessos}</span>
+                    </div>
+                </td>
+                <td class="px-5 py-3.5 text-center text-sm font-medium text-green-600 dark:text-green-400">${r.total_entradas}</td>
+                <td class="px-5 py-3.5 text-center text-sm font-medium text-red-600 dark:text-red-400">${r.total_saidas}</td>
+            </tr>`;
+        }).join('');
+
+        // Update subtitle
+        if (inicio_str && fim_str) {
+            const d1 = new Date(inicio_str).toLocaleDateString('pt-BR');
+            const d2 = new Date(fim_str).toLocaleDateString('pt-BR');
+            document.getElementById('topVeiculosPeriodo').textContent = `${d1} até ${d2}`;
+        }
+    } catch (e) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="px-5 py-10 text-center text-red-500 dark:text-red-400">
+                    <i class="bi bi-exclamation-circle text-3xl mb-2 block"></i>
+                    <p>Erro ao carregar dados</p>
+                </td>
+            </tr>`;
+    }
+}
+
+// ─── Export helpers ───────────────────────────────────────────────────────────
+async function downloadCSV(url, filename) {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = '/login'; return; }
+
+        const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!response.ok) { showToast('Erro ao exportar arquivo', 'danger'); return; }
+
+        const blob   = await response.blob();
+        const objUrl = URL.createObjectURL(blob);
+        const a      = document.createElement('a');
+        a.href       = objUrl;
+        a.download   = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(objUrl);
+        showToast('Arquivo exportado com sucesso', 'success');
+    } catch (e) {
+        showToast('Erro ao exportar arquivo', 'danger');
+    }
+}
+
+async function exportarRegistrosCSV() {
+    const { data_inicio, data_fim, inicio_str } = getPeriodo();
+    const tipo = document.getElementById('exportTipoMovimento').value;
+    const p    = new URLSearchParams();
+    if (data_inicio) p.append('data_inicio', data_inicio);
+    if (data_fim)    p.append('data_fim',    data_fim);
+    if (tipo)        p.append('tipo_movimento', tipo);
+    const tag = (inicio_str || new Date().toISOString().slice(0,10)).replace(/-/g,'');
+    await downloadCSV(`/api/v1/relatorios/exportar/registros${p.toString() ? '?' + p : ''}`, `registros_${tag}.csv`);
+}
+
+async function exportarProprietariosCSV() {
+    const { data_inicio, data_fim, inicio_str } = getPeriodo();
+    const cat = document.getElementById('exportCategoria').value;
+    const p   = new URLSearchParams();
+    if (data_inicio) p.append('data_inicio', data_inicio);
+    if (data_fim)    p.append('data_fim',    data_fim);
+    if (cat)         p.append('categoria',   cat);
+    const tag = (inicio_str || new Date().toISOString().slice(0,10)).replace(/-/g,'');
+    await downloadCSV(`/api/v1/relatorios/exportar/proprietarios${p.toString() ? '?' + p : ''}`, `proprietarios_${tag}.csv`);
 }
 </script>
 {% endblock %}
