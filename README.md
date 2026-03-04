@@ -507,7 +507,7 @@ python -m desktop_module.simulador_plc
 
 ```bash
 git clone https://github.com/setprogramacao/set-alpr-moz.git
-cd alpr_ujpm
+cd set-alpr-moz
 ```
 
 ### Passo 2: Criar Ambiente Virtual
