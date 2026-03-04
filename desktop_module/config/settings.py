@@ -126,6 +126,31 @@ MAX_PLATE_HEIGHT = 200  # pixels
 
 
 # ============================================================================
+# PLC / CANCELA CONFIGURATION  (Modbus TCP)
+# ============================================================================
+
+# Habilita integração com PLC
+PLC_HABILITADO = os.getenv("PLC_HABILITADO", "True").lower() == "true"
+
+# Endereço IP e porta do PLC (Modbus TCP padrão: 502; simulador usa 5020)
+PLC_HOST = os.getenv("PLC_HOST", "127.0.0.1")
+PLC_PORT = int(os.getenv("PLC_PORT", "5020"))
+PLC_TIMEOUT = float(os.getenv("PLC_TIMEOUT", "3.0"))
+
+# Endereço Modbus da coil que comanda a cancela (0 = primeiro coil)
+PLC_COIL_CANCELA = int(os.getenv("PLC_COIL_CANCELA", "0"))
+
+# Endereço Modbus do discrete input do sensor de laço indutivo
+PLC_INPUT_LACO = int(os.getenv("PLC_INPUT_LACO", "0"))
+
+# Segundos até fechar a cancela automaticamente (fallback caso sensor não responda)
+BARREIRA_TIMEOUT_SEGUNDOS = int(os.getenv("BARREIRA_TIMEOUT_SEGUNDOS", "8"))
+
+# Confiança mínima do OCR para acionar a cancela
+BARREIRA_CONFIANCA_MINIMA = float(os.getenv("BARREIRA_CONFIANCA_MINIMA", "0.70"))
+
+
+# ============================================================================
 # VALIDATION
 # ============================================================================
 

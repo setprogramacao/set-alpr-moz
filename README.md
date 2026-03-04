@@ -1,181 +1,512 @@
-# 🚗 Sistema ALPR UNIPIAGET
+# Sistema ALPR UNIPIAGET
 
-### Projeto de Conclusão de Curso
+**Reconhecimento Automático de Placas Veiculares com Controlo de Cancela via PLC**
 
-Tema: **Sistema de Reconhecimento Automático de Placas Veiculares**
+Universidade Jean Piaget de Moçambique — Engenharia Electrónica e de Telecomunicações
 
-Universidade Jean Piaget de Moçambique
-Curso: Engenharia Electrónica e de Telecomunicações
-Ano: 2026
-
-Estudante: **Salvador Eduardo Tomoecene**
-
+Estudante: **Salvador Eduardo Tomoecene** · Ano: **2026**
 
 ---
 
-## 📋 Índice
+## Índice
 
-- [Sobre o Projeto](#-sobre-o-projeto)
-- [Características](#-características)
-- [Arquitetura](#%EF%B8%8F-arquitetura)
-- [Tecnologias](#%EF%B8%8F-tecnologias)
-- [Instalação](#-instalação)
-- [Configuração](#%EF%B8%8F-configuração)
-- [Uso](#-uso)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [API Endpoints](#-api-endpoints)
-- [Formato de Placas](#-formato-de-placas-moçambicanas)
-- [Testes](#-testes)
-- [Troubleshooting](#-troubleshooting)
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Arquitetura do Sistema](#arquitetura-do-sistema)
+- [Fluxo de Detecção](#fluxo-de-detecção)
+- [Base de Dados](#base-de-dados)
+- [Integração PLC / Cancela](#integração-plc--cancela)
+- [Tecnologias](#tecnologias)
+- [Instalação](#instalação)
+- [Configuração](#configuração)
+- [Uso](#uso)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [API Endpoints](#api-endpoints)
+- [Formato de Placas](#formato-de-placas-moçambicanas)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## 🎯 Sobre o Projeto
+## Sobre o Projeto
 
-O Sistema ALPR (Automatic License Plate Recognition) é uma solução completa para controle de acesso veicular no campus da UNIPIAGET. O sistema detecta automaticamente placas de veículos, registra entradas e saídas, e gera relatórios de permanência.
-
-### Objetivos
-
-- ✅ Monitorar presença real de docentes no campus
-- ✅ Automatizar controle de acesso veicular
-- ✅ Evitar fraude em assinatura de presença
-- ✅ Gerar relatórios gerenciais
+O Sistema ALPR é uma solução completa para controlo de acesso veicular no campus da UNIPIAGET.
+Detecta automaticamente placas de veículos via câmara, regista entradas e saídas, aciona a cancela
+eletrônica via PLC (Modbus TCP) e disponibiliza um dashboard web com relatórios.
 
 ### Problema
 
-Docentes assinam presença, saem com seus carros para fazer outras atividades, e voltam. Isso prejudica o aproveitamento dos estudantes e a qualidade do ensino.
+Docentes podiam assinar presença e abandonar o campus antes de cumprir a carga horária.
+Não existia correlação automática entre a presença física (veículo no campus) e o registo de presença.
 
 ### Solução
 
-Sistema híbrido (Desktop + Web) que detecta, reconhece, registra e gera relatórios automáticos de permanência.
+Sistema híbrido (Desktop + Web + PLC) que detecta, reconhece e regista automaticamente
+a passagem de veículos, controlando a cancela eletrônica e gerando relatórios de permanência.
 
 ---
 
-## ✨ Características
+## Arquitetura do Sistema
 
-### Detecção
-- ✅ Detecção em tempo real via webcam/vídeo
-- ✅ Modelo YOLO v8 treinado especificamente para placas moçambicanas
-- ✅ Detecção directa de placas (modo optimizado)
-- ✅ Processamento CPU/GPU
-- ✅ Suporte a múltiplas fontes (webcam, arquivo, IP camera)
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         SISTEMA ALPR UNIPIAGET                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
-### Reconhecimento (OCR)
-- ✅ OCR duplo: EasyOCR + Tesseract (modo híbrido)
-- ✅ **Correção automática inteligente** de erros comuns:
-  - 0 ↔ O, 1 ↔ I/L, 5 ↔ S, 8 ↔ B, 6 ↔ G, 2 ↔ Z, 7 ↔ T
-- ✅ Validação rigorosa do formato XXX000XX
-- ✅ Confiança ajustável
-- ✅ Pré-processamento avançado de imagens
+  ┌─────────────────────────────────┐          ┌──────────────────────────────┐
+  │        MÓDULO DESKTOP           │          │        MÓDULO WEB            │
+  │        Python · Tkinter         │          │      Python · FastAPI        │
+  │                                 │          │                              │
+  │  ┌──────────┐  ┌─────────────┐  │          │  ┌────────────────────────┐  │
+  │  │  Câmara  │  │   YOLO v8   │  │          │  │    REST API (50+       │  │
+  │  │  OpenCV  ├─►│  Detecção   │  │          │  │    endpoints)          │  │
+  │  └──────────┘  └──────┬──────┘  │          │  │  /auth /veiculos       │  │
+  │                        │         │          │  │  /proprietarios        │  │
+  │               ┌────────▼──────┐  │  HTTP    │  │  /registros            │  │
+  │               │  OCR Duplo    │  │◄────────►│  │  /dashboard            │  │
+  │               │  EasyOCR +    ├──┼─ POST ──►│  │  /relatorios           │  │
+  │               │  Tesseract    │  │ /deteccao│  └──────────┬─────────────┘  │
+  │               └──────┬────────┘  │          │             │                │
+  │                       │          │          │  ┌──────────▼─────────────┐  │
+  │               ┌───────▼───────┐  │          │  │    SQLAlchemy ORM      │  │
+  │               │  Correção OCR │  │          │  │    Deteccao Service    │  │
+  │               │  0↔O 1↔I 5↔S │  │          │  │    Auth Service        │  │
+  │               └──────┬────────┘  │          │  └──────────┬─────────────┘  │
+  │                       │          │          │             │                │
+  │               ┌───────▼───────┐  │          │  ┌──────────▼─────────────┐  │
+  │               │  API Client   │  │          │  │  Templates Jinja2      │  │
+  │               │  (HTTP)       │  │          │  │  Tailwind CSS v4       │  │
+  │               └──────┬────────┘  │          │  │  Vanilla JS            │  │
+  │                       │          │          │  └────────────────────────┘  │
+  │               ┌───────▼───────┐  │          └──────────────┬───────────────┘
+  │               │ PLC Controller│  │                          │ SQL
+  │               │ Modbus TCP    │  │          ┌──────────────▼───────────────┐
+  │               └──────┬────────┘  │          │         BASE DE DADOS        │
+  └──────────────────────┼───────────┘          │    SQLite (dev)              │
+                         │                       │    PostgreSQL (prod)         │
+                         │ Modbus TCP             │                              │
+                         │ porta 5020             │    proprietarios             │
+  ┌──────────────────────▼────────────┐          │    veiculos                  │
+  │         PLC / CANCELA             │          │    registros_acesso          │
+  │                                   │          │    usuarios                  │
+  │  [Coil 0]  Cancela ─────────────► │ Abre /   └──────────────────────────────┘
+  │                          Fecha    │
+  │  [DI 0]    Sensor Laço ◄───────── │ Veículo                    Browser
+  │                          Presente │                               │
+  └───────────────────────────────────┘          ┌──────────────────▼──────────┐
+                                                 │     Dashboard Web            │
+                                                 │   http://localhost:8000      │
+                                                 └──────────────────────────────┘
+```
 
-### Gestão Web
-- ✅ API REST completa (FastAPI)
-- ✅ Dashboard moderno (TailwindCSS v4)
-- ✅ Dark mode com tema burgundy
-- ✅ CRUD completo de veículos e proprietários
-- ✅ Histórico de acessos com filtros
-- ✅ Estatísticas em tempo real
-- ✅ Relatórios exportáveis
-- ✅ Autenticação JWT com níveis de acesso
+### Descrição dos Módulos
 
-### Desktop Module
-- ✅ Interface gráfica Tkinter
-- ✅ Visualização em tempo real
-- ✅ Controles de entrada/saída
-- ✅ Sistema de logs
-- ✅ Configurações via .env
-- ✅ Salvamento automático de imagens
+| Módulo | Tecnologia | Função |
+|--------|-----------|--------|
+| Desktop | Python · Tkinter · OpenCV | Captura vídeo, detecta e reconhece placas |
+| Web API | FastAPI · SQLAlchemy · JWT | Armazena registros, autentica, serve dashboard |
+| PLC | Modbus TCP · pymodbus | Controla abertura/fecho da cancela |
+| Base de Dados | SQLite / PostgreSQL | Persiste proprietários, veículos, acessos |
 
 ---
 
-## 🏗️ Arquitetura
+## Fluxo de Detecção
+
+### Diagrama Completo
 
 ```
-┌─────────────────────┐         ┌─────────────────────┐
-│  DESKTOP MODULE     │         │    WEB MODULE       │
-│  (Detecção)         │  HTTP   │    (Gerenciamento)  │
-│                     │◄───────►│                     │
-│  • Câmera/Vídeo     │         │  • API REST         │
-│  • YOLO v8          │         │  • Dashboard        │
-│  • EasyOCR          │         │  • Relatórios       │
-│  • Tesseract        │         │  • Autenticação     │
-│  • Interface Tkinter│         │  • FastAPI          │
-└─────────────────────┘         └─────────────────────┘
-                                         │
-                                         ▼
-                                ┌─────────────────┐
-                                │  SQLite ou      │
-                                │  PostgreSQL     │
-                                └─────────────────┘
+  CÂMARA             MÓDULO DESKTOP                   API                 PLC
+     │                      │                           │                    │
+     │──── Frame ───────────►                           │                    │
+     │                      │                           │                    │
+     │               ┌──────▼──────┐                    │                    │
+     │               │  YOLO v8    │                    │                    │
+     │               │  Localiza   │                    │                    │
+     │               │  BBox placa │                    │                    │
+     │               └──────┬──────┘                    │                    │
+     │                      │                           │                    │
+     │               ┌──────▼──────┐                    │                    │
+     │               │  Recorta    │                    │                    │
+     │               │  + CLAHE    │                    │                    │
+     │               │  + Margem   │                    │                    │
+     │               └──────┬──────┘                    │                    │
+     │                      │                           │                    │
+     │               ┌──────▼──────┐                    │                    │
+     │               │  EasyOCR   │                    │                    │
+     │               │     +       │                    │                    │
+     │               │  Tesseract │                    │                    │
+     │               └──────┬──────┘                    │                    │
+     │                      │                           │                    │
+     │               ┌──────▼──────┐                    │                    │
+     │               │  Correção   │                    │                    │
+     │               │  Inteligente│                    │                    │
+     │               │  0↔O,1↔I.. │                    │                    │
+     │               └──────┬──────┘                    │                    │
+     │                      │                           │                    │
+     │               ┌──────▼──────┐                    │                    │
+     │               │  Validação  │                    │                    │
+     │               │  XXX000XX   │                    │                    │
+     │               └──────┬──────┘                    │                    │
+     │                      │                           │                    │
+     │                      │─── POST /registros ──────►│                    │
+     │                      │       /deteccao           │                    │
+     │                      │                    ┌──────▼──────┐             │
+     │                      │                    │  Verifica    │             │
+     │                      │                    │  Duplicata   │             │
+     │                      │                    │  (cooldown)  │             │
+     │                      │                    └──────┬───────┘             │
+     │                      │                    ┌──────▼──────┐             │
+     │                      │                    │  Toggle      │             │
+     │                      │                    │  Entrada/    │             │
+     │                      │                    │  Saída       │             │
+     │                      │                    └──────┬───────┘             │
+     │                      │                    ┌──────▼──────┐             │
+     │                      │                    │  Salva na   │             │
+     │                      │                    │  Base de    │             │
+     │                      │                    │  Dados      │             │
+     │                      │                    └──────┬───────┘             │
+     │                      │◄─── Resposta ─────────────│                    │
+     │                      │   {cadastrado, tipo,      │                    │
+     │                      │    mensagem, duplicata}   │                    │
+     │                      │                           │                    │
+     │               ┌──────▼──────────────────────┐    │                    │
+     │               │  SE cadastrado=true          │    │                    │
+     │               │     E confiança ≥ 70%        │    │                    │
+     │               │     E não duplicata:         │    │                    │
+     │               └──────┬──────────────────────-┘    │                    │
+     │                      │── Write Coil 0 = True ─────────────────────────►│
+     │                      │                           │   ┌─────────────┐   │
+     │                      │                           │   │ Cancela     │   │
+     │                      │                           │   │ ABRE ↑      │   │
+     │                      │                           │   └─────────────┘   │
+     │                      │                           │                    │
+     │                      │                           │◄── DI 0 = True ────│
+     │                      │                           │  (veículo no laço) │
+     │                      │                           │                    │
+     │                      │                           │◄── DI 0 = False ───│
+     │                      │                           │  (veículo passou)  │
+     │                      │── Write Coil 0 = False ──────────────────────► │
+     │                      │                           │   ┌─────────────┐   │
+     │                      │                           │   │ Cancela     │   │
+     │                      │                           │   │ FECHA ↓     │   │
+     │                      │                           │   └─────────────┘   │
 ```
 
-### Fluxo de Detecção
+### Lógica de Toggle Entrada/Saída
 
 ```
-1. Câmera captura frame
-2. YOLO v8 detecta região da placa
-3. Pré-processamento da imagem
-4. OCR duplo (EasyOCR + Tesseract)
-5. Correção inteligente baseada no formato XXX000XX
-6. Validação formato moçambicano
-7. Envia para API via HTTP POST
-8. API verifica duplicata temporal (cooldown)
-9. Busca veículo no banco de dados
-10. Registra acesso (entrada/saída)
-11. Retorna status ao Desktop Module
+  Detecção da placa AHK641MP
+         │
+         ▼
+  ┌─────────────────────────┐
+  │  Consulta último        │
+  │  registo desta placa    │
+  │  na Base de Dados       │
+  └─────────┬───────────────┘
+            │
+   ┌─────── ▼ ───────┐
+   │ Existe registo? │
+   └─────── ┬ ───────┘
+            │
+      Não ──┼── Sim
+      │     │    │
+      │     │    ▼
+      │     │  ┌─────────────────┐
+      │     │  │ Qual foi o      │
+      │     │  │ último tipo?    │
+      │     │  └────────┬────────┘
+      │     │           │
+      │     │    entrada─┼─saida
+      │     │           │    │
+      ▼     │           ▼    ▼
+  ENTRADA   │       SAÍDA  ENTRADA
+      │     │           │    │
+      └─────┴───────────┴────┘
+                    │
+              Regista na BD
+              com tipo determinado
+```
+
+### Seleção do Resultado OCR
+
+```
+         Imagem recortada da placa
+                    │
+          ┌─────────┴──────────┐
+          │                    │
+          ▼                    ▼
+    ┌───────────┐        ┌───────────┐
+    │  EasyOCR  │        │ Tesseract │
+    │ (deep     │        │ (clássico)│
+    │ learning) │        │ PSM 7/8/6 │
+    └─────┬─────┘        └─────┬─────┘
+          │                    │
+          └─────────┬──────────┘
+                    │
+           ┌────────▼────────┐
+           │  Concordam?     │
+           │ (mesmo texto)   │
+           └────────┬────────┘
+                    │
+           Sim ─────┴───── Não
+            │                │
+            ▼                ▼
+      Confiança alta    Valida formato
+      usa resultado     moçambicano XXX000XX
+                        escolhe o melhor
+                            │
+                            ▼
+                   corrigir_placa_ocr()
+                   (correção por posição)
+                            │
+                            ▼
+                    Placa final validada
 ```
 
 ---
 
-## 🛠️ Tecnologias
+## Base de Dados
+
+### Diagrama Entidade-Relacionamento
+
+```
+┌───────────────────────────────┐          ┌───────────────────────────────────┐
+│          PROPRIETARIOS        │          │              VEICULOS             │
+├───────────────────────────────┤          ├───────────────────────────────────┤
+│ PK  id           INTEGER      │◄──1───N──│ FK  proprietario_id  INTEGER      │
+│     nome         VARCHAR      │          │ PK  id               INTEGER      │
+│     categoria    ENUM         │          │     placa            VARCHAR(8)   │
+│     departamento VARCHAR?     │          │     modelo           VARCHAR?     │
+│     telefone     VARCHAR?     │          │     marca            VARCHAR?     │
+│     email        VARCHAR?     │          │     cor              VARCHAR?     │
+│     ativo        BOOLEAN      │          │     ano              INTEGER?     │
+│     criado_em    DATETIME     │          │     ativo            BOOLEAN      │
+└───────────────────────────────┘          └──────────────┬────────────────────┘
+                                                          │
+         categoria:                              1        │
+         docente | tecnico                               │
+         aluno | visitante                              N │
+                                           ┌─────────────▼──────────────────────┐
+                                           │          REGISTROS_ACESSO          │
+                                           ├────────────────────────────────────┤
+                                           │ PK  id               INTEGER       │
+                                           │ FK  veiculo_id       INTEGER?      │
+                                           │     placa_detectada  VARCHAR       │
+                                           │     tipo_movimento   ENUM          │
+                                           │     data_hora        DATETIME      │
+                                           │     confianca_ocr    FLOAT         │
+                                           │     metodo_ocr       VARCHAR       │
+                                           │     imagem_path      VARCHAR?      │
+                                           └────────────────────────────────────┘
+                                                veiculo_id nullable:
+                                                aceita placas não cadastradas
+
+┌───────────────────────────────┐
+│            USUARIOS           │
+├───────────────────────────────┤
+│ PK  id           INTEGER      │
+│     username     VARCHAR      │   nivel_acesso:
+│     senha_hash   VARCHAR      │   admin | operador | visualizador
+│     nivel_acesso ENUM         │
+│     ativo        BOOLEAN      │
+│     criado_em    DATETIME     │
+└───────────────────────────────┘
+  (independente — sem FK para as outras tabelas)
+```
+
+### Tabelas Detalhadas
+
+#### `proprietarios`
+
+| Coluna | Tipo | Restrição | Descrição |
+|--------|------|-----------|-----------|
+| id | INTEGER | PK, Auto | Identificador único |
+| nome | VARCHAR | NOT NULL | Nome completo |
+| categoria | ENUM | NOT NULL | `docente` / `tecnico` / `aluno` / `visitante` |
+| departamento | VARCHAR | NULL | Faculdade ou departamento |
+| telefone | VARCHAR | NULL | Formato `+258XXXXXXXXX` |
+| email | VARCHAR | NULL | Endereço de e-mail |
+| ativo | BOOLEAN | DEFAULT True | Registo ativo |
+| criado_em | DATETIME | DEFAULT now() | Data de criação |
+
+#### `veiculos`
+
+| Coluna | Tipo | Restrição | Descrição |
+|--------|------|-----------|-----------|
+| id | INTEGER | PK, Auto | Identificador único |
+| proprietario_id | INTEGER | FK, NOT NULL | Referência ao proprietário |
+| placa | VARCHAR(8) | UNIQUE, NOT NULL | Formato `XXX000XX` |
+| modelo | VARCHAR | NULL | Modelo do veículo |
+| marca | VARCHAR | NULL | Marca (Toyota, etc.) |
+| cor | VARCHAR | NULL | Cor do veículo |
+| ano | INTEGER | NULL | Ano de fabrico |
+| ativo | BOOLEAN | DEFAULT True | Registo ativo |
+
+#### `registros_acesso`
+
+| Coluna | Tipo | Restrição | Descrição |
+|--------|------|-----------|-----------|
+| id | INTEGER | PK, Auto | Identificador único |
+| veiculo_id | INTEGER | FK, NULL | Veículo cadastrado (nullable) |
+| placa_detectada | VARCHAR | NOT NULL | Placa lida pelo OCR |
+| tipo_movimento | ENUM | NOT NULL | `entrada` / `saida` |
+| data_hora | DATETIME | NOT NULL | Timestamp da detecção |
+| confianca_ocr | FLOAT | 0.0–1.0 | Qualidade do reconhecimento |
+| metodo_ocr | VARCHAR | NOT NULL | `easyocr` / `tesseract` / `hibrido` |
+| imagem_path | VARCHAR | NULL | Caminho relativo da imagem salva |
+
+#### `usuarios`
+
+| Coluna | Tipo | Restrição | Descrição |
+|--------|------|-----------|-----------|
+| id | INTEGER | PK, Auto | Identificador único |
+| username | VARCHAR | UNIQUE, NOT NULL | Nome de utilizador |
+| senha_hash | VARCHAR | NOT NULL | Hash bcrypt da senha |
+| nivel_acesso | ENUM | NOT NULL | `admin` / `operador` / `visualizador` |
+| ativo | BOOLEAN | DEFAULT True | Conta ativa |
+| criado_em | DATETIME | DEFAULT now() | Data de criação |
+
+---
+
+## Integração PLC / Cancela
+
+### Protocolo Modbus TCP
+
+```
+  MÓDULO DESKTOP                        PLC / CANCELA ELETRÔNICA
+  PLCController                         Porta Modbus TCP: 5020
+       │
+       │── connect() ──────────────────────────────────► TCP:5020
+       │
+       │── write_coil(0, True) ─────────────────────────► Coil 0 = 1
+       │                                                   ┌──────────┐
+       │                                                   │ CANCELA  │
+       │                                                   │  ABRE ↑  │
+       │                                                   └──────────┘
+       │── read_discrete_inputs(0) ◄──────────── DI 0 ────► Sensor Laço
+       │   (polling a cada 300ms)                          Indutivo
+       │
+       │   DI 0 = True  → veículo entrou no laço
+       │   DI 0 = False → veículo saiu do laço
+       │
+       │── write_coil(0, False) ────────────────────────── Coil 0 = 0
+       │                                                   ┌──────────┐
+       │                                                   │ CANCELA  │
+       │                                                   │ FECHA ↓  │
+       │                                                   └──────────┘
+       │
+       │   FALLBACK: se DI 0 não responder em 8s
+       │── write_coil(0, False) ─────────────────────────► Fecha por segurança
+```
+
+### Mapa de Registos Modbus
+
+| Tipo | Endereço | Função Modbus | Direcção | Descrição |
+|------|----------|--------------|----------|-----------|
+| Coil | 0 | FC01 (read) / FC05 (write) | Escrita pelo Desktop | Comando cancela: `True`=abrir, `False`=fechar |
+| Discrete Input | 0 | FC02 (read) | Leitura pelo Desktop | Sensor de laço: `True`=veículo presente |
+
+### Condições para Abertura da Cancela
+
+```
+  Nova detecção recebida
+           │
+    ┌──────▼──────┐
+    │  Veículo    │── Não ──► Regista mas não abre cancela
+    │  cadastrado?│
+    └──────┬──────┘
+           │ Sim
+    ┌──────▼──────┐
+    │  Confiança  │── < 70% ─► Regista mas não abre cancela
+    │   ≥ 70%?    │
+    └──────┬──────┘
+           │ Sim
+    ┌──────▼──────┐
+    │  É duplicata│── Sim ──► Ignora (cooldown ativo)
+    │  (cooldown)?│
+    └──────┬──────┘
+           │ Não
+    ┌──────▼──────┐
+    │  PLC        │── Não ──► Regista sem controlo PLC
+    │  conectado? │
+    └──────┬──────┘
+           │ Sim
+           ▼
+    abrir_cancela()  →  Coil 0 = True
+```
+
+### Simulador PLC Virtual
+
+Para testes sem hardware, o projeto inclui um servidor Modbus TCP virtual:
+
+```bash
+# Iniciar simulador (terminal separado)
+python -m desktop_module.simulador_plc
+
+# Saída esperada:
+#   Servidor Modbus TCP aguardando em 127.0.0.1:5020
+#   Cancela: fechada ↓  |  Laço: livre ○
+#   [SIM] Veículo chegará ao laço em 1.5s
+#   [SIM] Veículo NO laço indutivo (sensor=ON)
+#   [SIM] Veículo SAIU do laço (sensor=OFF)
+#   Cancela: fechada ↓  |  Laço: livre ○
+```
+
+---
+
+## Tecnologias
 
 ### Backend (Web Module)
-- **FastAPI 0.128.5** - Framework web moderno
-- **SQLAlchemy 2.0.46** - ORM para banco de dados
-- **Pydantic 2.12.5** - Validação de dados
-- **Python-Jose 3.5.0** - JWT para autenticação
-- **Uvicorn 0.40.0** - Servidor ASGI
-- **Bcrypt 5.0.0** - Hash de senhas
+
+| Pacote | Versão | Função |
+|--------|--------|--------|
+| FastAPI | 0.128.5 | Framework web REST |
+| SQLAlchemy | 2.0.46 | ORM base de dados |
+| Pydantic | 2.12.5 | Validação de schemas |
+| Uvicorn | 0.40.0 | Servidor ASGI |
+| python-jose | 3.5.0 | JWT (autenticação) |
+| bcrypt | 5.0.0 | Hash de senhas |
+| Jinja2 | 3.1.x | Templates HTML |
 
 ### Frontend (Web Module)
-- **TailwindCSS v4** - Framework CSS utility-first
-- **Jinja2 3.1.6** - Templates
-- **Bootstrap Icons 1.11.3** - Ícones
-- **JavaScript Vanilla** - Interatividade
+
+| Tecnologia | Versão | Função |
+|-----------|--------|--------|
+| Tailwind CSS | v4 (CDN) | Estilo utility-first |
+| Bootstrap Icons | 1.11.3 | Ícones |
+| Chart.js | 4.4.0 | Gráficos do dashboard |
+| Vanilla JS | ES2020 | Interatividade |
 
 ### Computer Vision (Desktop Module)
-- **Ultralytics YOLOv8 8.4.13** - Detecção de placas
-- **OpenCV 4.13.0** - Processamento de imagens
-- **EasyOCR 1.7.2** - OCR com deep learning
-- **Tesseract OCR 0.3.13** - OCR tradicional
-- **PyTorch 2.10.0+cpu** - Framework deep learning
-- **torchvision 0.25.0+cpu** - Visão computacional
 
-### Interface Desktop
-- **Tkinter** - Interface gráfica nativa
-- **Pillow 12.1.0** - Manipulação de imagens
+| Pacote | Versão | Função |
+|--------|--------|--------|
+| Ultralytics (YOLO) | 8.4.13 | Detecção de placas |
+| OpenCV | 4.13.0 | Processamento de imagens |
+| EasyOCR | 1.7.2 | OCR com deep learning |
+| pytesseract | 0.3.13 | Interface Tesseract |
+| PyTorch (CPU) | 2.10.0 | Framework neural |
+| Pillow | 12.1.0 | Manipulação de imagens |
 
-### Outras
-- **Requests 2.32.5** - Cliente HTTP
-- **python-dotenv 1.2.1** - Variáveis de ambiente
-- **Loguru 0.7.3** - Sistema de logs
+### Integração Industrial
+
+| Pacote | Versão | Função |
+|--------|--------|--------|
+| pymodbus | 3.9.2 | Cliente/servidor Modbus TCP |
 
 ---
 
-## 📦 Instalação
+## Instalação
 
 ### Pré-requisitos
 
-- **Python 3.8+** (recomendado: **3.13**)
-- **Tesseract OCR** instalado no sistema
-- **Webcam** ou arquivo de vídeo para testes
-- **4GB RAM** mínimo (8GB recomendado)
-- **(Opcional) GPU NVIDIA com CUDA** para melhor performance
+- Python 3.8+ (recomendado: **3.13**)
+- Tesseract OCR instalado no sistema
+- Webcam ou arquivo de vídeo
+- 4 GB RAM mínimo (8 GB recomendado)
 
-### Passo 1: Clonar Repositório
+### Passo 1: Clonar o Repositório
 
 ```bash
-git clone https://github.com/seu-usuario/alpr_ujpm.git
+git clone https://github.com/setprogramacao/set-alpr-moz.git
 cd alpr_ujpm
 ```
 
@@ -183,12 +514,13 @@ cd alpr_ujpm
 
 ```bash
 python -m venv venv
-```
 
-**Ativar:**
-- Windows (CMD): `venv\Scripts\activate`
-- Windows (PowerShell): `venv\Scripts\Activate.ps1`
-- Linux/Mac: `source venv/bin/activate`
+# Ativar (Windows CMD)
+venv\Scripts\activate
+
+# Ativar (Linux/macOS)
+source venv/bin/activate
+```
 
 ### Passo 3: Instalar Dependências
 
@@ -196,452 +528,354 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-> ⏱️ Tempo estimado: 5-10 minutos (depende da conexão)
-
 ### Passo 4: Instalar Tesseract OCR
 
-#### Windows
-1. Baixe: https://github.com/UB-Mannheim/tesseract/wiki
-2. Instale em `C:\Program Files\Tesseract-OCR\`
-3. O caminho será configurado automaticamente no `.env`
+**Windows:** Descarregar de https://github.com/UB-Mannheim/tesseract/wiki e instalar em `C:\Program Files\Tesseract-OCR\`
 
-#### Linux (Ubuntu/Debian)
+**Linux:**
 ```bash
-sudo apt-get update
 sudo apt-get install tesseract-ocr
 ```
 
-#### macOS
-```bash
-brew install tesseract
-```
-
-### Passo 5: Modelo YOLO
-
-O modelo treinado já deve estar em:
-```
-desktop_module/models/license_plate_detector.pt
-```
-
-Se não estiver, verifique a pasta `docs/` para instruções de download.
-
----
-
-## ⚙️ Configuração
-
-### 1. Arquivo de Configuração
-
-O arquivo `.env` já está configurado. Principais configurações:
-
-```env
-# YOLO
-YOLO_MODEL_PATH=desktop_module/models/license_plate_detector.pt
-YOLO_CONFIDENCE=0.5              # 0.3 a 0.7 (quanto maior, mais rigoroso)
-YOLO_DEVICE=cpu                  # ou 'cuda' para GPU
-
-# OCR
-OCR_METHOD=hibrido               # easyocr, tesseract, ou hibrido
-OCR_MIN_CONFIDENCE=0.3           # 0.0 a 1.0
-TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
-
-# API
-API_HOST=http://localhost:8000
-API_TIMEOUT=30
-
-# Banco de Dados
-DATABASE_URL=sqlite:///./alpr_unipiaget.db
-
-# Segurança
-SECRET_KEY=sua-chave-secreta-super-segura-mude-em-producao-12345
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-
-# Vídeo/Câmera
-VIDEO_SOURCE=0                   # 0=webcam, 1=segunda webcam, ou caminho
-PROCESS_EVERY_N_FRAMES=5         # Processa 1 a cada N frames
-FRAME_RESIZE_WIDTH=640
-FRAME_RESIZE_HEIGHT=480
-
-# Debug
-ALPR_DEBUG_MODE=true             # true=aceita qualquer texto, false=validação rigorosa
-LOG_LEVEL=INFO                   # DEBUG, INFO, WARNING, ERROR
-```
-
-### 2. Inicializar Banco de Dados
+### Passo 5: Inicializar Base de Dados
 
 ```bash
 python init_database.py
 ```
 
-Isso cria:
-- ✅ Tabelas do banco de dados
-- ✅ Usuário admin (`admin` / `admin123`)
-- ✅ Estrutura inicial
+Cria as tabelas e o utilizador `admin` / `admin123`.
 
 ---
 
-## 🚀 Uso
+## Configuração
 
-### Iniciar Web Module (API + Dashboard)
+O ficheiro `.env` controla todas as configurações do sistema:
 
-**Terminal 1:**
+```env
+# === YOLO ===
+YOLO_MODEL_PATH=desktop_module/models/license_plate_detector.pt
+YOLO_CONFIDENCE=0.5
+
+# === OCR ===
+OCR_METHOD=hibrido               # easyocr | tesseract | hibrido
+OCR_MIN_CONFIDENCE=0.3
+TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
+
+# === API ===
+API_HOST=http://localhost:8000
+API_TIMEOUT=30
+
+# === BASE DE DADOS ===
+DATABASE_URL=sqlite:///./alpr_unipiaget.db
+
+# === SEGURANÇA ===
+SECRET_KEY=mude-esta-chave-em-producao
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+# === CÂMARA ===
+VIDEO_SOURCE=0                   # 0=webcam, ou caminho para ficheiro
+PROCESS_EVERY_N_FRAMES=5
+
+# === PLC / CANCELA ===
+PLC_HABILITADO=True
+PLC_HOST=127.0.0.1
+PLC_PORT=5020
+BARREIRA_CONFIANCA_MINIMA=0.70   # Confiança mínima para abrir cancela
+BARREIRA_TIMEOUT_SEGUNDOS=8      # Fecha automaticamente após N segundos
+```
+
+---
+
+## Uso
+
+### 1. Iniciar o Servidor Web
+
 ```bash
-# Ativar ambiente virtual
-venv\Scripts\activate
-
-# Iniciar servidor
+# Terminal 1
 uvicorn web_module.main:app --reload --port 8000
 ```
 
-Acesse:
-- **Dashboard**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- **Login**: `admin` / `admin123`
+Aceder em: http://localhost:8000 — Login: `admin` / `admin123`
 
-### Iniciar Desktop Module (Detecção)
+### 2. Iniciar o Simulador PLC (para testes)
 
-**Terminal 2:**
 ```bash
-# Ativar ambiente virtual
-venv\Scripts\activate
+# Terminal 2
+python -m desktop_module.simulador_plc
+```
 
-# Iniciar aplicação desktop
-python desktop_module/main.py
+### 3. Iniciar o Módulo Desktop
+
+```bash
+# Terminal 3
+python -m desktop_module.main
 ```
 
 ### Workflow Recomendado
 
-1. **Cadastrar Proprietários** via Dashboard Web
-2. **Cadastrar Veículos** com placas no formato XXX000XX
-3. **Iniciar Desktop Module** e começar detecção
-4. **Apontar placa para câmera**
-5. **Verificar registros** no Dashboard Web
+1. Cadastrar **Proprietários** (Pessoas) via Dashboard Web
+2. Cadastrar **Veículos** com placa no formato `XXX000XX`
+3. Iniciar **Módulo Desktop** e clicar em "Iniciar Captura"
+4. Apontar placa para câmara
+5. Verificar **Registros** e **Dashboard** no browser
 
 ---
 
-## 📁 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 alpr_ujpm/
-├── desktop_module/              # Aplicação Desktop
-│   ├── main.py                 # Ponto de entrada
-│   ├── core/
-│   │   ├── detector.py         # YOLO + OCR (521 linhas)
-│   │   ├── api_client.py       # Cliente HTTP (214 linhas)
-│   │   └── camera.py           # Gerenciador câmera (210 linhas)
-│   ├── ui/
-│   │   └── main_window.py      # Interface Tkinter (520 linhas)
+├── desktop_module/                 # Aplicação Desktop (Tkinter)
+│   ├── main.py                    # Ponto de entrada
+│   ├── simulador_plc.py           # Servidor Modbus TCP virtual
 │   ├── config/
-│   │   └── settings.py         # Configurações
+│   │   └── settings.py            # Todas as configurações (.env)
+│   ├── core/
+│   │   ├── detector.py            # YOLO v8 + OCR duplo
+│   │   ├── camera.py              # Gestão de câmara/vídeo
+│   │   ├── api_client.py          # Cliente HTTP para a API
+│   │   └── plc_controller.py      # Cliente Modbus TCP
+│   ├── ui/
+│   │   └── main_window.py         # Interface Tkinter principal
 │   └── models/
-│       └── license_plate_detector.pt  # Modelo YOLO (5.2 MB)
+│       └── license_plate_detector.pt   # Modelo YOLO (5.2 MB)
 │
-├── web_module/                  # API e Dashboard Web
-│   ├── main.py                 # FastAPI app
-│   ├── routes/                 # Endpoints da API
-│   │   ├── auth.py
-│   │   ├── veiculos.py
-│   │   ├── proprietarios.py
-│   │   ├── registros.py
-│   │   ├── dashboard.py
-│   │   └── relatorios.py
-│   ├── templates/              # Templates Jinja2
-│   │   ├── base.html           # Template base
-│   │   ├── login.html          # Login moderno
-│   │   ├── dashboard.html      # Dashboard
-│   │   ├── veiculos.html       # Gestão veículos
-│   │   └── proprietarios.html  # Gestão proprietários
-│   └── services/               # Lógica de negócio
-│       ├── auth_service.py
-│       └── deteccao_service.py
+├── web_module/                     # API REST + Dashboard Web
+│   ├── main.py                    # Aplicação FastAPI
+│   ├── routes/
+│   │   ├── auth.py                # Login, JWT, gestão de utilizadores
+│   │   ├── veiculos.py            # CRUD de veículos
+│   │   ├── proprietarios.py       # CRUD de proprietários
+│   │   ├── registros.py           # Registos de acesso + detecção
+│   │   ├── dashboard.py           # Estatísticas e KPIs
+│   │   └── relatorios.py          # Relatórios e exportação CSV
+│   ├── services/
+│   │   ├── auth_service.py        # Lógica JWT + bcrypt
+│   │   └── deteccao_service.py    # Toggle entrada/saída, duplicatas
+│   ├── templates/                 # HTML Jinja2
+│   │   ├── base.html              # Layout com sidebar
+│   │   ├── login.html
+│   │   ├── index.html             # Dashboard
+│   │   ├── veiculos.html
+│   │   ├── proprietarios.html
+│   │   ├── registros.html
+│   │   ├── relatorios.html
+│   │   └── usuarios.html
+│   └── static/
+│       └── js/main.js             # JS partilhado (auth, apiRequest)
 │
-├── shared/                      # Código compartilhado
-│   ├── utils.py                # Validação XXX000XX + correção OCR
-│   └── schemas.py              # Modelos Pydantic
+├── shared/                         # Código partilhado
+│   ├── schemas.py                 # Modelos Pydantic (request/response)
+│   └── utils.py                   # Validação placa, correção OCR, imagens
 │
-├── storage/                     # Armazenamento
-│   ├── images/                 # Imagens de detecções
-│   ├── debug/                  # Imagens de debug
-│   └── test_images/            # Imagens de teste
+├── docs_apresentacao/              # Landing page para apresentação TCC
+│   └── index.html
 │
-├── tests/                       # Scripts de teste
-│   ├── verificar_modelo.py     # Verifica modelo YOLO
-│   ├── testar_modelo.py        # Testa detecção
-│   └── testar_correcao_ocr_simples.py  # Testa correção OCR
+├── storage/
+│   ├── images/                    # Imagens de detecções salvas
+│   └── test_images/               # Imagens para testes
 │
-├── docs/                        # Documentação
-│   ├── SISTEMA_COMPLETO.md     # Documentação completa
-│   ├── INSTALACAO_MODELO_YOLO.md
-│   └── INSTALACAO_TESSERACT.md
-│
-├── scripts_antigos/             # Scripts auxiliares antigos
-│
-├── venv/                        # Ambiente virtual (119 dependências)
-│
-├── .env                         # Configurações (NÃO commitar!)
-├── .gitignore                   # Arquivos ignorados
-├── requirements.txt             # Dependências Python
-├── init_database.py             # Inicializa banco
-└── README.md                    # Este arquivo
+├── .env                            # Configurações (não commitar)
+├── requirements.txt
+├── init_database.py
+└── README.md
 ```
 
 ---
 
-## 🔌 API Endpoints
+## API Endpoints
 
-### Autenticação
-```
-POST   /api/v1/auth/login       # Login (retorna JWT)
-GET    /api/v1/auth/me          # Dados do usuário atual
-```
+Base URL: `http://localhost:8000/api/v1`
+Autenticação: `Authorization: Bearer <jwt_token>`
+Documentação interativa: http://localhost:8000/api/docs
 
-### Veículos
+### Autenticação e Utilizadores
+
 ```
-GET    /api/v1/veiculos                  # Listar veículos
-POST   /api/v1/veiculos                  # Criar veículo
-GET    /api/v1/veiculos/{id}             # Obter veículo
-GET    /api/v1/veiculos/placa/{placa}    # Buscar por placa
-PUT    /api/v1/veiculos/{id}             # Atualizar veículo
-DELETE /api/v1/veiculos/{id}             # Deletar veículo
-GET    /api/v1/veiculos/count/total      # Contar veículos
+POST   /auth/login                  Login — devolve JWT token
+GET    /auth/me                     Perfil do utilizador atual
+POST   /usuarios                    Criar utilizador (admin)
+GET    /usuarios                    Listar utilizadores
+PUT    /usuarios/{id}               Atualizar utilizador
+DELETE /usuarios/{id}               Desativar utilizador (admin)
 ```
 
-### Proprietários
+### Detecção (Desktop → API)
+
 ```
-GET    /api/v1/proprietarios             # Listar proprietários
-POST   /api/v1/proprietarios             # Criar proprietário
-GET    /api/v1/proprietarios/{id}        # Obter proprietário
-PUT    /api/v1/proprietarios/{id}        # Atualizar proprietário
-DELETE /api/v1/proprietarios/{id}        # Deletar proprietário
-GET    /api/v1/proprietarios/count/total # Contar proprietários
+POST   /registros/deteccao          Registar detecção (sem autenticação)
+                                    Body: { placa, tipo_movimento, confianca_ocr,
+                                            metodo_ocr, imagem_base64, timestamp }
 ```
 
-### Registros de Acesso
+### Veículos e Proprietários
+
 ```
-GET    /api/v1/registros                 # Listar registros
-POST   /api/v1/registros/deteccao        # Registrar detecção (Desktop)
-GET    /api/v1/registros/{id}            # Obter registro
-GET    /api/v1/registros/hoje            # Registros de hoje
-GET    /api/v1/registros/count/hoje      # Contagem de hoje
+GET    /veiculos                    Listar (filtros: proprietario_id, placa)
+POST   /veiculos                    Criar
+GET    /veiculos/placa/{placa}      Buscar por placa
+PUT    /veiculos/{id}               Atualizar
+DELETE /veiculos/{id}               Eliminar (admin)
+
+GET    /proprietarios               Listar (filtros: categoria, nome, ativo)
+POST   /proprietarios               Criar
+PUT    /proprietarios/{id}          Atualizar
+DELETE /proprietarios/{id}          Eliminar (admin, em cascata)
 ```
 
-### Dashboard
+### Registros e Dashboard
+
 ```
-GET    /api/v1/dashboard/estatisticas         # Estatísticas gerais
-GET    /api/v1/dashboard/veiculos-no-campus   # Veículos no campus
-GET    /api/v1/dashboard/atividade-recente    # Últimas detecções
+GET    /registros                   Listar com filtros (placa, tipo, datas)
+GET    /registros/count/hoje        Contagem de hoje (total, entradas, saídas)
+GET    /registros/ultimos/por-hora  Gráfico horário (últimas N horas)
+DELETE /registros/{id}              Eliminar registo (admin)
+
+GET    /dashboard/estatisticas      KPIs completos
+GET    /dashboard/veiculos-no-campus Veículos presentes agora
+GET    /dashboard/alertas           Alertas (ausência > 3 dias, etc.)
+GET    /dashboard/atividade-recente Últimas detecções
+
+POST   /relatorios/veiculos         Análise por veículo (período)
+POST   /relatorios/proprietarios    Análise por proprietário
+GET    /relatorios/exportar/registros  Exportar CSV
+GET    /relatorios/resumo           Resumo do período
 ```
 
-**Documentação interativa:** http://localhost:8000/docs
+### Exemplo de Request/Response
+
+**POST /registros/deteccao** (Desktop → API):
+```json
+{
+  "placa_detectada": "AHK641MP",
+  "tipo_movimento": "entrada",
+  "confianca_ocr": 0.87,
+  "metodo_ocr": "hibrido",
+  "timestamp": "2026-03-04T14:32:00"
+}
+```
+
+**Resposta:**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Detecção registrada [ENTRADA] — José Silva (docente)",
+  "registro_id": 142,
+  "veiculo_cadastrado": true,
+  "duplicata": false,
+  "tipo_movimento": "entrada"
+}
+```
 
 ---
 
-## 🚦 Formato de Placas Moçambicanas
+## Formato de Placas Moçambicanas
 
-### Formato Válido: `XXX000XX`
+### Padrão: `XXX 000 XX`
 
-- **XXX**: 3 letras (província/categoria)
-- **000**: 3 números (série)
-- **XX**: 2 letras (final)
-
-### Exemplos Válidos
 ```
-MPM123AB  ✅  (Maputo)
-AAA456CD  ✅  (Série AAA)
-LMX789BC  ✅  (Série LMX)
-GAZ012EF  ✅  (Gaza)
-INB345GH  ✅  (Inhambane)
-```
+  ┌─────────────────────────────────────────┐
+  │  ┌─────┐  ┌─────┐  ┌─────┐             │
+  │  │ M Z │  │ 1 2 │  │ M C │  MOÇAMBIQUE │
+  │  │ B   │  │ 3   │  │    │             │
+  │  └─────┘  └─────┘  └─────┘             │
+  │    3 Letras  3 Números  2 Letras        │
+  └─────────────────────────────────────────┘
 
-### Exemplos Inválidos
-```
-MP1234AB  ❌  (Apenas 2 letras iniciais)
-MPM12AB   ❌  (Apenas 2 números)
-MPM123A   ❌  (Apenas 1 letra final)
-MPM123ABC ❌  (3 letras finais)
+  Regex: ^[A-Z]{3}[0-9]{3}[A-Z]{2}$
 ```
 
-### Correção Automática de OCR
+### Correção Automática de Erros OCR
 
-O sistema corrige automaticamente confusões comuns baseadas na posição:
+O sistema corrige confusões visuais com base na posição do caractere:
 
-| Confusão | Posição | Correção |
-|----------|---------|----------|
-| 0 ↔ O | 0-2, 6-7 | 0 → O |
-| 0 ↔ O | 3-5 | O → 0 |
-| 1 ↔ I/L | 0-2, 6-7 | 1 → I |
-| 1 ↔ I/L | 3-5 | I/L → 1 |
-| 5 ↔ S | 0-2, 6-7 | 5 → S |
-| 5 ↔ S | 3-5 | S → 5 |
-| 8 ↔ B | 0-2, 6-7 | 8 → B |
-| 8 ↔ B | 3-5 | B → 8 |
-| 6 ↔ G | Todas | Inteligente |
-| 2 ↔ Z | Todas | Inteligente |
-| 7 ↔ T | Todas | Inteligente |
+| Leu | Posição | Esperado | Substitui por |
+|-----|---------|----------|--------------|
+| `0` | Letra (0-2, 6-7) | Letra | `O` |
+| `O` | Número (3-5) | Número | `0` |
+| `1` | Letra (0-2, 6-7) | Letra | `I` |
+| `I` ou `L` | Número (3-5) | Número | `1` |
+| `5` | Letra (0-2, 6-7) | Letra | `S` |
+| `S` | Número (3-5) | Número | `5` |
+| `8` | Letra (0-2, 6-7) | Letra | `B` |
+| `6` | Letra (0-2, 6-7) | Letra | `G` |
+| `2` | Letra (0-2, 6-7) | Letra | `Z` |
 
 **Exemplo:**
 ```
-OCR Lê:      MPM1O3AB  (O em vez de 0)
-Sistema Corrige: MPM103AB  (O→0 na posição numérica)
+OCR leu:       MZB1O3MC   (O em posição numérica)
+Após correção: MZB103MC   (O → 0)
 ```
 
 ---
 
-## 🧪 Testes
+## Troubleshooting
 
-### Verificar Modelo YOLO
+### Desktop não abre
+
 ```bash
-python tests/verificar_modelo.py
-```
-
-Saída esperada:
-```
-✓ Modelo carregado com sucesso!
-  Classes detectadas: 1
-  Nomes das classes: {0: 'licenses'}
-  [INFO] Tipo: MODELO DE PLACAS
-```
-
-### Testar Detecção com Webcam
-```bash
-# Com GUI (se disponível)
-python tests/testar_modelo.py --webcam
-
-# Sem GUI (salva frames em arquivo)
-python tests/testar_modelo.py --webcam --no-gui --frames=5
-```
-
-### Testar Correção OCR
-```bash
-python tests/testar_correcao_ocr_simples.py
-```
-
-Saída esperada:
-```
-Resultados: 7 sucessos, 0 falhas
-```
-
-### Testar com Imagem
-```bash
-python tests/testar_modelo.py storage/test_images/carro1.jpg
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Desktop Module não abre
-
-**Problema:** Erro ao importar cv2, ultralytics, etc.
-
-**Solução:**
-```bash
-# Verifique se está no ambiente virtual
+# Verificar ambiente virtual
 venv\Scripts\activate
-
-# Reinstale dependências
 pip install -r requirements.txt
 ```
 
 ### Webcam não funciona
 
-**Problema:** Câmera não abre ou tela preta
-
-**Soluções:**
 ```env
-# Tente outro índice no .env
-VIDEO_SOURCE=1  # ou 2, 3...
-
-# Ou use vídeo de arquivo
-VIDEO_SOURCE=caminho/para/video.mp4
+# .env — tentar outro índice
+VIDEO_SOURCE=1
+# ou usar ficheiro de vídeo:
+VIDEO_SOURCE=storage/test_images/video.mp4
 ```
 
-### YOLO não detecta placas
+### PLC não conecta
 
-**Problema:** Bounding box não aparece
+```bash
+# Verificar se simulador está a correr
+python -m desktop_module.simulador_plc
 
-**Soluções:**
-```env
-# Reduza confiança no .env
-YOLO_CONFIDENCE=0.25  # ou até 0.2
-
-# Verifique se modelo existe
-ls desktop_module/models/license_plate_detector.pt
-```
-
-### OCR retorna texto errado
-
-**Problema:** Placa não é reconhecida corretamente
-
-**Soluções:**
-```env
-# Use modo debug temporariamente
-ALPR_DEBUG_MODE=true
-
-# Ajuste confiança mínima
-OCR_MIN_CONFIDENCE=0.2
-
-# Use método híbrido
-OCR_METHOD=hibrido
+# Verificar .env
+PLC_HOST=127.0.0.1
+PLC_PORT=5020
 ```
 
 ### Desktop não conecta à API
 
-**Problema:** Detecção não aparece no dashboard
-
-**Soluções:**
 ```bash
-# Verifique se web module está rodando
+# Verificar se servidor web está a correr
 curl http://localhost:8000/health
 
-# Verifique configuração
-grep API_HOST .env
-
-# Deve ser: API_HOST=http://localhost:8000
+# .env deve ter:
+API_HOST=http://localhost:8000
 ```
 
-### Erro: "Tesseract not found"
+### Tesseract não encontrado
 
-**Solução:**
 ```env
-# Configure caminho correto no .env
 # Windows:
 TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
 
-# Linux/Mac:
+# Linux/macOS:
 TESSERACT_CMD=tesseract
 ```
 
 ---
 
-## 📄 Licença
+## Papéis de Utilizador
 
-Este projeto é desenvolvido como trabalho académico para a Universidade Jean Piaget de Moçambique.
-
----
-
-## 👥 Autores
-
-**Sistema ALPR UNIPIAGET**
-Engenharia Electrónica e de Telecomunicações
-Universidade Jean Piaget de Moçambique
-2026
+| Papel | Criar/Editar | Eliminar | Relatórios | Gerir Utilizadores |
+|-------|-------------|----------|------------|-------------------|
+| `admin` | Sim | Sim | Sim | Sim |
+| `operador` | Sim | Não | Sim | Não |
+| `visualizador` | Não | Não | Leitura | Não |
 
 ---
 
-## 🙏 Agradecimentos
+## Licença
 
-- Universidade Jean Piaget de Moçambique
-- Docentes orientadores
-- Comunidade open source (Ultralytics, FastAPI, OpenCV, EasyOCR, Tesseract)
-
----
-
-## 📞 Suporte
-
-Para questões e sugestões:
-- **Issues**: https://github.com/seu-usuario/alpr_ujpm/issues
-- **Email**: suporte@unipiaget.ac.mz
+Projeto académico desenvolvido para a Universidade Jean Piaget de Moçambique.
+Proibida a reprodução comercial sem autorização.
 
 ---
 
-**⭐ Sistema ALPR UNIPIAGET - Reconhecimento Automático de Placas para Moçambique 🇲🇿**
+**Sistema ALPR UNIPIAGET — Reconhecimento Automático de Placas para Moçambique**

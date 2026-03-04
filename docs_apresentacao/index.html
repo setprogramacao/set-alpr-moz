@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema ALPR UNIPIAGET — Documentação Técnica</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --primary: #1e40af;
+      --accent:  #3b82f6;
+      --dark:    #0f172a;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; }
+
+    /* ---- NAVBAR ---- */
+    nav a { transition: color .2s; }
+    nav a:hover { color: #93c5fd; }
+
+    /* ---- HERO ---- */
+    .hero-bg {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+    }
+
+    /* ---- SECTION CARDS ---- */
+    .card { background: #fff; border-radius: 1rem; box-shadow: 0 2px 16px rgba(0,0,0,.08); }
+    .section-title { font-size: 1.75rem; font-weight: 700; color: #1e40af; border-left: 4px solid #3b82f6; padding-left: .75rem; }
+
+    /* ---- FLOW STEP ---- */
+    .flow-step { display: flex; flex-direction: column; align-items: center; gap: .5rem; }
+    .flow-icon { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .flow-arrow { font-size: 1.5rem; color: #94a3b8; }
+
+    /* ---- TABLE SCHEMA ---- */
+    .schema-table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+    .schema-table th { background: #1e40af; color: #fff; padding: .5rem .75rem; text-align: left; }
+    .schema-table td { padding: .4rem .75rem; border-bottom: 1px solid #e2e8f0; }
+    .schema-table tr:last-child td { border: none; }
+    .schema-table tr:hover td { background: #eff6ff; }
+    .pk { background: #fef9c3; font-weight: 700; }
+    .fk { background: #e0f2fe; }
+    .type-badge { display: inline-block; font-size:.72rem; padding:.1rem .4rem; border-radius:.3rem; font-family: monospace; }
+    .type-int    { background:#dbeafe; color:#1e40af; }
+    .type-str    { background:#d1fae5; color:#065f46; }
+    .type-float  { background:#fce7f3; color:#9d174d; }
+    .type-bool   { background:#fef3c7; color:#92400e; }
+    .type-dt     { background:#ede9fe; color:#5b21b6; }
+    .type-enum   { background:#fee2e2; color:#991b1b; }
+
+    /* ---- ARCH DIAGRAM ---- */
+    .arch-box {
+      border: 2px solid;
+      border-radius: .75rem;
+      padding: 1rem;
+    }
+    .arch-desktop { border-color: #3b82f6; background: #eff6ff; }
+    .arch-web     { border-color: #10b981; background: #ecfdf5; }
+    .arch-db      { border-color: #f59e0b; background: #fffbeb; }
+    .arch-plc     { border-color: #8b5cf6; background: #f5f3ff; }
+
+    /* ---- BADGE ---- */
+    .badge { display: inline-block; padding: .2rem .6rem; border-radius: 9999px; font-size: .75rem; font-weight: 600; }
+    .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+    .badge-green  { background: #d1fae5; color: #047857; }
+    .badge-red    { background: #fee2e2; color: #b91c1c; }
+    .badge-purple { background: #ede9fe; color: #6d28d9; }
+    .badge-yellow { background: #fef9c3; color: #92400e; }
+    .badge-gray   { background: #f1f5f9; color: #475569; }
+
+    /* ---- ENDPOINT LIST ---- */
+    .endpoint { display: flex; align-items: center; gap: .5rem; padding: .45rem .75rem; border-radius: .4rem; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: .35rem; font-size: .85rem; }
+    .method { font-family: monospace; font-weight: 700; min-width: 52px; text-align: center; padding: .1rem .3rem; border-radius: .3rem; font-size: .8rem; }
+    .GET    { background: #d1fae5; color: #065f46; }
+    .POST   { background: #dbeafe; color: #1e40af; }
+    .PUT    { background: #fef9c3; color: #92400e; }
+    .DELETE { background: #fee2e2; color: #991b1b; }
+
+    /* ---- PRINT ---- */
+    @media print {
+      nav, .no-print { display: none !important; }
+      .card { box-shadow: none; border: 1px solid #e2e8f0; }
+      body { font-size: 11pt; }
+      h1, h2 { page-break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ======== NAVBAR ======== -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur text-white px-6 py-3 flex items-center justify-between shadow-lg">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+      <i class="fa fa-car text-white text-sm"></i>
+    </div>
+    <span class="font-bold text-lg">ALPR UNIPIAGET</span>
+  </div>
+  <div class="hidden md:flex gap-6 text-sm text-slate-300">
+    <a href="#visao-geral">Visão Geral</a>
+    <a href="#arquitetura">Arquitetura</a>
+    <a href="#fluxo">Fluxo</a>
+    <a href="#banco">Base de Dados</a>
+    <a href="#api">API</a>
+    <a href="#ocr">OCR</a>
+    <a href="#plc">PLC</a>
+    <a href="#tecnologias">Tecnologias</a>
+  </div>
+  <button onclick="window.print()" class="text-xs bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition no-print">
+    <i class="fa fa-print mr-1"></i>Imprimir
+  </button>
+</nav>
+
+<!-- ======== HERO ======== -->
+<header class="hero-bg text-white pt-24 pb-16 px-6">
+  <div class="max-w-5xl mx-auto text-center">
+    <div class="inline-block bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm px-4 py-1.5 rounded-full mb-6">
+      Trabalho de Conclusão de Curso — Monografia 2026
+    </div>
+    <h1 class="text-4xl md:text-5xl font-black mb-4 leading-tight">
+      Sistema ALPR<br/>
+      <span class="text-blue-300">Reconhecimento Automático de Placas</span>
+    </h1>
+    <p class="text-lg text-slate-300 max-w-2xl mx-auto mb-8">
+      Monitoramento automático de entrada e saída de veículos no campus da
+      Universidade Jean Piaget de Moçambique, com controlo de cancela eletrônica via PLC.
+    </p>
+    <div class="flex flex-wrap justify-center gap-4 text-sm">
+      <div class="bg-white/10 backdrop-blur rounded-lg px-5 py-3 text-center">
+        <div class="text-2xl font-black text-white">3</div>
+        <div class="text-slate-400">Módulos</div>
+      </div>
+      <div class="bg-white/10 backdrop-blur rounded-lg px-5 py-3 text-center">
+        <div class="text-2xl font-black text-white">50+</div>
+        <div class="text-slate-400">Endpoints API</div>
+      </div>
+      <div class="bg-white/10 backdrop-blur rounded-lg px-5 py-3 text-center">
+        <div class="text-2xl font-black text-white">3</div>
+        <div class="text-slate-400">Métodos OCR</div>
+      </div>
+      <div class="bg-white/10 backdrop-blur rounded-lg px-5 py-3 text-center">
+        <div class="text-2xl font-black text-white">Modbus</div>
+        <div class="text-slate-400">Protocolo PLC</div>
+      </div>
+    </div>
+    <div class="mt-10 pt-8 border-t border-white/10 flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+      <div><span class="text-white font-semibold">Aluno:</span> Salvador Eduardo Tomoecene</div>
+      <div><span class="text-white font-semibold">Curso:</span> Eng. Electrónica e de Telecomunicações</div>
+      <div><span class="text-white font-semibold">Instituição:</span> Universidade Jean Piaget de Moçambique</div>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-12 space-y-16">
+
+  <!-- ======== 1. VISÃO GERAL ======== -->
+  <section id="visao-geral">
+    <h2 class="section-title mb-8">1. Visão Geral do Projeto</h2>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="card p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+            <i class="fa fa-triangle-exclamation text-red-500"></i>
+          </div>
+          <h3 class="font-bold text-lg">Problema Identificado</h3>
+        </div>
+        <p class="text-slate-600 text-sm leading-relaxed">
+          Na Universidade Jean Piaget de Moçambique, docentes podiam registar a sua presença na portaria
+          e abandonar o campus antes de cumprir a carga horária. Não existia nenhum sistema automático
+          que correlacionasse o momento de chegada e saída dos veículos com o registo de presença.
+        </p>
+      </div>
+      <div class="card p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+            <i class="fa fa-check-circle text-green-500"></i>
+          </div>
+          <h3 class="font-bold text-lg">Solução Proposta</h3>
+        </div>
+        <p class="text-slate-600 text-sm leading-relaxed">
+          Sistema ALPR (Automatic License Plate Recognition) que detecta automaticamente as placas dos
+          veículos através de câmara IP, usando YOLOv8 + OCR duplo, regista entradas/saídas numa base
+          de dados e aciona a cancela eletrônica via protocolo Modbus TCP.
+        </p>
+      </div>
+      <div class="card p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <i class="fa fa-bullseye text-blue-500"></i>
+          </div>
+          <h3 class="font-bold text-lg">Objetivos Específicos</h3>
+        </div>
+        <ul class="text-slate-600 text-sm space-y-1.5">
+          <li class="flex items-start gap-2"><i class="fa fa-check text-blue-400 mt-0.5 flex-shrink-0"></i>Detetar e reconhecer placas moçambicanas (formato XXX 000 XX)</li>
+          <li class="flex items-start gap-2"><i class="fa fa-check text-blue-400 mt-0.5 flex-shrink-0"></i>Registar automaticamente entradas e saídas por placa</li>
+          <li class="flex items-start gap-2"><i class="fa fa-check text-blue-400 mt-0.5 flex-shrink-0"></i>Controlar cancela eletrônica via PLC (Modbus TCP)</li>
+          <li class="flex items-start gap-2"><i class="fa fa-check text-blue-400 mt-0.5 flex-shrink-0"></i>Disponibilizar painel web com relatórios e alertas</li>
+          <li class="flex items-start gap-2"><i class="fa fa-check text-blue-400 mt-0.5 flex-shrink-0"></i>Gestão de utilizadores com controlo de acessos (RBAC)</li>
+        </ul>
+      </div>
+      <div class="card p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+            <i class="fa fa-cube text-purple-500"></i>
+          </div>
+          <h3 class="font-bold text-lg">Formato de Placa — Moçambique</h3>
+        </div>
+        <div class="flex items-center justify-center gap-0 my-4">
+          <div class="bg-yellow-400 border-4 border-slate-800 rounded-l-md px-4 py-3 text-center">
+            <div class="font-black text-2xl tracking-widest text-slate-800 font-mono">MZB</div>
+            <div class="text-xs text-slate-600 mt-1">3 Letras</div>
+          </div>
+          <div class="bg-yellow-400 border-t-4 border-b-4 border-slate-800 px-4 py-3 text-center">
+            <div class="font-black text-2xl tracking-widest text-slate-800 font-mono">123</div>
+            <div class="text-xs text-slate-600 mt-1">3 Dígitos</div>
+          </div>
+          <div class="bg-yellow-400 border-4 border-slate-800 rounded-r-md px-4 py-3 text-center">
+            <div class="font-black text-2xl tracking-widest text-slate-800 font-mono">MC</div>
+            <div class="text-xs text-slate-600 mt-1">2 Letras</div>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 text-center">Padrão regex: <code class="bg-slate-100 px-1 rounded">^[A-Z]{3}[0-9]{3}[A-Z]{2}$</code></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== 2. ARQUITETURA ======== -->
+  <section id="arquitetura">
+    <h2 class="section-title mb-8">2. Arquitetura do Sistema</h2>
+    <div class="card p-8">
+      <!-- SVG ARCHITECTURE DIAGRAM -->
+      <svg viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg" class="w-full" style="max-height:520px">
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+          </marker>
+          <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+          </marker>
+          <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#8b5cf6"/>
+          </marker>
+        </defs>
+
+        <!-- ========= DESKTOP MODULE ========= -->
+        <rect x="20" y="20" width="260" height="310" rx="14" fill="#eff6ff" stroke="#3b82f6" stroke-width="2.5"/>
+        <text x="150" y="48" text-anchor="middle" font-weight="bold" font-size="14" fill="#1e40af">MÓDULO DESKTOP</text>
+        <text x="150" y="64" text-anchor="middle" font-size="10" fill="#64748b">Python · Tkinter</text>
+
+        <!-- Camera -->
+        <rect x="50" y="80" width="90" height="55" rx="8" fill="#bfdbfe" stroke="#93c5fd" stroke-width="1.5"/>
+        <text x="95" y="100" text-anchor="middle" font-size="18">📷</text>
+        <text x="95" y="118" text-anchor="middle" font-size="10" font-weight="600" fill="#1e40af">Câmara / Vídeo</text>
+        <text x="95" y="130" text-anchor="middle" font-size="9" fill="#64748b">OpenCV</text>
+
+        <!-- YOLO -->
+        <rect x="155" y="80" width="90" height="55" rx="8" fill="#bfdbfe" stroke="#93c5fd" stroke-width="1.5"/>
+        <text x="200" y="100" text-anchor="middle" font-size="18">🔍</text>
+        <text x="200" y="118" text-anchor="middle" font-size="10" font-weight="600" fill="#1e40af">YOLO v8</text>
+        <text x="200" y="130" text-anchor="middle" font-size="9" fill="#64748b">Detecção de placa</text>
+
+        <!-- OCR -->
+        <rect x="50" y="155" width="90" height="55" rx="8" fill="#bfdbfe" stroke="#93c5fd" stroke-width="1.5"/>
+        <text x="95" y="175" text-anchor="middle" font-size="18">📝</text>
+        <text x="95" y="193" text-anchor="middle" font-size="10" font-weight="600" fill="#1e40af">OCR Duplo</text>
+        <text x="95" y="205" text-anchor="middle" font-size="9" fill="#64748b">EasyOCR + Tesseract</text>
+
+        <!-- API Client -->
+        <rect x="155" y="155" width="90" height="55" rx="8" fill="#bfdbfe" stroke="#93c5fd" stroke-width="1.5"/>
+        <text x="200" y="175" text-anchor="middle" font-size="18">🌐</text>
+        <text x="200" y="193" text-anchor="middle" font-size="10" font-weight="600" fill="#1e40af">API Client</text>
+        <text x="200" y="205" text-anchor="middle" font-size="9" fill="#64748b">HTTP / JSON</text>
+
+        <!-- PLC Controller -->
+        <rect x="50" y="230" width="195" height="55" rx="8" fill="#ede9fe" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="147" y="250" text-anchor="middle" font-size="18">🔌</text>
+        <text x="147" y="268" text-anchor="middle" font-size="10" font-weight="600" fill="#6d28d9">PLCController</text>
+        <text x="147" y="280" text-anchor="middle" font-size="9" fill="#64748b">Modbus TCP Client · pymodbus</text>
+
+        <!-- Desktop arrows (internal) -->
+        <line x1="140" y1="107" x2="155" y2="107" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="95" y1="135" x2="95" y2="155" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="200" y1="135" x2="200" y2="155" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="147" y1="210" x2="147" y2="230" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+        <!-- ========= WEB MODULE ========= -->
+        <rect x="330" y="20" width="270" height="380" rx="14" fill="#ecfdf5" stroke="#10b981" stroke-width="2.5"/>
+        <text x="465" y="48" text-anchor="middle" font-weight="bold" font-size="14" fill="#065f46">MÓDULO WEB</text>
+        <text x="465" y="64" text-anchor="middle" font-size="10" fill="#64748b">Python · FastAPI</text>
+
+        <!-- FastAPI -->
+        <rect x="355" y="80" width="220" height="50" rx="8" fill="#a7f3d0" stroke="#6ee7b7" stroke-width="1.5"/>
+        <text x="465" y="100" text-anchor="middle" font-size="10" font-weight="600" fill="#065f46">⚡ FastAPI (REST API)</text>
+        <text x="465" y="116" text-anchor="middle" font-size="9" fill="#64748b">50+ endpoints · JWT · CORS · Pydantic</text>
+
+        <!-- Routers -->
+        <rect x="355" y="145" width="100" height="40" rx="6" fill="#bbf7d0" stroke="#86efac" stroke-width="1.2"/>
+        <text x="405" y="160" text-anchor="middle" font-size="9" font-weight="600" fill="#065f46">Routers</text>
+        <text x="405" y="174" text-anchor="middle" font-size="8.5" fill="#64748b">auth · veic · prop</text>
+
+        <rect x="470" y="145" width="105" height="40" rx="6" fill="#bbf7d0" stroke="#86efac" stroke-width="1.2"/>
+        <text x="522" y="160" text-anchor="middle" font-size="9" font-weight="600" fill="#065f46">Services</text>
+        <text x="522" y="174" text-anchor="middle" font-size="8.5" fill="#64748b">deteccao · auth</text>
+
+        <!-- Templates -->
+        <rect x="355" y="200" width="220" height="40" rx="6" fill="#bbf7d0" stroke="#86efac" stroke-width="1.2"/>
+        <text x="465" y="215" text-anchor="middle" font-size="9" font-weight="600" fill="#065f46">Templates Jinja2</text>
+        <text x="465" y="229" text-anchor="middle" font-size="8.5" fill="#64748b">Tailwind CSS v4 · Vanilla JS</text>
+
+        <!-- Pages -->
+        <rect x="355" y="255" width="220" height="50" rx="6" fill="#bbf7d0" stroke="#86efac" stroke-width="1.2"/>
+        <text x="465" y="270" text-anchor="middle" font-size="9" font-weight="600" fill="#065f46">Páginas Web</text>
+        <text x="465" y="285" text-anchor="middle" font-size="8.5" fill="#64748b">Dashboard · Veículos · Proprietários</text>
+        <text x="465" y="297" text-anchor="middle" font-size="8.5" fill="#64748b">Registros · Relatórios · Utilizadores</text>
+
+        <!-- SQLAlchemy -->
+        <rect x="355" y="320" width="220" height="40" rx="8" fill="#a7f3d0" stroke="#6ee7b7" stroke-width="1.5"/>
+        <text x="465" y="338" text-anchor="middle" font-size="9" font-weight="600" fill="#065f46">🗄 SQLAlchemy ORM</text>
+        <text x="465" y="352" text-anchor="middle" font-size="8.5" fill="#64748b">Modelos: Proprietario · Veiculo · RegistroAcesso</text>
+
+        <!-- ========= DATABASE ========= -->
+        <rect x="650" y="20" width="230" height="200" rx="14" fill="#fffbeb" stroke="#f59e0b" stroke-width="2.5"/>
+        <text x="765" y="48" text-anchor="middle" font-weight="bold" font-size="14" fill="#92400e">BASE DE DADOS</text>
+        <text x="765" y="64" text-anchor="middle" font-size="10" fill="#64748b">SQLite / PostgreSQL</text>
+
+        <rect x="670" y="78" width="190" height="30" rx="6" fill="#fde68a" stroke="#fbbf24" stroke-width="1.2"/>
+        <text x="765" y="97" text-anchor="middle" font-size="10" font-weight="600" fill="#92400e">📋 Proprietario</text>
+
+        <rect x="670" y="118" width="190" height="30" rx="6" fill="#fde68a" stroke="#fbbf24" stroke-width="1.2"/>
+        <text x="765" y="137" text-anchor="middle" font-size="10" font-weight="600" fill="#92400e">🚗 Veiculo</text>
+
+        <rect x="670" y="158" width="190" height="30" rx="6" fill="#fde68a" stroke="#fbbf24" stroke-width="1.2"/>
+        <text x="765" y="177" text-anchor="middle" font-size="10" font-weight="600" fill="#92400e">📊 RegistroAcesso</text>
+
+        <rect x="670" y="198" width="90" height="30" rx="6" fill="#fde68a" stroke="#fbbf24" stroke-width="1.2"/>
+        <text x="715" y="217" text-anchor="middle" font-size="10" font-weight="600" fill="#92400e">👤 Usuario</text>
+
+        <!-- ========= PLC ========= -->
+        <rect x="650" y="270" width="230" height="130" rx="14" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="2.5"/>
+        <text x="765" y="298" text-anchor="middle" font-weight="bold" font-size="14" fill="#5b21b6">PLC / CANCELA</text>
+        <text x="765" y="314" text-anchor="middle" font-size="10" fill="#64748b">Modbus TCP · porta 5020</text>
+
+        <rect x="670" y="325" width="85" height="40" rx="6" fill="#ddd6fe" stroke="#c4b5fd" stroke-width="1.2"/>
+        <text x="712" y="341" text-anchor="middle" font-size="9" font-weight="600" fill="#5b21b6">Coil 0</text>
+        <text x="712" y="356" text-anchor="middle" font-size="8.5" fill="#64748b">Cancela</text>
+
+        <rect x="770" y="325" width="90" height="40" rx="6" fill="#ddd6fe" stroke="#c4b5fd" stroke-width="1.2"/>
+        <text x="815" y="341" text-anchor="middle" font-size="9" font-weight="600" fill="#5b21b6">DI 0</text>
+        <text x="815" y="356" text-anchor="middle" font-size="8.5" fill="#64748b">Sensor Laço</text>
+
+        <rect x="670" y="372" width="190" height="20" rx="4" fill="#ede9fe"/>
+        <text x="765" y="385" text-anchor="middle" font-size="9" fill="#7c3aed">Simulador Virtual disponível</text>
+
+        <!-- ========= ARROWS BETWEEN MODULES ========= -->
+        <!-- Desktop → Web (HTTP POST /registros/deteccao) -->
+        <line x1="280" y1="182" x2="330" y2="182" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrow-blue)"/>
+        <text x="305" y="175" text-anchor="middle" font-size="8" fill="#3b82f6">HTTP POST</text>
+
+        <!-- Web → DB -->
+        <line x1="600" y1="200" x2="650" y2="150" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow)"/>
+        <text x="630" y="168" text-anchor="middle" font-size="8" fill="#b45309">SQL</text>
+
+        <!-- Desktop PLC → PLC box -->
+        <line x1="245" y1="290" x2="620" y2="380" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrow-purple)"/>
+        <text x="440" y="360" text-anchor="middle" font-size="8" fill="#7c3aed">Modbus TCP</text>
+
+        <!-- Web return arrow -->
+        <line x1="330" y1="196" x2="280" y2="196" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <text x="305" y="208" text-anchor="middle" font-size="8" fill="#047857">JSON resp.</text>
+
+        <!-- User browser → Web -->
+        <text x="465" y="465" text-anchor="middle" font-size="11" fill="#64748b">🖥️ Browser</text>
+        <line x1="465" y1="455" x2="465" y2="400" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <text x="505" y="435" text-anchor="middle" font-size="8" fill="#64748b">HTTPS</text>
+
+        <!-- Legend -->
+        <rect x="20" y="390" width="280" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+        <text x="30" y="410" font-size="9" fill="#64748b" font-weight="600">LEGENDA</text>
+        <line x1="30" y1="424" x2="70" y2="424" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,3"/>
+        <text x="76" y="427" font-size="9" fill="#64748b">Comunicação HTTP (REST)</text>
+        <line x1="30" y1="440" x2="70" y2="440" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="5,3"/>
+        <text x="76" y="443" font-size="9" fill="#64748b">Comunicação Modbus TCP</text>
+        <line x1="160" y1="424" x2="200" y2="424" stroke="#f59e0b" stroke-width="2"/>
+        <text x="206" y="427" font-size="9" fill="#64748b">Comunicação SQL</text>
+      </svg>
+
+      <!-- Summary boxes -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+        <div class="arch-box arch-desktop text-center">
+          <div class="text-blue-600 font-bold text-sm mb-1">Módulo Desktop</div>
+          <div class="text-xs text-slate-500">Python · Tkinter · OpenCV · YOLO · OCR</div>
+        </div>
+        <div class="arch-box arch-web text-center">
+          <div class="text-emerald-700 font-bold text-sm mb-1">Módulo Web</div>
+          <div class="text-xs text-slate-500">FastAPI · SQLAlchemy · Jinja2 · Tailwind</div>
+        </div>
+        <div class="arch-box arch-db text-center">
+          <div class="text-amber-700 font-bold text-sm mb-1">Base de Dados</div>
+          <div class="text-xs text-slate-500">SQLite (dev) · PostgreSQL (prod)</div>
+        </div>
+        <div class="arch-box arch-plc text-center">
+          <div class="text-violet-700 font-bold text-sm mb-1">PLC / Cancela</div>
+          <div class="text-xs text-slate-500">Modbus TCP · pymodbus · Simulador</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== 3. FLUXO DE DETECÇÃO ======== -->
+  <section id="fluxo">
+    <h2 class="section-title mb-8">3. Fluxo de Detecção de Placas</h2>
+
+    <!-- Main Flow -->
+    <div class="card p-8 mb-6">
+      <h3 class="font-bold text-lg mb-6 text-slate-700">3.1 Pipeline Principal (Desktop → API → PLC)</h3>
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        <!-- Step 1 -->
+        <div class="flow-step">
+          <div class="flow-icon bg-blue-100 text-blue-600"><i class="fa fa-video"></i></div>
+          <div class="text-center">
+            <div class="font-semibold text-sm">Câmara</div>
+            <div class="text-xs text-slate-500">Frame capturado</div>
+            <div class="text-xs text-blue-500">OpenCV</div>
+          </div>
+        </div>
+        <div class="flow-arrow"><i class="fa fa-chevron-right"></i></div>
+
+        <!-- Step 2 -->
+        <div class="flow-step">
+          <div class="flow-icon bg-purple-100 text-purple-600"><i class="fa fa-brain"></i></div>
+          <div class="text-center">
+            <div class="font-semibold text-sm">YOLO v8</div>
+            <div class="text-xs text-slate-500">Deteta placa</div>
+            <div class="text-xs text-purple-500">Bounding box</div>
+          </div>
+        </div>
+        <div class="flow-arrow"><i class="fa fa-chevron-right"></i></div>
+
+        <!-- Step 3 -->
+        <div class="flow-step">
+          <div class="flow-icon bg-orange-100 text-orange-600"><i class="fa fa-crop"></i></div>
+          <div class="text-center">
+            <div class="font-semibold text-sm">Pré-proc.</div>
+            <div class="text-xs text-slate-500">Crop + CLAHE</div>
+            <div class="text-xs text-orange-500">Normalização</div>
+          </div>
+        </div>
+        <div class="flow-arrow"><i class="fa fa-chevron-right"></i></div>
+
+        <!-- Step 4 -->
+        <div class="flow-step">
+          <div class="flow-icon bg-green-100 text-green-600"><i class="fa fa-font"></i></div>
+          <div class="text-center">
+            <div class="font-semibold text-sm">OCR Duplo</div>
+            <div class="text-xs text-slate-500">EasyOCR + Tess.</div>
+            <div class="text-xs text-green-500">Fusão de resultados</div>
+          </div>
+        </div>
+        <div class="flow-arrow"><i class="fa fa-chevron-right"></i></div>
+
+        <!-- Step 5 -->
+        <div class="flow-step">
+          <div class="flow-icon bg-yellow-100 text-yellow-600"><i class="fa fa-spell-check"></i></div>
+          <div class="text-center">
+            <div class="font-semibold text-sm">Correção OCR</div>
+            <div class="text-xs text-slate-500">0↔O, 1↔I, 5↔S</div>
+            <div class="text-xs text-yellow-600">Validação formato</div>
+          </div>
+        </div>
+        <div class="flow-arrow"><i class="fa fa-chevron-right"></i></div>
+
+        <!-- Step 6 -->
+        <div class="flow-step">
+          <div class="flow-icon bg-teal-100 text-teal-600"><i class="fa fa-cloud-arrow-up"></i></div>
+          <div class="text-center">
+            <div class="font-semibold text-sm">POST /deteccao</div>
+            <div class="text-xs text-slate-500">JSON + imagem</div>
+            <div class="text-xs text-teal-500">HTTP para API</div>
+          </div>
+        </div>
+        <div class="flow-arrow"><i class="fa fa-chevron-right"></i></div>
+
+        <!-- Step 7 -->
+        <div class="flow-step">
+          <div class="flow-icon bg-indigo-100 text-indigo-600"><i class="fa fa-database"></i></div>
+          <div class="text-center">
+            <div class="font-semibold text-sm">Registo BD</div>
+            <div class="text-xs text-slate-500">Entrada / Saída</div>
+            <div class="text-xs text-indigo-500">Toggle automático</div>
+          </div>
+        </div>
+        <div class="flow-arrow"><i class="fa fa-chevron-right"></i></div>
+
+        <!-- Step 8 -->
+        <div class="flow-step">
+          <div class="flow-icon bg-violet-100 text-violet-600"><i class="fa fa-door-open"></i></div>
+          <div class="text-center">
+            <div class="font-semibold text-sm">Cancela Abre</div>
+            <div class="text-xs text-slate-500">Se cadastrado</div>
+            <div class="text-xs text-violet-500">Modbus TCP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OCR Decision Tree -->
+    <div class="card p-8 mb-6">
+      <h3 class="font-bold text-lg mb-4 text-slate-700">3.2 Lógica de Seleção de Resultado OCR</h3>
+      <div class="overflow-x-auto">
+        <svg viewBox="0 0 800 300" class="w-full" style="max-height:300px">
+          <!-- Input -->
+          <rect x="320" y="10" width="160" height="40" rx="20" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="400" y="35" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">Imagem de Placa Recortada</text>
+
+          <!-- EasyOCR -->
+          <rect x="80" y="90" width="160" height="40" rx="8" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+          <text x="160" y="115" text-anchor="middle" font-size="11" font-weight="600" fill="#065f46">EasyOCR (deep learning)</text>
+
+          <!-- Tesseract -->
+          <rect x="560" y="90" width="160" height="40" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+          <text x="640" y="115" text-anchor="middle" font-size="11" font-weight="600" fill="#9d174d">Tesseract (clássico)</text>
+
+          <!-- Decision 1 -->
+          <polygon points="400,160 460,200 400,240 340,200" fill="#fef9c3" stroke="#f59e0b" stroke-width="2"/>
+          <text x="400" y="196" text-anchor="middle" font-size="10" font-weight="600" fill="#92400e">Concordam?</text>
+          <text x="400" y="210" text-anchor="middle" font-size="9" fill="#92400e">(mesmo texto)</text>
+
+          <!-- Yes path -->
+          <rect x="560" y="180" width="160" height="40" rx="8" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+          <text x="640" y="198" text-anchor="middle" font-size="10" font-weight="600" fill="#065f46">✓ Usa resultado</text>
+          <text x="640" y="212" text-anchor="middle" font-size="9" fill="#64748b">Confiança alta</text>
+
+          <!-- No path -->
+          <rect x="80" y="180" width="160" height="40" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+          <text x="160" y="198" text-anchor="middle" font-size="10" font-weight="600" fill="#991b1b">Valida Formato MZ</text>
+          <text x="160" y="212" text-anchor="middle" font-size="9" fill="#64748b">Escolhe melhor</text>
+
+          <!-- Final -->
+          <rect x="280" y="265" width="240" height="30" rx="15" fill="#1e40af"/>
+          <text x="400" y="285" text-anchor="middle" font-size="11" font-weight="600" fill="white">Aplica corrigir_placa_ocr()</text>
+
+          <!-- Arrows -->
+          <line x1="400" y1="50" x2="200" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <line x1="400" y1="50" x2="600" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <line x1="160" y1="130" x2="340" y2="175" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <line x1="640" y1="130" x2="460" y2="175" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <text x="470" y="192" font-size="10" fill="#10b981" font-weight="600">Sim</text>
+          <text x="340" y="192" font-size="10" fill="#ef4444" font-weight="600">Não</text>
+          <line x1="460" y1="200" x2="560" y2="200" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <line x1="340" y1="200" x2="240" y2="200" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <line x1="640" y1="220" x2="460" y2="265" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <line x1="160" y1="220" x2="330" y2="265" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Toggle logic -->
+    <div class="card p-6">
+      <h3 class="font-bold text-lg mb-4 text-slate-700">3.3 Lógica de Alternância Entrada/Saída (Toggle por Placa)</h3>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <p class="text-sm text-slate-600 mb-4">
+            O tipo de movimento (entrada/saída) é <strong>determinado automaticamente pelo servidor</strong>
+            com base no histórico de cada placa individual — não pelo módulo desktop.
+          </p>
+          <div class="bg-slate-50 rounded-lg p-4 font-mono text-xs space-y-1">
+            <div class="text-slate-400"># deteccao_service.py</div>
+            <div><span class="text-purple-600">def</span> <span class="text-blue-600">determinar_tipo_movimento</span>(db, placa, veiculo_id):</div>
+            <div class="pl-4">ultimo = obter_ultimo_registro_placa(db, placa)</div>
+            <div class="pl-4 text-slate-400"># Sem histórico → primeira vez = entrada</div>
+            <div class="pl-4"><span class="text-blue-600">if not</span> ultimo:</div>
+            <div class="pl-8"><span class="text-orange-600">return</span> <span class="text-green-600">"entrada"</span></div>
+            <div class="pl-4"><span class="text-blue-600">return</span> <span class="text-green-600">"saida"</span> <span class="text-blue-600">if</span> ultimo.tipo_movimento == <span class="text-green-600">"entrada"</span> <span class="text-blue-600">else</span> <span class="text-green-600">"entrada"</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm font-semibold text-slate-600 mb-3">Exemplo visual:</div>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg p-3">
+              <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>
+              <div>
+                <div class="font-semibold text-sm text-green-800">MZB123MC detectada</div>
+                <div class="text-xs text-green-600">Sem histórico → <strong>ENTRADA</strong> registada</div>
+              </div>
+            </div>
+            <div class="text-center text-slate-400 text-xs">↓ veículo permanece no campus</div>
+            <div class="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-lg p-3">
+              <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>
+              <div>
+                <div class="font-semibold text-sm text-orange-800">MZB123MC detectada novamente</div>
+                <div class="text-xs text-orange-600">Último registo = entrada → <strong>SAÍDA</strong> registada</div>
+              </div>
+            </div>
+            <div class="text-center text-slate-400 text-xs">↓ veículo sai do campus</div>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div class="text-xs text-blue-600 text-center">✓ A lógica é <strong>por placa individual</strong> — não afetada por outras placas detectadas</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== 4. BASE DE DADOS ======== -->
+  <section id="banco">
+    <h2 class="section-title mb-8">4. Esquema da Base de Dados</h2>
+
+    <!-- ER Diagram SVG -->
+    <div class="card p-6 mb-6">
+      <h3 class="font-bold text-lg mb-4 text-slate-700">4.1 Diagrama Entidade-Relacionamento</h3>
+      <svg viewBox="0 0 800 380" class="w-full" style="max-height:380px">
+        <defs>
+          <marker id="ar2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+          </marker>
+        </defs>
+
+        <!-- PROPRIETARIO -->
+        <rect x="20" y="20" width="180" height="200" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+        <rect x="20" y="20" width="180" height="36" rx="8" fill="#f59e0b"/>
+        <text x="110" y="44" text-anchor="middle" font-weight="bold" font-size="12" fill="white">PROPRIETARIO</text>
+        <text x="36" y="75" font-size="10" fill="#1e293b">🔑 id (PK)</text>
+        <text x="36" y="93" font-size="10" fill="#1e293b">nome</text>
+        <text x="36" y="111" font-size="10" fill="#1e293b">categoria</text>
+        <text x="36" y="129" font-size="10" fill="#1e293b">departamento</text>
+        <text x="36" y="147" font-size="10" fill="#1e293b">telefone</text>
+        <text x="36" y="165" font-size="10" fill="#1e293b">email</text>
+        <text x="36" y="183" font-size="10" fill="#1e293b">ativo</text>
+        <text x="36" y="201" font-size="10" fill="#1e293b">criado_em</text>
+        <text x="36" y="219" font-size="10.5" fill="#b45309">categoria: docente|técnico|aluno|visitante</text>
+
+        <!-- VEICULO -->
+        <rect x="310" y="20" width="180" height="200" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+        <rect x="310" y="20" width="180" height="36" rx="8" fill="#3b82f6"/>
+        <text x="400" y="44" text-anchor="middle" font-weight="bold" font-size="12" fill="white">VEICULO</text>
+        <text x="326" y="75" font-size="10" fill="#1e293b">🔑 id (PK)</text>
+        <text x="326" y="93" font-size="10" fill="#3b82f6">🔗 proprietario_id (FK)</text>
+        <text x="326" y="111" font-size="10" fill="#1e293b">placa</text>
+        <text x="326" y="129" font-size="10" fill="#1e293b">modelo</text>
+        <text x="326" y="147" font-size="10" fill="#1e293b">marca</text>
+        <text x="326" y="165" font-size="10" fill="#1e293b">cor</text>
+        <text x="326" y="183" font-size="10" fill="#1e293b">ano</text>
+        <text x="326" y="201" font-size="10" fill="#1e293b">ativo</text>
+        <text x="326" y="219" font-size="10.5" fill="#1d4ed8">placa: 8 chars, formato XXX000XX</text>
+
+        <!-- REGISTRO ACESSO -->
+        <rect x="570" y="20" width="210" height="220" rx="8" fill="#f0fdf4" stroke="#10b981" stroke-width="2"/>
+        <rect x="570" y="20" width="210" height="36" rx="8" fill="#10b981"/>
+        <text x="675" y="44" text-anchor="middle" font-weight="bold" font-size="12" fill="white">REGISTRO_ACESSO</text>
+        <text x="586" y="75" font-size="10" fill="#1e293b">🔑 id (PK)</text>
+        <text x="586" y="93" font-size="10" fill="#059669">🔗 veiculo_id (FK, nullable)</text>
+        <text x="586" y="111" font-size="10" fill="#1e293b">placa_detectada</text>
+        <text x="586" y="129" font-size="10" fill="#1e293b">tipo_movimento</text>
+        <text x="586" y="147" font-size="10" fill="#1e293b">data_hora</text>
+        <text x="586" y="165" font-size="10" fill="#1e293b">confianca_ocr</text>
+        <text x="586" y="183" font-size="10" fill="#1e293b">metodo_ocr</text>
+        <text x="586" y="201" font-size="10" fill="#1e293b">imagem_path</text>
+        <text x="586" y="219" font-size="10.5" fill="#047857">tipo: entrada | saida</text>
+        <text x="586" y="234" font-size="10.5" fill="#047857">nullable FK: aceita nao-cadastrados</text>
+
+        <!-- USUARIO -->
+        <rect x="20" y="290" width="180" height="80" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="2"/>
+        <rect x="20" y="290" width="180" height="36" rx="8" fill="#a855f7"/>
+        <text x="110" y="314" text-anchor="middle" font-weight="bold" font-size="12" fill="white">USUARIO</text>
+        <text x="36" y="345" font-size="10" fill="#1e293b">🔑 id (PK), username, senha_hash</text>
+        <text x="36" y="361" font-size="10" fill="#1e293b">nivel_acesso, ativo, criado_em</text>
+        <text x="36" y="376" font-size="10.5" fill="#7e22ce">nivel: admin | operador | visualizador</text>
+
+        <!-- Relationship lines -->
+        <!-- Proprietario → Veiculo (1:N) -->
+        <line x1="200" y1="120" x2="310" y2="120" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar2)"/>
+        <text x="215" y="112" font-size="10" fill="#64748b">1</text>
+        <text x="287" y="112" font-size="10" fill="#64748b">N</text>
+
+        <!-- Veiculo → RegistroAcesso (1:N) -->
+        <line x1="490" y1="120" x2="570" y2="120" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar2)"/>
+        <text x="505" y="112" font-size="10" fill="#64748b">1</text>
+        <text x="547" y="112" font-size="10" fill="#64748b">N</text>
+
+        <!-- Labels -->
+        <text x="250" y="108" text-anchor="middle" font-size="9" fill="#94a3b8">tem</text>
+        <text x="530" y="108" text-anchor="middle" font-size="9" fill="#94a3b8">gera</text>
+      </svg>
+    </div>
+
+    <!-- Tables detailed -->
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Proprietario table -->
+      <div class="card overflow-hidden">
+        <div class="bg-amber-500 text-white px-4 py-3 font-bold flex items-center gap-2">
+          <i class="fa fa-user"></i> Tabela: proprietarios
+        </div>
+        <table class="schema-table">
+          <thead><tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr></thead>
+          <tbody>
+            <tr class="pk"><td><i class="fa fa-key text-yellow-500 mr-1 text-xs"></i>id</td><td><span class="type-badge type-int">Integer</span></td><td>PK auto-increment</td></tr>
+            <tr><td>nome</td><td><span class="type-badge type-str">String</span></td><td>Nome completo</td></tr>
+            <tr><td>categoria</td><td><span class="type-badge type-enum">Enum</span></td><td>docente / técnico / aluno / visitante</td></tr>
+            <tr><td>departamento</td><td><span class="type-badge type-str">String?</span></td><td>Faculdade/departamento</td></tr>
+            <tr><td>telefone</td><td><span class="type-badge type-str">String?</span></td><td>+258XXXXXXXXX</td></tr>
+            <tr><td>email</td><td><span class="type-badge type-str">String?</span></td><td>Endereço de e-mail</td></tr>
+            <tr><td>ativo</td><td><span class="type-badge type-bool">Boolean</span></td><td>Registo ativo (default: True)</td></tr>
+            <tr><td>criado_em</td><td><span class="type-badge type-dt">DateTime</span></td><td>Data de criação</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Veiculo table -->
+      <div class="card overflow-hidden">
+        <div class="bg-blue-600 text-white px-4 py-3 font-bold flex items-center gap-2">
+          <i class="fa fa-car"></i> Tabela: veiculos
+        </div>
+        <table class="schema-table">
+          <thead><tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr></thead>
+          <tbody>
+            <tr class="pk"><td><i class="fa fa-key text-yellow-500 mr-1 text-xs"></i>id</td><td><span class="type-badge type-int">Integer</span></td><td>PK auto-increment</td></tr>
+            <tr class="fk"><td><i class="fa fa-link text-blue-400 mr-1 text-xs"></i>proprietario_id</td><td><span class="type-badge type-int">Integer</span></td><td>FK → proprietarios.id</td></tr>
+            <tr><td>placa</td><td><span class="type-badge type-str">String(8)</span></td><td>Formato XXX000XX · UNIQUE</td></tr>
+            <tr><td>modelo</td><td><span class="type-badge type-str">String?</span></td><td>Modelo do veículo</td></tr>
+            <tr><td>marca</td><td><span class="type-badge type-str">String?</span></td><td>Marca (Toyota, etc.)</td></tr>
+            <tr><td>cor</td><td><span class="type-badge type-str">String?</span></td><td>Cor do veículo</td></tr>
+            <tr><td>ano</td><td><span class="type-badge type-int">Integer?</span></td><td>Ano de fabrico</td></tr>
+            <tr><td>ativo</td><td><span class="type-badge type-bool">Boolean</span></td><td>Registo ativo</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- RegistroAcesso table -->
+      <div class="card overflow-hidden">
+        <div class="bg-emerald-600 text-white px-4 py-3 font-bold flex items-center gap-2">
+          <i class="fa fa-list-check"></i> Tabela: registros_acesso
+        </div>
+        <table class="schema-table">
+          <thead><tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr></thead>
+          <tbody>
+            <tr class="pk"><td><i class="fa fa-key text-yellow-500 mr-1 text-xs"></i>id</td><td><span class="type-badge type-int">Integer</span></td><td>PK auto-increment</td></tr>
+            <tr class="fk"><td><i class="fa fa-link text-blue-400 mr-1 text-xs"></i>veiculo_id</td><td><span class="type-badge type-int">Integer?</span></td><td>FK nullable → veiculos.id</td></tr>
+            <tr><td>placa_detectada</td><td><span class="type-badge type-str">String</span></td><td>Placa lida pelo OCR (sempre preenchida)</td></tr>
+            <tr><td>tipo_movimento</td><td><span class="type-badge type-enum">Enum</span></td><td>entrada / saida</td></tr>
+            <tr><td>data_hora</td><td><span class="type-badge type-dt">DateTime</span></td><td>Timestamp da detecção</td></tr>
+            <tr><td>confianca_ocr</td><td><span class="type-badge type-float">Float</span></td><td>0.0 – 1.0 (qualidade OCR)</td></tr>
+            <tr><td>metodo_ocr</td><td><span class="type-badge type-str">String</span></td><td>easyocr / tesseract / hibrido</td></tr>
+            <tr><td>imagem_path</td><td><span class="type-badge type-str">String?</span></td><td>Caminho relativo da imagem salva</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Usuario table -->
+      <div class="card overflow-hidden">
+        <div class="bg-purple-600 text-white px-4 py-3 font-bold flex items-center gap-2">
+          <i class="fa fa-user-shield"></i> Tabela: usuarios
+        </div>
+        <table class="schema-table">
+          <thead><tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr></thead>
+          <tbody>
+            <tr class="pk"><td><i class="fa fa-key text-yellow-500 mr-1 text-xs"></i>id</td><td><span class="type-badge type-int">Integer</span></td><td>PK auto-increment</td></tr>
+            <tr><td>username</td><td><span class="type-badge type-str">String</span></td><td>Username único (letras/nums/_)</td></tr>
+            <tr><td>senha_hash</td><td><span class="type-badge type-str">String</span></td><td>bcrypt hash da senha</td></tr>
+            <tr><td>nivel_acesso</td><td><span class="type-badge type-enum">Enum</span></td><td>admin / operador / visualizador</td></tr>
+            <tr><td>ativo</td><td><span class="type-badge type-bool">Boolean</span></td><td>Conta ativa</td></tr>
+            <tr><td>criado_em</td><td><span class="type-badge type-dt">DateTime</span></td><td>Data de registo</td></tr>
+          </tbody>
+        </table>
+        <div class="px-4 py-3 bg-purple-50 text-xs text-purple-700">
+          <strong>Nota de segurança:</strong> Senhas nunca armazenadas em texto plano.
+          Utiliza bcrypt com salt automático. JWT válido por 24h.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== 5. API ENDPOINTS ======== -->
+  <section id="api">
+    <h2 class="section-title mb-8">5. API REST — Endpoints</h2>
+    <div class="card p-6 mb-4">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="badge badge-blue">Base URL: /api/v1</span>
+        <span class="badge badge-gray">Autenticação: Bearer JWT</span>
+        <span class="badge badge-green">Docs: /api/docs</span>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Auth -->
+        <div>
+          <div class="font-bold text-sm text-slate-700 mb-2 flex items-center gap-2"><i class="fa fa-lock text-orange-500"></i> Autenticação</div>
+          <div class="endpoint"><span class="method POST">POST</span><span class="font-mono">/auth/login</span><span class="text-slate-400 ml-auto text-xs">Obtém JWT token</span></div>
+          <div class="endpoint"><span class="method GET">GET</span><span class="font-mono">/auth/me</span><span class="text-slate-400 ml-auto text-xs">Perfil atual</span></div>
+          <div class="endpoint"><span class="method POST">POST</span><span class="font-mono">/usuarios</span><span class="text-slate-400 ml-auto text-xs">Criar utilizador (admin)</span></div>
+          <div class="endpoint"><span class="method GET">GET</span><span class="font-mono">/usuarios</span><span class="text-slate-400 ml-auto text-xs">Listar utilizadores</span></div>
+          <div class="endpoint"><span class="method DELETE">DEL</span><span class="font-mono">/usuarios/{id}</span><span class="text-slate-400 ml-auto text-xs">Desativar (admin)</span></div>
+        </div>
+
+        <!-- Detecção -->
+        <div>
+          <div class="font-bold text-sm text-slate-700 mb-2 flex items-center gap-2"><i class="fa fa-camera text-green-500"></i> Detecção (Desktop→API)</div>
+          <div class="endpoint"><span class="method POST">POST</span><span class="font-mono">/registros/deteccao</span><span class="text-slate-400 ml-auto text-xs">Sem auth — Desktop envia</span></div>
+          <div class="endpoint"><span class="method GET">GET</span><span class="font-mono">/registros</span><span class="text-slate-400 ml-auto text-xs">Listar registros c/ filtros</span></div>
+          <div class="endpoint"><span class="method GET">GET</span><span class="font-mono">/registros/count/hoje</span><span class="text-slate-400 ml-auto text-xs">Contagem hoje</span></div>
+          <div class="endpoint"><span class="method GET">GET</span><span class="font-mono">/registros/ultimos/por-hora</span><span class="text-slate-400 ml-auto text-xs">Gráfico horário</span></div>
+          <div class="endpoint"><span class="method DELETE">DEL</span><span class="font-mono">/registros/{id}</span><span class="text-slate-400 ml-auto text-xs">Excluir (admin)</span></div>
+        </div>
+
+        <!-- Veículos -->
+        <div>
+          <div class="font-bold text-sm text-slate-700 mb-2 flex items-center gap-2"><i class="fa fa-car text-blue-500"></i> Veículos</div>
+          <div class="endpoint"><span class="method POST">POST</span><span class="font-mono">/veiculos</span><span class="text-slate-400 ml-auto text-xs">Cadastrar veículo</span></div>
+          <div class="endpoint"><span class="method GET">GET</span><span class="font-mono">/veiculos</span><span class="text-slate-400 ml-auto text-xs">Listar c/ filtros</span></div>
+          <div class="endpoint"><span class="method GET">GET</span><span class="font-mono">/veiculos/placa/{placa}</span><span class="text-slate-400 ml-auto text-xs">Buscar por placa</span></div>
+          <div class="endpoint"><span class="method PUT">PUT</span><span class="font-mono">/veiculos/{id}</span><span class="text-slate-400 ml-auto text-xs">Atualizar</span></div>
+          <div class="endpoint"><span class="method DELETE">DEL</span><span class="font-mono">/veiculos/{id}</span><span class="text-slate-400 ml-auto text-xs">Excluir (admin)</span></div>
+        </div>
+
+        <!-- Dashboard -->
+        <div>
+          <div class="font-bold text-sm text-slate-700 mb-2 flex items-center gap-2"><i class="fa fa-chart-bar text-purple-500"></i> Dashboard & Relatórios</div>
+          <div class="endpoint"><span class="method GET">GET</span><span class="font-mono">/dashboard/estatisticas</span><span class="text-slate-400 ml-auto text-xs">KPIs completos</span></div>
+          <div class="endpoint"><span class="method GET">GET</span><span class="font-mono">/dashboard/veiculos-no-campus</span><span class="text-slate-400 ml-auto text-xs">Veículos presentes</span></div>
+          <div class="endpoint"><span class="method GET">GET</span><span class="font-mono">/dashboard/alertas</span><span class="text-slate-400 ml-auto text-xs">Alertas de ausência</span></div>
+          <div class="endpoint"><span class="method POST">POST</span><span class="font-mono">/relatorios/veiculos</span><span class="text-slate-400 ml-auto text-xs">Análise por veículo</span></div>
+          <div class="endpoint"><span class="method GET">GET</span><span class="font-mono">/relatorios/exportar/registros</span><span class="text-slate-400 ml-auto text-xs">Export CSV</span></div>
+        </div>
+      </div>
+
+      <!-- Payload example -->
+      <div class="mt-6 grid md:grid-cols-2 gap-4">
+        <div>
+          <div class="text-sm font-bold text-slate-600 mb-2">Exemplo — POST /registros/deteccao (request)</div>
+          <pre class="bg-slate-900 text-green-400 rounded-lg p-4 text-xs overflow-x-auto">{
+  "placa_detectada": "AHK641MP",
+  "tipo_movimento": "entrada",
+  "confianca_ocr": 0.87,
+  "metodo_ocr": "hibrido",
+  "timestamp": "2026-03-04T14:32:00",
+  "imagem_base64": "data:image/jpeg;base64,..."
+}</pre>
+        </div>
+        <div>
+          <div class="text-sm font-bold text-slate-600 mb-2">Exemplo — Resposta (response)</div>
+          <pre class="bg-slate-900 text-blue-300 rounded-lg p-4 text-xs overflow-x-auto">{
+  "sucesso": true,
+  "mensagem": "Detecção registrada [ENTRADA] - José Silva (docente)",
+  "registro_id": 142,
+  "veiculo_cadastrado": true,
+  "duplicata": false,
+  "tempo_desde_ultimo_registro": 14400
+}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== 6. OCR PIPELINE ======== -->
+  <section id="ocr">
+    <h2 class="section-title mb-8">6. Pipeline OCR — Reconhecimento de Placas</h2>
+    <div class="grid md:grid-cols-3 gap-6 mb-6">
+      <div class="card p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600 font-bold">AI</div>
+          <div>
+            <div class="font-bold">EasyOCR</div>
+            <div class="text-xs text-slate-500">Deep Learning (CRNN)</div>
+          </div>
+        </div>
+        <ul class="text-xs text-slate-600 space-y-1">
+          <li><i class="fa fa-check text-green-500 mr-1"></i>Melhor em imagens reais e ruidosas</li>
+          <li><i class="fa fa-check text-green-500 mr-1"></i>Pré-processamento: escala cinza suave</li>
+          <li><i class="fa fa-check text-green-500 mr-1"></i>Retorna coordenadas + confiança por char</li>
+          <li><i class="fa fa-minus text-slate-400 mr-1"></i>Mais lento (modelo neural)</li>
+        </ul>
+      </div>
+      <div class="card p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600 font-bold">T</div>
+          <div>
+            <div class="font-bold">Tesseract</div>
+            <div class="text-xs text-slate-500">OCR Clássico (Google)</div>
+          </div>
+        </div>
+        <ul class="text-xs text-slate-600 space-y-1">
+          <li><i class="fa fa-check text-green-500 mr-1"></i>Melhor em imagens binarizadas</li>
+          <li><i class="fa fa-check text-green-500 mr-1"></i>Pré-proc: CLAHE + threshold adaptativo</li>
+          <li><i class="fa fa-check text-green-500 mr-1"></i>3 modos PSM testados (7, 8, 6)</li>
+          <li><i class="fa fa-minus text-slate-400 mr-1"></i>Sensível a ruído e perspectiva</li>
+        </ul>
+      </div>
+      <div class="card p-5 border-2 border-blue-200">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold">H</div>
+          <div>
+            <div class="font-bold">Modo Híbrido ★</div>
+            <div class="text-xs text-slate-500">Melhor dos dois mundos</div>
+          </div>
+        </div>
+        <ul class="text-xs text-slate-600 space-y-1">
+          <li><i class="fa fa-check text-green-500 mr-1"></i>Corre EasyOCR + Tesseract em paralelo</li>
+          <li><i class="fa fa-check text-green-500 mr-1"></i>Compara resultados por posição</li>
+          <li><i class="fa fa-check text-green-500 mr-1"></i>Valida formato moçambicano</li>
+          <li><i class="fa fa-check text-green-500 mr-1"></i>Confiança máxima quando concordam</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- OCR Correction table -->
+    <div class="card p-6">
+      <h3 class="font-bold text-lg mb-4 text-slate-700">Correção Inteligente de Erros OCR — <code class="text-sm bg-slate-100 px-2 py-0.5 rounded">corrigir_placa_ocr()</code></h3>
+      <p class="text-sm text-slate-600 mb-4">
+        A função analisa a posição de cada caractere. Posições 0-2 e 6-7 devem ser <strong>letras</strong>.
+        Posições 3-5 devem ser <strong>números</strong>. Se o OCR retornou o caractere errado, é corrigido automaticamente:
+      </p>
+      <div class="overflow-x-auto">
+        <table class="schema-table">
+          <thead>
+            <tr>
+              <th>OCR leu</th>
+              <th>Posição esperada</th>
+              <th>Correção aplicada</th>
+              <th>Motivo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="font-mono font-bold text-red-600">0</td><td>Letra (pos. 0-2, 6-7)</td><td class="font-mono font-bold text-green-600">O</td><td>Zero visualmente igual a O</td></tr>
+            <tr><td class="font-mono font-bold text-red-600">O</td><td>Número (pos. 3-5)</td><td class="font-mono font-bold text-green-600">0</td><td>O visualmente igual a zero</td></tr>
+            <tr><td class="font-mono font-bold text-red-600">1</td><td>Letra (pos. 0-2, 6-7)</td><td class="font-mono font-bold text-green-600">I</td><td>Um visualmente igual a I</td></tr>
+            <tr><td class="font-mono font-bold text-red-600">I / L</td><td>Número (pos. 3-5)</td><td class="font-mono font-bold text-green-600">1</td><td>I/L visualmente igual a 1</td></tr>
+            <tr><td class="font-mono font-bold text-red-600">5</td><td>Letra (pos. 0-2, 6-7)</td><td class="font-mono font-bold text-green-600">S</td><td>Cinco visualmente igual a S</td></tr>
+            <tr><td class="font-mono font-bold text-red-600">S</td><td>Número (pos. 3-5)</td><td class="font-mono font-bold text-green-600">5</td><td>S visualmente igual a 5</td></tr>
+            <tr><td class="font-mono font-bold text-red-600">8</td><td>Letra (pos. 0-2, 6-7)</td><td class="font-mono font-bold text-green-600">B</td><td>Oito visualmente igual a B</td></tr>
+            <tr><td class="font-mono font-bold text-red-600">6</td><td>Letra (pos. 0-2, 6-7)</td><td class="font-mono font-bold text-green-600">G</td><td>Seis visualmente igual a G</td></tr>
+            <tr><td class="font-mono font-bold text-red-600">2</td><td>Letra (pos. 0-2, 6-7)</td><td class="font-mono font-bold text-green-600">Z</td><td>Dois visualmente igual a Z</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== 7. PLC / CANCELA ======== -->
+  <section id="plc">
+    <h2 class="section-title mb-8">7. Integração PLC / Cancela Eletrônica</h2>
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
+      <div class="card p-6">
+        <h3 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2"><i class="fa fa-plug text-violet-500"></i> Protocolo Modbus TCP</h3>
+        <p class="text-sm text-slate-600 mb-4">
+          O Modbus TCP é o protocolo industrial mais utilizado para comunicação com PLCs (Programmable Logic Controllers).
+          Funciona sobre Ethernet/IP, na porta <strong>502 (padrão) / 5020 (simulador)</strong>.
+        </p>
+        <div class="space-y-3">
+          <div class="flex items-start gap-3 bg-violet-50 rounded-lg p-3">
+            <div class="w-8 h-8 bg-violet-200 rounded-full flex items-center justify-center text-violet-700 font-bold text-xs flex-shrink-0">C0</div>
+            <div>
+              <div class="font-semibold text-sm">Coil 0 — Cancela</div>
+              <div class="text-xs text-slate-500">Saída digital. <code>True</code> = abre cancela. <code>False</code> = fecha.</div>
+              <div class="text-xs text-slate-500">Função Modbus: FC01 (read) / FC05 (write)</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 bg-blue-50 rounded-lg p-3">
+            <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 font-bold text-xs flex-shrink-0">DI0</div>
+            <div>
+              <div class="font-semibold text-sm">Discrete Input 0 — Sensor de Laço</div>
+              <div class="text-xs text-slate-500">Entrada digital. <code>True</code> = veículo no laço indutivo.</div>
+              <div class="text-xs text-slate-500">Função Modbus: FC02 (read discrete inputs)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-6">
+        <h3 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2"><i class="fa fa-rotate text-violet-500"></i> Fluxo de Abertura da Cancela</h3>
+        <div class="space-y-2">
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-green-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">1</div>
+            <div class="text-sm">Placa cadastrada detectada com confiança ≥ 70%</div>
+          </div>
+          <div class="ml-3.5 w-0.5 h-4 bg-slate-200"></div>
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-blue-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">2</div>
+            <div class="text-sm">API confirma registo → Desktop recebe resposta</div>
+          </div>
+          <div class="ml-3.5 w-0.5 h-4 bg-slate-200"></div>
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-violet-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">3</div>
+            <div class="text-sm">PLCController escreve <code class="bg-violet-100 px-1 rounded text-xs">Coil 0 = True</code> via Modbus TCP</div>
+          </div>
+          <div class="ml-3.5 w-0.5 h-4 bg-slate-200"></div>
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-orange-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">4</div>
+            <div class="text-sm">Thread monitora <code class="bg-orange-100 px-1 rounded text-xs">DI 0</code> (sensor de laço) a cada 300ms</div>
+          </div>
+          <div class="ml-3.5 w-0.5 h-4 bg-slate-200"></div>
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-teal-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">5</div>
+            <div class="text-sm">Veículo passa → sensor vai a False → escreve <code class="bg-teal-100 px-1 rounded text-xs">Coil 0 = False</code></div>
+          </div>
+          <div class="ml-3.5 w-0.5 h-4 bg-slate-200"></div>
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-red-400 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">⚠</div>
+            <div class="text-sm text-slate-500">Fallback: se sensor não responder em 8s → cancela fecha por segurança</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Simulator -->
+    <div class="card p-6">
+      <h3 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+        <i class="fa fa-flask text-violet-500"></i> Simulador PLC Virtual
+      </h3>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <p class="text-sm text-slate-600 mb-3">
+            Para permitir testes sem hardware físico, o sistema inclui um <strong>servidor Modbus TCP virtual</strong>
+            (<code>desktop_module/simulador_plc.py</code>) que emula o comportamento do PLC e do sensor de laço.
+          </p>
+          <div class="bg-slate-900 rounded-lg p-4 font-mono text-xs text-green-400">
+            <div class="text-slate-400 mb-2"># Iniciar simulador</div>
+            <div>python -m desktop_module.simulador_plc</div>
+            <div class="text-slate-500 mt-3">Servidor Modbus TCP aguardando em 127.0.0.1:5020</div>
+            <div class="text-slate-500">Thread de simulação iniciada (modo AUTO)</div>
+            <div class="mt-2">Cancela: fechada ↓   |   Laço: livre ○</div>
+            <div class="text-yellow-400 mt-1">Cancela: ABERTA  ↑  |   Laço: livre ○</div>
+            <div class="text-yellow-400">[SIM] Veículo NO laço indutivo (sensor=ON)</div>
+            <div class="text-green-400">[SIM] Veículo SAIU do laço (sensor=OFF)</div>
+            <div>Cancela: fechada ↓   |   Laço: livre ○</div>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm font-semibold text-slate-600 mb-3">Comportamento automático do simulador:</div>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-start gap-2 text-slate-600">
+              <span class="w-5 h-5 bg-violet-200 rounded-full flex items-center justify-center text-xs font-bold text-violet-700 flex-shrink-0">1</span>
+              Desktop abre cancela (Coil 0 = True)
+            </div>
+            <div class="flex items-start gap-2 text-slate-600">
+              <span class="w-5 h-5 bg-violet-200 rounded-full flex items-center justify-center text-xs font-bold text-violet-700 flex-shrink-0">2</span>
+              Simulador aguarda 1.5s (simula veículo chegando ao laço)
+            </div>
+            <div class="flex items-start gap-2 text-slate-600">
+              <span class="w-5 h-5 bg-violet-200 rounded-full flex items-center justify-center text-xs font-bold text-violet-700 flex-shrink-0">3</span>
+              Liga DI 0 = True (veículo no laço)
+            </div>
+            <div class="flex items-start gap-2 text-slate-600">
+              <span class="w-5 h-5 bg-violet-200 rounded-full flex items-center justify-center text-xs font-bold text-violet-700 flex-shrink-0">4</span>
+              Aguarda 2s (veículo a passar)
+            </div>
+            <div class="flex items-start gap-2 text-slate-600">
+              <span class="w-5 h-5 bg-violet-200 rounded-full flex items-center justify-center text-xs font-bold text-violet-700 flex-shrink-0">5</span>
+              Liga DI 0 = False → PLCController fecha a cancela
+            </div>
+          </div>
+          <div class="mt-4 bg-violet-50 border border-violet-200 rounded-lg p-3 text-xs text-violet-700">
+            <strong>Nota:</strong> Em produção, o simulador é substituído pelo PLC real. O desktop_module não precisa de alterações — apenas muda o IP/porta no ficheiro <code>.env</code>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== 8. TECNOLOGIAS ======== -->
+  <section id="tecnologias">
+    <h2 class="section-title mb-8">8. Stack Tecnológico</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="card p-5">
+        <div class="font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa fa-eye text-blue-500"></i> Visão Computacional</div>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center justify-between"><span>YOLOv8 (ultralytics)</span><span class="badge badge-blue">v8.4</span></div>
+          <div class="flex items-center justify-between"><span>OpenCV</span><span class="badge badge-blue">4.13</span></div>
+          <div class="flex items-center justify-between"><span>EasyOCR</span><span class="badge badge-green">1.7</span></div>
+          <div class="flex items-center justify-between"><span>Tesseract OCR</span><span class="badge badge-gray">5.x</span></div>
+          <div class="flex items-center justify-between"><span>PyTorch (CPU)</span><span class="badge badge-red">2.10</span></div>
+          <div class="flex items-center justify-between"><span>Pillow</span><span class="badge badge-gray">12.x</span></div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa fa-server text-green-500"></i> Backend Web</div>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center justify-between"><span>FastAPI</span><span class="badge badge-green">0.128</span></div>
+          <div class="flex items-center justify-between"><span>SQLAlchemy</span><span class="badge badge-blue">2.0</span></div>
+          <div class="flex items-center justify-between"><span>Pydantic</span><span class="badge badge-blue">2.12</span></div>
+          <div class="flex items-center justify-between"><span>Uvicorn (ASGI)</span><span class="badge badge-gray">0.40</span></div>
+          <div class="flex items-center justify-between"><span>python-jose (JWT)</span><span class="badge badge-yellow">3.5</span></div>
+          <div class="flex items-center justify-between"><span>bcrypt</span><span class="badge badge-gray">5.0</span></div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa fa-desktop text-purple-500"></i> Desktop & Industrial</div>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center justify-between"><span>Tkinter (Python)</span><span class="badge badge-purple">GUI</span></div>
+          <div class="flex items-center justify-between"><span>pymodbus</span><span class="badge badge-purple">3.9</span></div>
+          <div class="flex items-center justify-between"><span>Python</span><span class="badge badge-gray">3.13</span></div>
+          <div class="flex items-center justify-between"><span>Tailwind CSS v4</span><span class="badge badge-blue">CDN</span></div>
+          <div class="flex items-center justify-between"><span>Jinja2</span><span class="badge badge-gray">Templates</span></div>
+          <div class="flex items-center justify-between"><span>SQLite / PostgreSQL</span><span class="badge badge-yellow">BD</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== 9. PAPÉIS DE UTILIZADOR ======== -->
+  <section>
+    <h2 class="section-title mb-8">9. Papéis de Utilizador (RBAC)</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="card overflow-hidden border-t-4 border-red-500">
+        <div class="p-5">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+              <i class="fa fa-crown text-red-500 text-xl"></i>
+            </div>
+            <div>
+              <div class="font-bold text-lg">Admin</div>
+              <div class="text-xs text-slate-500">Acesso total</div>
+            </div>
+          </div>
+          <ul class="text-sm text-slate-600 space-y-1.5">
+            <li><i class="fa fa-check text-green-500 mr-2"></i>Criar / excluir utilizadores</li>
+            <li><i class="fa fa-check text-green-500 mr-2"></i>Excluir registros e veículos</li>
+            <li><i class="fa fa-check text-green-500 mr-2"></i>Configurar sistema</li>
+            <li><i class="fa fa-check text-green-500 mr-2"></i>Ver todos os relatórios</li>
+            <li><i class="fa fa-check text-green-500 mr-2"></i>Gerir proprietários</li>
+          </ul>
+        </div>
+        <div class="bg-red-50 px-5 py-3">
+          <code class="text-xs text-red-700">nivel_acesso = "admin"</code>
+        </div>
+      </div>
+
+      <div class="card overflow-hidden border-t-4 border-blue-500">
+        <div class="p-5">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <i class="fa fa-user-tie text-blue-500 text-xl"></i>
+            </div>
+            <div>
+              <div class="font-bold text-lg">Operador</div>
+              <div class="text-xs text-slate-500">Gestão operacional</div>
+            </div>
+          </div>
+          <ul class="text-sm text-slate-600 space-y-1.5">
+            <li><i class="fa fa-check text-green-500 mr-2"></i>Cadastrar proprietários e veículos</li>
+            <li><i class="fa fa-check text-green-500 mr-2"></i>Ver e filtrar registros</li>
+            <li><i class="fa fa-check text-green-500 mr-2"></i>Exportar relatórios CSV</li>
+            <li><i class="fa fa-check text-green-500 mr-2"></i>Ver dashboard completo</li>
+            <li><i class="fa fa-times text-slate-300 mr-2"></i>Excluir registros ou utilizadores</li>
+          </ul>
+        </div>
+        <div class="bg-blue-50 px-5 py-3">
+          <code class="text-xs text-blue-700">nivel_acesso = "operador"</code>
+        </div>
+      </div>
+
+      <div class="card overflow-hidden border-t-4 border-slate-400">
+        <div class="p-5">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
+              <i class="fa fa-eye text-slate-500 text-xl"></i>
+            </div>
+            <div>
+              <div class="font-bold text-lg">Visualizador</div>
+              <div class="text-xs text-slate-500">Somente leitura</div>
+            </div>
+          </div>
+          <ul class="text-sm text-slate-600 space-y-1.5">
+            <li><i class="fa fa-check text-green-500 mr-2"></i>Ver dashboard e estatísticas</li>
+            <li><i class="fa fa-check text-green-500 mr-2"></i>Consultar registros</li>
+            <li><i class="fa fa-check text-green-500 mr-2"></i>Ver lista de veículos</li>
+            <li><i class="fa fa-times text-slate-300 mr-2"></i>Criar ou modificar dados</li>
+            <li><i class="fa fa-times text-slate-300 mr-2"></i>Exportar relatórios</li>
+          </ul>
+        </div>
+        <div class="bg-slate-50 px-5 py-3">
+          <code class="text-xs text-slate-600">nivel_acesso = "visualizador"</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== 10. COMO EXECUTAR ======== -->
+  <section>
+    <h2 class="section-title mb-8">10. Guia de Execução</h2>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="card p-6">
+        <h3 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+          <i class="fa fa-globe text-green-500"></i> Módulo Web (API + Dashboard)
+        </h3>
+        <div class="bg-slate-900 rounded-lg p-4 font-mono text-xs text-slate-300 space-y-1">
+          <div class="text-slate-500"># 1. Instalar dependências</div>
+          <div>pip install -r requirements.txt</div>
+          <div class="mt-2 text-slate-500"># 2. Inicializar base de dados</div>
+          <div>python init_database.py</div>
+          <div class="mt-2 text-slate-500"># 3. Iniciar servidor</div>
+          <div>uvicorn web_module.main:app --reload</div>
+          <div class="mt-2 text-green-400"># Aceder em:</div>
+          <div class="text-blue-300">http://localhost:8000</div>
+          <div class="text-slate-500 text-xs mt-1">admin / admin123 (padrão)</div>
+        </div>
+      </div>
+
+      <div class="card p-6">
+        <h3 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+          <i class="fa fa-desktop text-blue-500"></i> Módulo Desktop + Simulador PLC
+        </h3>
+        <div class="bg-slate-900 rounded-lg p-4 font-mono text-xs text-slate-300 space-y-1">
+          <div class="text-slate-500"># Terminal 1 — Simulador PLC</div>
+          <div>python -m desktop_module.simulador_plc</div>
+          <div class="mt-2 text-slate-500"># Terminal 2 — Módulo Desktop</div>
+          <div>python -m desktop_module.main</div>
+          <div class="mt-2 text-slate-500"># Ou com vídeo de teste:</div>
+          <div>VIDEO_SOURCE=storage/test_images python -m desktop_module.main</div>
+          <div class="mt-2 text-yellow-400"># .env (configuração):</div>
+          <div class="text-slate-400">API_HOST=http://localhost:8000</div>
+          <div class="text-slate-400">PLC_HOST=127.0.0.1</div>
+          <div class="text-slate-400">PLC_PORT=5020</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ======== FOOTER ======== -->
+<footer class="bg-slate-900 text-white mt-16 py-10 px-6">
+  <div class="max-w-5xl mx-auto text-center">
+    <div class="text-2xl font-black text-blue-400 mb-2">Sistema ALPR UNIPIAGET</div>
+    <p class="text-slate-400 text-sm mb-4">
+      Reconhecimento Automático de Placas · Controlo de Acesso com PLC · Dashboard Web
+    </p>
+    <div class="flex flex-wrap justify-center gap-6 text-sm text-slate-400 mb-6">
+      <div><i class="fa fa-user mr-1"></i> Salvador Eduardo Tomoecene</div>
+      <div><i class="fa fa-graduation-cap mr-1"></i> Eng. Electrónica e Telecomunicações</div>
+      <div><i class="fa fa-university mr-1"></i> Universidade Jean Piaget de Moçambique</div>
+      <div><i class="fa fa-calendar mr-1"></i> 2026</div>
+    </div>
+    <div class="border-t border-slate-700 pt-4 text-xs text-slate-500">
+      Documentação técnica gerada para apresentação à banca avaliadora do TCC.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Smooth highlight active nav link on scroll
+  const sections = document.querySelectorAll('section[id], header[id]');
+  const navLinks = document.querySelectorAll('nav a[href^="#"]');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.remove('text-blue-400');
+          if (link.getAttribute('href') === '#' + entry.target.id) {
+            link.classList.add('text-blue-400');
+          }
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

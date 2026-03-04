@@ -5,6 +5,18 @@
 
 const API_URL = 'http://localhost:8000/api/v1';
 
+// Papel do utilizador atual (preenchido por loadUserInfo)
+let currentUserRole = 'visualizador';
+
+// Previne múltiplos redirects simultâneos para /login
+let _redirecionandoParaLogin = false;
+
+function _redirecionarLogin() {
+    if (_redirecionandoParaLogin) return;
+    _redirecionandoParaLogin = true;
+    window.location.href = '/login';
+}
+
 /**
  * Faz requisição autenticada à API
  * @param {string} endpoint - Endpoint da API (ex: '/veiculos')
@@ -14,11 +26,6 @@ const API_URL = 'http://localhost:8000/api/v1';
  */
 async function apiRequest(endpoint, method = 'GET', data = null) {
     const token = localStorage.getItem('token');
-
-    if (!token && !endpoint.includes('/auth/login')) {
-        window.location.href = '/login';
-        return null;
-    }
 
     const headers = {
         'Content-Type': 'application/json'
@@ -40,11 +47,11 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
     try {
         const response = await fetch(`${API_URL}${endpoint}`, config);
 
-        // Se 401, token inválido -> redireciona para login
+        // Se 401, token inválido -> redireciona para login (uma única vez)
         if (response.status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('usuario');
-            window.location.href = '/login';
+            _redirecionarLogin();
             return null;
         }
 
@@ -64,6 +71,7 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
         return result;
 
     } catch (error) {
+        if (_redirecionandoParaLogin) return null; // ignora erros durante redirect
         console.error('Erro na requisição:', error);
         showToast('Erro ao comunicar com servidor', 'danger');
         throw error;
@@ -78,7 +86,7 @@ function checkAuth() {
     const currentPath = window.location.pathname;
 
     if (!token && currentPath !== '/login') {
-        window.location.href = '/login';
+        _redirecionarLogin();
     } else if (token && currentPath === '/login') {
         window.location.href = '/';
     }
@@ -120,8 +128,8 @@ function loadUserInfo() {
             if (navUsuarios) navUsuarios.classList.remove('hidden');
         }
 
-        // Guarda role no window para uso nas páginas
-        window.currentUserRole = usuario.nivel_acesso;
+        // Guarda role numa variável global para uso nas páginas
+        currentUserRole = usuario.nivel_acesso;
 
     } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
@@ -144,16 +152,12 @@ function getUserRole() {
 /**
  * Faz logout do sistema
  */
-async function logout() {
-    try {
-        await apiRequest('/auth/logout', 'POST');
-    } catch (error) {
-        console.error('Erro no logout:', error);
-    } finally {
-        localStorage.removeItem('token');
-        localStorage.removeItem('usuario');
-        window.location.href = '/login';
-    }
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    // Notifica API de forma não-bloqueante (fire-and-forget)
+    fetch(`${API_URL}/auth/logout`, { method: 'POST' }).catch(() => {});
+    window.location.href = '/login';
 }
 
 /**
@@ -423,20 +427,10 @@ function hideLoading(elementId) {
 // EVENT LISTENERS GLOBAIS
 // ============================================================================
 
-// Ativa tooltips do Bootstrap
-document.addEventListener('DOMContentLoaded', function() {
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-});
-
-// Marca link ativo na navbar
+// Marca link ativo na sidebar (Tailwind)
 document.addEventListener('DOMContentLoaded', function() {
     const currentPath = window.location.pathname;
-    const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
-
-    navLinks.forEach(link => {
+    document.querySelectorAll('aside nav a[href]').forEach(link => {
         if (link.getAttribute('href') === currentPath) {
             link.classList.add('active');
         }

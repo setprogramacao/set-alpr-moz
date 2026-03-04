@@ -15,6 +15,15 @@ __all__ = [
     "VIDEO_SOURCE",
     "DETECTION_COOLDOWN",
     "SAVE_DETECTION_IMAGES",
+    # PLC / Cancela
+    "PLC_HABILITADO",
+    "PLC_HOST",
+    "PLC_PORT",
+    "PLC_TIMEOUT",
+    "PLC_COIL_CANCELA",
+    "PLC_INPUT_LACO",
+    "BARREIRA_TIMEOUT_SEGUNDOS",
+    "BARREIRA_CONFIANCA_MINIMA",
     "validar_configuracoes",
     "obter_config_display",
 ]

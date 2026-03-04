@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Optional
 import logging
 
-from ..core import PlateDetector, CameraManager, APIClient
+from ..core import PlateDetector, CameraManager, APIClient, PLCController
 from ..config import (
     WINDOW_TITLE,
     WINDOW_WIDTH,
@@ -20,12 +20,15 @@ from ..config import (
     PREVIEW_WIDTH,
     PREVIEW_HEIGHT,
     PROCESS_EVERY_N_FRAMES,
-    DEFAULT_MOVEMENT_TYPE,
-    AUTO_TOGGLE_MOVEMENT,
     SAVE_DETECTION_IMAGES,
+    API_HOST,
+    API_TIMEOUT,
+    PLC_HABILITADO,
+    PLC_HOST,
+    PLC_PORT,
 )
 from ..utils import converter_cv_para_pil, preprocessar_para_display
-from shared.utils import salvar_imagem_deteccao, formatar_log_deteccao
+from shared.utils import salvar_imagem_deteccao
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +48,10 @@ class MainWindow:
         self.detector = None
         self.camera = None
         self.api_client = None
+        self.plc_controller = None
 
         # Estado
         self.capturando = False
-        self.tipo_movimento = DEFAULT_MOVEMENT_TYPE
         self.frame_count = 0
         self.deteccoes_count = 0
         self.thread_captura = None
@@ -60,6 +63,7 @@ class MainWindow:
         self.status_label = None
         self.btn_iniciar = None
         self.btn_pausar = None
+        self.btn_recarregar = None
         self.btn_parar_teste = None
         self.lbl_progresso_teste = None
 
@@ -127,7 +131,7 @@ class MainWindow:
             btn_frame,
             text="▶ Iniciar Captura",
             command=self.iniciar_captura,
-            width=20
+            width=18
         )
         self.btn_iniciar.pack(side=tk.LEFT, padx=5)
 
@@ -136,32 +140,17 @@ class MainWindow:
             text="⏸ Pausar",
             command=self.pausar_captura,
             state=tk.DISABLED,
-            width=20
+            width=12
         )
         self.btn_pausar.pack(side=tk.LEFT, padx=5)
 
-        # Tipo de movimento
-        movimento_frame = ttk.Frame(control_frame)
-        movimento_frame.pack(fill=tk.X, pady=5)
-
-        ttk.Label(movimento_frame, text="Tipo de Movimento:").pack(side=tk.LEFT, padx=5)
-
-        self.tipo_movimento_var = tk.StringVar(value=self.tipo_movimento)
-        ttk.Radiobutton(
-            movimento_frame,
-            text="Entrada",
-            variable=self.tipo_movimento_var,
-            value="entrada",
-            command=self.on_tipo_movimento_changed
-        ).pack(side=tk.LEFT, padx=5)
-
-        ttk.Radiobutton(
-            movimento_frame,
-            text="Saída",
-            variable=self.tipo_movimento_var,
-            value="saida",
-            command=self.on_tipo_movimento_changed
-        ).pack(side=tk.LEFT, padx=5)
+        self.btn_recarregar = ttk.Button(
+            btn_frame,
+            text="↺ Recarregar",
+            command=self.recarregar_sistema,
+            width=14
+        )
+        self.btn_recarregar.pack(side=tk.LEFT, padx=5)
 
         # Configurações
         config_frame = ttk.LabelFrame(right_frame, text="Configurações", padding="5")
@@ -183,6 +172,12 @@ class MainWindow:
             config_frame,
             text="Ver Configurações",
             command=self.ver_configuracoes
+        ).pack(fill=tk.X, pady=2)
+
+        ttk.Button(
+            config_frame,
+            text="Configurar PLC / Cancela",
+            command=self.configurar_plc
         ).pack(fill=tk.X, pady=2)
 
         # Separador e botões de teste com imagens
@@ -222,6 +217,9 @@ class MainWindow:
 
         self.lbl_api_status = ttk.Label(stats_frame, text="API: Desconectado", foreground="red")
         self.lbl_api_status.pack(anchor=tk.W)
+
+        self.lbl_plc_status = ttk.Label(stats_frame, text="Cancela: ○ Desconectado", foreground="gray")
+        self.lbl_plc_status.pack(anchor=tk.W)
 
         self.lbl_progresso_teste = ttk.Label(stats_frame, text="", foreground="blue")
         self.lbl_progresso_teste.pack(anchor=tk.W)
@@ -275,6 +273,22 @@ class MainWindow:
             else:
                 self.adicionar_log("⚠ API não disponível (modo offline)", nivel="WARNING")
                 self.atualizar_status_api(False)
+
+            # Inicializa PLC controller
+            if PLC_HABILITADO:
+                self.adicionar_log("🔌 Conectando ao PLC...")
+                self.plc_controller = PLCController(
+                    callback_status=self._on_plc_status,
+                    callback_veiculo_detectado=self._on_veiculo_no_sensor
+                )
+                if self.plc_controller.conectar():
+                    self.adicionar_log("✓ PLC conectado — cancela pronta")
+                    self.atualizar_status_plc("fechada")
+                else:
+                    self.adicionar_log("⚠ PLC não conectado (inicie o simulador)", nivel="WARNING")
+                    self.atualizar_status_plc("erro")
+            else:
+                self.adicionar_log("○ Integração PLC desativada (PLC_HABILITADO=False)")
 
             self.atualizar_status("Sistema pronto para captura")
 
@@ -365,11 +379,11 @@ class MainWindow:
         if SAVE_DETECTION_IMAGES and imagem_placa is not None:
             salvar_imagem_deteccao(frame, placa)
 
-        # Envia para API
+        # Envia para API (tipo_movimento é determinado automaticamente pelo servidor)
         if self.api_client and self.api_client.esta_conectado():
             resposta = self.api_client.enviar_deteccao(
                 placa=placa,
-                tipo_movimento=self.tipo_movimento,
+                tipo_movimento="entrada",  # valor ignorado pelo servidor; a API decide
                 confianca_ocr=confianca,
                 metodo_ocr=metodo,
                 imagem=imagem_placa,
@@ -378,11 +392,12 @@ class MainWindow:
 
             if resposta:
                 cadastrado = resposta.get("veiculo_cadastrado", False)
-                mensagem = resposta.get("mensagem", "")
+                eh_duplicata = resposta.get("duplicata", False)
+                mensagem_servidor = resposta.get("mensagem", "")
 
-                # Log formatado
-                log_msg = formatar_log_deteccao(placa, self.tipo_movimento, confianca, metodo, cadastrado)
-                self.adicionar_log(log_msg)
+                # Log com mensagem real do servidor (contém [ENTRADA]/[SAÍDA] e nome)
+                icone = "⚠" if eh_duplicata else ("✓" if cadastrado else "🚗")
+                self.adicionar_log(f"{icone} {placa} | {confianca:.0%} | {metodo} | {mensagem_servidor}")
 
                 # Atualiza status veículo
                 if cadastrado:
@@ -393,9 +408,6 @@ class MainWindow:
                 else:
                     self.atualizar_status_veiculo(False)
 
-                # Auto toggle movimento
-                if AUTO_TOGGLE_MOVEMENT and not resposta.get("duplicata", False):
-                    self.alternar_tipo_movimento()
             else:
                 self.adicionar_log(f"⚠ Detecção não enviada: {placa}", nivel="WARNING")
         else:
@@ -476,16 +488,41 @@ class MainWindow:
         """Atualiza barra de status"""
         self.root.after(0, lambda: self.status_label.config(text=mensagem))
 
-    def on_tipo_movimento_changed(self):
-        """Callback quando tipo de movimento muda"""
-        self.tipo_movimento = self.tipo_movimento_var.get()
-        self.adicionar_log(f"📝 Tipo de movimento alterado: {self.tipo_movimento.upper()}")
+    def recarregar_sistema(self):
+        """Para a captura atual e reinicializa todos os componentes"""
+        # Para captura se estiver rodando
+        if self.capturando:
+            self.capturando = False
+            self.btn_iniciar.config(state=tk.NORMAL)
+            self.btn_pausar.config(state=tk.DISABLED)
 
-    def alternar_tipo_movimento(self):
-        """Alterna automaticamente tipo de movimento"""
-        novo_tipo = "saida" if self.tipo_movimento == "entrada" else "entrada"
-        self.tipo_movimento = novo_tipo
-        self.root.after(0, lambda: self.tipo_movimento_var.set(novo_tipo))
+        if self.testando_imagens:
+            self.testando_imagens = False
+            self.btn_parar_teste.config(state=tk.DISABLED)
+            self.root.after(0, lambda: self.lbl_progresso_teste.config(text=""))
+
+        # Fecha câmera atual
+        if self.camera:
+            try:
+                self.camera.fechar()
+            except Exception:
+                pass
+
+        # Desconecta PLC (será reconectado na reinicialização)
+        if self.plc_controller:
+            try:
+                self.plc_controller.desconectar()
+            except Exception:
+                pass
+
+        self.adicionar_log("↺ Recarregando sistema...")
+        self.atualizar_status("Recarregando...")
+
+        # Reinicializa em thread para não travar a UI durante o carregamento do YOLO/OCR
+        def _recarregar():
+            self.inicializar_componentes()
+
+        threading.Thread(target=_recarregar, daemon=True).start()
 
     def selecionar_fonte(self):
         """Abre diálogo para selecionar fonte de vídeo"""
@@ -510,9 +547,116 @@ class MainWindow:
                 self.adicionar_log(f"✗ Erro ao abrir: {filepath}", nivel="ERROR")
 
     def configurar_api(self):
-        """Abre diálogo para configurar API"""
-        # TODO: Implementar diálogo de configuração
-        messagebox.showinfo("Configurar API", "Funcionalidade em desenvolvimento")
+        """Abre diálogo para configurar a URL e timeout da API"""
+        from ..config import BASE_DIR
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Configurar API")
+        dialog.geometry("420x230")
+        dialog.resizable(False, False)
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        # Valores actuais
+        url_atual = self.api_client.api_url if self.api_client else ""
+        # Extrai o host (remove o endpoint /api/v1/registros/deteccao)
+        try:
+            parts = url_atual.split("/")
+            host_atual = f"{parts[0]}//{parts[2]}"
+        except Exception:
+            host_atual = f"http://{API_HOST}" if not API_HOST.startswith("http") else API_HOST
+
+        timeout_atual = str(self.api_client.timeout if self.api_client else API_TIMEOUT)
+
+        frame = ttk.Frame(dialog, padding="15")
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        # Host
+        ttk.Label(frame, text="URL da API (host):").grid(row=0, column=0, sticky=tk.W, pady=4)
+        entry_host = ttk.Entry(frame, width=36)
+        entry_host.insert(0, host_atual)
+        entry_host.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(8, 0), pady=4)
+
+        # Timeout
+        ttk.Label(frame, text="Timeout (segundos):").grid(row=1, column=0, sticky=tk.W, pady=4)
+        entry_timeout = ttk.Entry(frame, width=10)
+        entry_timeout.insert(0, timeout_atual)
+        entry_timeout.grid(row=1, column=1, sticky=tk.W, padx=(8, 0), pady=4)
+
+        # Status de conexão
+        lbl_status = ttk.Label(frame, text="", foreground="gray")
+        lbl_status.grid(row=2, column=0, columnspan=2, sticky=tk.W, pady=4)
+
+        def testar_conexao():
+            host = entry_host.get().strip().rstrip("/")
+            if not host.startswith("http"):
+                lbl_status.config(text="✗ URL deve começar com http:// ou https://", foreground="red")
+                return
+            lbl_status.config(text="Testando conexão...", foreground="gray")
+            dialog.update()
+            try:
+                import requests as _req
+                resp = _req.get(f"{host}/health", timeout=5)
+                if resp.status_code == 200:
+                    lbl_status.config(text="✓ Conexão bem-sucedida!", foreground="green")
+                else:
+                    lbl_status.config(text=f"✗ Servidor respondeu: {resp.status_code}", foreground="orange")
+            except Exception as e:
+                lbl_status.config(text=f"✗ Falha: {type(e).__name__}", foreground="red")
+
+        def salvar():
+            host = entry_host.get().strip().rstrip("/")
+            if not host.startswith("http"):
+                lbl_status.config(text="✗ URL inválida. Use http:// ou https://", foreground="red")
+                return
+            try:
+                timeout = int(entry_timeout.get().strip())
+            except ValueError:
+                lbl_status.config(text="✗ Timeout deve ser um número inteiro", foreground="red")
+                return
+
+            novo_endpoint = f"{host}/api/v1/registros/deteccao"
+
+            # Actualiza o cliente API em memória
+            if self.api_client:
+                self.api_client.api_url = novo_endpoint
+                self.api_client.timeout = timeout
+
+            # Persiste no .env
+            env_path = BASE_DIR / ".env"
+            try:
+                linhas = env_path.read_text(encoding="utf-8").splitlines() if env_path.exists() else []
+                novas = []
+                keys_written = set()
+                for linha in linhas:
+                    if linha.startswith("API_HOST="):
+                        novas.append(f"API_HOST={host}")
+                        keys_written.add("API_HOST")
+                    elif linha.startswith("API_TIMEOUT="):
+                        novas.append(f"API_TIMEOUT={timeout}")
+                        keys_written.add("API_TIMEOUT")
+                    else:
+                        novas.append(linha)
+                if "API_HOST" not in keys_written:
+                    novas.append(f"API_HOST={host}")
+                if "API_TIMEOUT" not in keys_written:
+                    novas.append(f"API_TIMEOUT={timeout}")
+                env_path.write_text("\n".join(novas) + "\n", encoding="utf-8")
+            except Exception as e:
+                self.adicionar_log(f"⚠ Não foi possível salvar .env: {e}", nivel="WARNING")
+
+            self.adicionar_log(f"✓ API configurada: {host} | timeout={timeout}s")
+            dialog.destroy()
+
+        # Botões
+        btn_frame = ttk.Frame(frame)
+        btn_frame.grid(row=3, column=0, columnspan=2, pady=(8, 0))
+
+        ttk.Button(btn_frame, text="Testar Conexão", command=testar_conexao, width=16).pack(side=tk.LEFT, padx=4)
+        ttk.Button(btn_frame, text="Salvar", command=salvar, width=10).pack(side=tk.LEFT, padx=4)
+        ttk.Button(btn_frame, text="Cancelar", command=dialog.destroy, width=10).pack(side=tk.LEFT, padx=4)
+
+        frame.columnconfigure(1, weight=1)
 
     def ver_configuracoes(self):
         """Exibe configurações atuais"""
@@ -695,6 +839,171 @@ class MainWindow:
         self.adicionar_log(f"{resumo}")
         self.atualizar_status(resumo)
 
+    def atualizar_status_plc(self, status: str):
+        """Atualiza label de status da cancela na UI."""
+        mapa = {
+            "aberta": ("Cancela: ↑ ABERTA", "green"),
+            "fechada": ("Cancela: ↓ Fechada", "gray"),
+            "erro": ("Cancela: ✗ Erro PLC", "red"),
+        }
+        texto, cor = mapa.get(status, ("Cancela: ○ Desconectado", "gray"))
+        self.root.after(0, lambda: self.lbl_plc_status.config(text=texto, foreground=cor))
+
+    def _on_plc_status(self, status: str):
+        """Callback chamado pelo PLCController (thread secundária) quando o status muda."""
+        self.atualizar_status_plc(status)
+
+    def _on_veiculo_no_sensor(self):
+        """
+        Callback chamado pelo PLCController quando o sensor de laço deteta um veículo.
+        Captura o frame atual da câmara e processa para registo de placa.
+        """
+        if not self.camera or not self.detector:
+            return
+
+        try:
+            ret, frame = self.camera.ler_frame()
+            if not ret or frame is None:
+                self.adicionar_log("⚠ Sensor ativo mas câmara não disponível", nivel="WARNING")
+                return
+
+            self.atualizar_preview(frame)
+            deteccoes = self.detector.processar_frame(frame)
+
+            if deteccoes:
+                for det in deteccoes:
+                    self.processar_deteccao(det, frame)
+                self.atualizar_estatisticas()
+            else:
+                self.adicionar_log("Sensor: veículo detectado — placa não lida neste frame", nivel="WARNING")
+
+        except Exception as e:
+            logger.error(f"Erro no callback de sensor: {e}")
+
+    def configurar_plc(self):
+        """Abre diálogo para configurar e testar a ligação ao PLC."""
+        from ..config import BASE_DIR
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Configurar PLC / Cancela")
+        dialog.geometry("440x280")
+        dialog.resizable(False, False)
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        frame = ttk.Frame(dialog, padding="15")
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        # IP
+        ttk.Label(frame, text="IP do PLC:").grid(row=0, column=0, sticky=tk.W, pady=4)
+        entry_host = ttk.Entry(frame, width=26)
+        entry_host.insert(0, self.plc_controller.host if self.plc_controller else PLC_HOST)
+        entry_host.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(8, 0), pady=4)
+
+        # Porta
+        ttk.Label(frame, text="Porta Modbus TCP:").grid(row=1, column=0, sticky=tk.W, pady=4)
+        entry_port = ttk.Entry(frame, width=10)
+        entry_port.insert(0, str(self.plc_controller.port if self.plc_controller else PLC_PORT))
+        entry_port.grid(row=1, column=1, sticky=tk.W, padx=(8, 0), pady=4)
+
+        # Mensagem de status
+        lbl_status = ttk.Label(frame, text="", foreground="gray")
+        lbl_status.grid(row=2, column=0, columnspan=2, sticky=tk.W, pady=4)
+
+        def testar_conexao():
+            host = entry_host.get().strip()
+            try:
+                port = int(entry_port.get().strip())
+            except ValueError:
+                lbl_status.config(text="✗ Porta inválida", foreground="red")
+                return
+            lbl_status.config(text="Conectando...", foreground="gray")
+            dialog.update()
+            tmp = PLCController(host=host, port=port)
+            if tmp.conectar():
+                tmp.desconectar()
+                lbl_status.config(text="✓ PLC acessível!", foreground="green")
+            else:
+                lbl_status.config(text="✗ Não foi possível conectar", foreground="red")
+
+        def abrir_manual():
+            if self.plc_controller and self.plc_controller.esta_conectado():
+                threading.Thread(target=self.plc_controller.abrir_cancela, daemon=True).start()
+                lbl_status.config(text="↑ Comando enviado: abrir cancela", foreground="blue")
+            else:
+                lbl_status.config(text="✗ PLC não conectado", foreground="red")
+
+        def fechar_manual():
+            if self.plc_controller and self.plc_controller.esta_conectado():
+                threading.Thread(target=self.plc_controller.fechar_cancela, daemon=True).start()
+                lbl_status.config(text="↓ Comando enviado: fechar cancela", foreground="gray")
+            else:
+                lbl_status.config(text="✗ PLC não conectado", foreground="red")
+
+        def salvar():
+            host = entry_host.get().strip()
+            try:
+                port = int(entry_port.get().strip())
+            except ValueError:
+                lbl_status.config(text="✗ Porta inválida", foreground="red")
+                return
+
+            # Reconecta com novos parâmetros
+            if self.plc_controller:
+                self.plc_controller.desconectar()
+
+            self.plc_controller = PLCController(
+                host=host, port=port,
+                callback_status=self._on_plc_status,
+                callback_veiculo_detectado=self._on_veiculo_no_sensor
+            )
+            if self.plc_controller.conectar():
+                self.adicionar_log(f"✓ PLC reconfigurado: {host}:{port}")
+                self.atualizar_status_plc("fechada")
+            else:
+                self.adicionar_log(f"⚠ PLC configurado mas não conectado: {host}:{port}", nivel="WARNING")
+                self.atualizar_status_plc("erro")
+
+            # Persiste no .env
+            env_path = BASE_DIR / ".env"
+            try:
+                linhas = env_path.read_text(encoding="utf-8").splitlines() if env_path.exists() else []
+                novas = []
+                keys_written = set()
+                for linha in linhas:
+                    if linha.startswith("PLC_HOST="):
+                        novas.append(f"PLC_HOST={host}")
+                        keys_written.add("PLC_HOST")
+                    elif linha.startswith("PLC_PORT="):
+                        novas.append(f"PLC_PORT={port}")
+                        keys_written.add("PLC_PORT")
+                    else:
+                        novas.append(linha)
+                if "PLC_HOST" not in keys_written:
+                    novas.append(f"PLC_HOST={host}")
+                if "PLC_PORT" not in keys_written:
+                    novas.append(f"PLC_PORT={port}")
+                env_path.write_text("\n".join(novas) + "\n", encoding="utf-8")
+            except Exception as e:
+                self.adicionar_log(f"⚠ Não foi possível salvar .env: {e}", nivel="WARNING")
+
+            dialog.destroy()
+
+        # Linha de botões 1 — testes manuais
+        btn_frame1 = ttk.Frame(frame)
+        btn_frame1.grid(row=3, column=0, columnspan=2, pady=(4, 0))
+        ttk.Button(btn_frame1, text="Testar Conexão", command=testar_conexao, width=16).pack(side=tk.LEFT, padx=3)
+        ttk.Button(btn_frame1, text="↑ Abrir", command=abrir_manual, width=10).pack(side=tk.LEFT, padx=3)
+        ttk.Button(btn_frame1, text="↓ Fechar", command=fechar_manual, width=10).pack(side=tk.LEFT, padx=3)
+
+        # Linha de botões 2 — salvar/cancelar
+        btn_frame2 = ttk.Frame(frame)
+        btn_frame2.grid(row=4, column=0, columnspan=2, pady=(8, 0))
+        ttk.Button(btn_frame2, text="Salvar e Reconectar", command=salvar, width=20).pack(side=tk.LEFT, padx=3)
+        ttk.Button(btn_frame2, text="Cancelar", command=dialog.destroy, width=10).pack(side=tk.LEFT, padx=3)
+
+        frame.columnconfigure(1, weight=1)
+
     def on_closing(self):
         """Callback ao fechar janela"""
         if self.capturando or self.testando_imagens:
@@ -712,6 +1021,9 @@ class MainWindow:
 
         if self.camera:
             self.camera.fechar()
+
+        if self.plc_controller:
+            self.plc_controller.desconectar()
 
         self.root.quit()
         self.root.destroy()

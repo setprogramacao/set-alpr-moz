@@ -60,14 +60,16 @@ def processar_deteccao(db: Session, deteccao: DeteccaoRequest, salvar_imagem: bo
     veiculo = buscar_veiculo_por_placa(db, placa_limpa)
     veiculo_cadastrado = veiculo is not None
 
-    # Verifica duplicata temporal
-    if veiculo:
-        eh_duplicata, tempo_desde_ultimo = verificar_duplicata(
-            db, veiculo.id, INTERVALO_DUPLICATA_MINUTOS
-        )
-    else:
-        eh_duplicata = False
-        tempo_desde_ultimo = None
+    # Determina automaticamente o tipo de movimento pela lógica de alternância
+    # (ignora o tipo enviado pelo desktop — o histórico da placa é a fonte da verdade)
+    tipo_movimento_real = determinar_tipo_movimento(
+        db, placa_limpa, veiculo.id if veiculo else None
+    )
+
+    # Verifica duplicata temporal (cobre placas cadastradas e não cadastradas)
+    eh_duplicata, tempo_desde_ultimo = verificar_duplicata(
+        db, placa_limpa, veiculo.id if veiculo else None, INTERVALO_DUPLICATA_MINUTOS
+    )
 
     # Se for duplicata, não registra novamente
     if eh_duplicata:
@@ -101,12 +103,12 @@ def processar_deteccao(db: Session, deteccao: DeteccaoRequest, salvar_imagem: bo
             print(f"Erro ao salvar imagem: {e}")
             # Continua mesmo se falhar ao salvar imagem
 
-    # Registra acesso no banco
+    # Registra acesso no banco usando o tipo determinado automaticamente
     registro = registrar_acesso(
         db=db,
         veiculo_id=veiculo.id if veiculo else None,
         placa_detectada=placa_limpa,
-        tipo_movimento=deteccao.tipo_movimento,
+        tipo_movimento=tipo_movimento_real,
         confianca_ocr=deteccao.confianca_ocr,
         metodo_ocr=deteccao.metodo_ocr,
         imagem_path=imagem_path,
@@ -118,7 +120,8 @@ def processar_deteccao(db: Session, deteccao: DeteccaoRequest, salvar_imagem: bo
     if veiculo:
         veiculo_response = VeiculoComProprietario.model_validate(veiculo)
 
-    mensagem = "Detecção registrada com sucesso"
+    tipo_label = "ENTRADA" if tipo_movimento_real == "entrada" else "SAÍDA"
+    mensagem = f"Detecção registrada [{tipo_label}]"
     if veiculo_cadastrado:
         proprietario = veiculo.proprietario
         mensagem += f" - {proprietario.nome} ({proprietario.categoria})"
@@ -169,22 +172,84 @@ def buscar_veiculo_por_id(db: Session, veiculo_id: int) -> Optional[Veiculo]:
 
 
 # ============================================================================
-# VERIFICAÇÕES DE DUPLICATA
+# LÓGICA DE TIPO DE MOVIMENTO (TOGGLE POR PLACA)
 # ============================================================================
 
-def verificar_duplicata(db: Session, veiculo_id: int, intervalo_minutos: int = 5) -> Tuple[bool, Optional[int]]:
+def determinar_tipo_movimento(db: Session, placa: str, veiculo_id: Optional[int] = None) -> str:
     """
-    Verifica se existe registro recente do veículo (duplicata temporal)
+    Determina automaticamente o tipo de movimento para uma placa.
+
+    Regra: o próximo movimento é sempre o oposto do último registrado para
+    aquela placa. Se não houver registro anterior, assume-se "entrada".
 
     Args:
         db: Sessão do banco
-        veiculo_id: ID do veículo
-        intervalo_minutos: Intervalo mínimo em minutos
+        placa: Placa detectada (limpa, sem hífens)
+        veiculo_id: ID do veículo cadastrado (se existir)
+
+    Returns:
+        "entrada" ou "saida"
+    """
+    ultimo = obter_ultimo_registro_placa(db, placa, veiculo_id)
+
+    if not ultimo:
+        return "entrada"  # primeiro registo da placa é sempre entrada
+
+    return "saida" if ultimo.tipo_movimento == "entrada" else "entrada"
+
+
+def obter_ultimo_registro_placa(
+    db: Session,
+    placa: str,
+    veiculo_id: Optional[int] = None
+) -> Optional[RegistroAcesso]:
+    """
+    Obtém o último registro de acesso de uma placa (cadastrada ou não).
+
+    Prioriza a busca por veiculo_id quando disponível para consistência,
+    mas também verifica por placa_detectada para cobrir registros antigos
+    sem vínculo de veículo.
+
+    Args:
+        db: Sessão do banco
+        placa: Placa detectada
+        veiculo_id: ID do veículo (opcional)
+
+    Returns:
+        RegistroAcesso mais recente ou None
+    """
+    if veiculo_id:
+        # Busca por ID do veículo (mais preciso para veículos cadastrados)
+        return db.query(RegistroAcesso).filter(
+            RegistroAcesso.veiculo_id == veiculo_id
+        ).order_by(desc(RegistroAcesso.data_hora)).first()
+
+    # Para veículos não cadastrados, busca pela placa detectada
+    return db.query(RegistroAcesso).filter(
+        RegistroAcesso.placa_detectada == placa
+    ).order_by(desc(RegistroAcesso.data_hora)).first()
+
+
+# ============================================================================
+# VERIFICAÇÕES DE DUPLICATA
+# ============================================================================
+
+def verificar_duplicata(db: Session, placa: str, veiculo_id: Optional[int], intervalo_minutos: int = 5) -> Tuple[bool, Optional[int]]:
+    """
+    Verifica se existe registro recente da placa (duplicata temporal).
+
+    Funciona tanto para veículos cadastrados quanto para não cadastrados.
+
+    Args:
+        db: Sessão do banco
+        placa: Placa detectada
+        veiculo_id: ID do veículo (None se não cadastrado)
+        intervalo_minutos: Intervalo mínimo em minutos para considerar duplicata
 
     Returns:
         Tupla (eh_duplicata: bool, segundos_desde_ultimo: Optional[int])
     """
-    ultimo_registro = obter_ultimo_registro_veiculo(db, veiculo_id)
+    ultimo_registro = obter_ultimo_registro_placa(db, placa, veiculo_id)
 
     if not ultimo_registro:
         return False, None
@@ -200,7 +265,7 @@ def verificar_duplicata(db: Session, veiculo_id: int, intervalo_minutos: int = 5
 
 def obter_ultimo_registro_veiculo(db: Session, veiculo_id: int) -> Optional[RegistroAcesso]:
     """
-    Obtém último registro de acesso de um veículo
+    Obtém último registro de acesso de um veículo cadastrado.
 
     Args:
         db: Sessão do banco
