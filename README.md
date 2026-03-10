@@ -168,9 +168,8 @@ a passagem de veículos, controlando a cancela eletrônica e gerando relatórios
      │                      │    mensagem, duplicata}   │                    │
      │                      │                           │                    │
      │               ┌──────▼──────────────────────┐    │                    │
-     │               │  SE cadastrado=true          │    │                    │
-     │               │     E confiança ≥ 70%        │    │                    │
-     │               │     E não duplicata:         │    │                    │
+     │               │  SE OCR leu placa            │    │                    │
+     │               │    (cadastrada ou não):      │    │                    │
      │               └──────┬──────────────────────-┘    │                    │
      │                      │── Write Coil 0 = True ─────────────────────────►│
      │                      │                           │   ┌─────────────┐   │
@@ -404,34 +403,39 @@ a passagem de veículos, controlando a cancela eletrônica e gerando relatórios
 | Coil | 0 | FC01 (read) / FC05 (write) | Escrita pelo Desktop | Comando cancela: `True`=abrir, `False`=fechar |
 | Discrete Input | 0 | FC02 (read) | Leitura pelo Desktop | Sensor de laço: `True`=veículo presente |
 
-### Condições para Abertura da Cancela
+### Regras de Acesso e Abertura da Cancela
+
+Toda a viatura que entra no campus deve ser registada. A cancela é controlada
+pelo sensor de laço indutivo e pelo resultado do OCR — não pelo cadastro da placa.
 
 ```
-  Nova detecção recebida
+  Sensor de laço deteta veículo (DI 0 = True)
+           │
+           ▼
+    Câmara captura frame e processa OCR
            │
     ┌──────▼──────┐
-    │  Veículo    │── Não ──► Regista mas não abre cancela
-    │  cadastrado?│
-    └──────┬──────┘
-           │ Sim
+    │  OCR leu a  │── Não ──► Cancela NÃO abre
+    │    placa?   │           Agente de segurança regista manualmente
+    └──────┬──────┘           e abre cancela pelo botão físico
+           │ Sim (qualquer placa, cadastrada ou não)
+           ▼
+    Movimento registado na BD (entrada ou saída)
+           │
     ┌──────▼──────┐
-    │  Confiança  │── < 70% ─► Regista mas não abre cancela
-    │   ≥ 70%?    │
-    └──────┬──────┘
-           │ Sim
-    ┌──────▼──────┐
-    │  É duplicata│── Sim ──► Ignora (cooldown ativo)
-    │  (cooldown)?│
-    └──────┬──────┘
-           │ Não
-    ┌──────▼──────┐
-    │  PLC        │── Não ──► Regista sem controlo PLC
+    │  PLC        │── Não ──► Registo feito, sem controlo PLC
     │  conectado? │
     └──────┬──────┘
            │ Sim
            ▼
     abrir_cancela()  →  Coil 0 = True
+           │
+    Sensor OFF (veículo passou)  →  fechar_cancela()  →  Coil 0 = False
 ```
+
+> **Nota:** O cadastro da placa não é condição de acesso.
+> Veículos não cadastrados entram e são registados como "desconhecido".
+> O relatório permite depois identificar padrões e presenças no campus.
 
 ### Simulador PLC Virtual
 

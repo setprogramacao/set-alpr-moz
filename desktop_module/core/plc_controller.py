@@ -31,12 +31,13 @@ class PLCController:
     """
     Controlador de cancela eletrônica via Modbus TCP.
 
-    Fluxo de operação (autônomo):
+    Fluxo de operação:
     1. Sensor de laço indutivo detecta veículo (DI 0 = True)
-    2. Cancela abre automaticamente (Coil 0 = True)
-    3. Callback opcional notifica módulo de câmara para capturar/registar placa
-    4. Sensor indica que veículo passou (DI 0 = False) → cancela fecha
-    5. Fallback: fecha após BARREIRA_TIMEOUT_SEGUNDOS se sensor não responder
+    2. Callback aciona câmara para capturar e ler a placa via OCR
+    3. Se OCR tiver sucesso → cancela abre (Coil 0 = True) + movimento registado
+    4. Se OCR falhar → cancela NÃO abre (agente de segurança intervém manualmente)
+    5. Sensor indica que veículo passou (DI 0 = False) → cancela fecha
+    6. Fallback: fecha após BARREIRA_TIMEOUT_SEGUNDOS se sensor não responder
     """
 
     def __init__(
@@ -167,12 +168,12 @@ class PLCController:
         Loop principal autónomo do sensor de laço indutivo.
 
         Lógica:
-        - Sensor ON  → abre cancela + dispara callback para câmara capturar placa
-        - Sensor OFF → fecha cancela
+        - Sensor ON  → aciona câmara para ler placa (a abertura da cancela depende do OCR)
+        - Sensor OFF → fecha cancela se estava aberta
         - Fallback   → fecha se cancela ficar aberta além de barreira_timeout segundos
         """
         veiculo_presente = False
-        tempo_abertura: Optional[float] = None
+        tempo_detecao: Optional[float] = None
         POLL = 0.3  # segundos entre leituras
 
         logger.debug("Loop de sensor iniciado")
@@ -185,41 +186,33 @@ class PLCController:
             estado = self.ler_sensor_laco()
 
             if estado is True and not veiculo_presente:
-                # Veículo entrou no laço → abre cancela
+                # Veículo entrou no laço → aciona câmara (cancela abre só se OCR tiver sucesso)
                 veiculo_presente = True
-                tempo_abertura = time.time()
-                self._abrir_por_sensor()
+                tempo_detecao = time.time()
+                logger.info("Sensor ON — acionando câmara para leitura de placa")
+                if self.callback_veiculo_detectado:
+                    threading.Thread(
+                        target=self.callback_veiculo_detectado,
+                        daemon=True
+                    ).start()
 
             elif estado is False and veiculo_presente:
-                # Veículo saiu do laço → fecha cancela
+                # Veículo saiu do laço → fecha cancela se estava aberta
                 veiculo_presente = False
-                tempo_abertura = None
-                self._fechar_por_sensor()
-
-            elif veiculo_presente and tempo_abertura is not None:
-                # Fallback: cancela aberta por demasiado tempo
-                if time.time() - tempo_abertura >= self.barreira_timeout:
-                    logger.warning(f"Timeout ({self.barreira_timeout}s) — fechando cancela por segurança")
-                    veiculo_presente = False
-                    tempo_abertura = None
+                tempo_detecao = None
+                if self._cancela_aberta:
                     self._fechar_por_sensor()
 
+            elif veiculo_presente and tempo_detecao is not None:
+                # Fallback: veículo bloqueado ou cancela aberta demasiado tempo
+                if time.time() - tempo_detecao >= self.barreira_timeout:
+                    logger.warning(f"Timeout ({self.barreira_timeout}s) — resetando estado")
+                    veiculo_presente = False
+                    tempo_detecao = None
+                    if self._cancela_aberta:
+                        self._fechar_por_sensor()
+
             time.sleep(POLL)
-
-    def _abrir_por_sensor(self):
-        """Abre cancela acionada pelo sensor e notifica câmara."""
-        sucesso = self._escrever_coil(True)
-        if sucesso:
-            self._cancela_aberta = True
-            self._notificar_status("aberta")
-            logger.info("↑ Cancela ABERTA (sensor de laço)")
-
-            # Notifica câmara para capturar e processar placa
-            if self.callback_veiculo_detectado:
-                threading.Thread(
-                    target=self.callback_veiculo_detectado,
-                    daemon=True
-                ).start()
 
     def _fechar_por_sensor(self):
         """Fecha cancela após veículo passar."""

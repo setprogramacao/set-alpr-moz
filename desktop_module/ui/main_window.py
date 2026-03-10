@@ -856,7 +856,10 @@ class MainWindow:
     def _on_veiculo_no_sensor(self):
         """
         Callback chamado pelo PLCController quando o sensor de laço deteta um veículo.
-        Captura o frame atual da câmara e processa para registo de placa.
+
+        Regra de acesso:
+        - OCR lê placa (qualquer placa) → cancela abre + movimento registado
+        - OCR falha → cancela NÃO abre → agente de segurança intervém
         """
         if not self.camera or not self.detector:
             return
@@ -871,11 +874,24 @@ class MainWindow:
             deteccoes = self.detector.processar_frame(frame)
 
             if deteccoes:
+                # OCR teve sucesso — regista e abre cancela
                 for det in deteccoes:
                     self.processar_deteccao(det, frame)
                 self.atualizar_estatisticas()
+
+                if self.plc_controller and self.plc_controller.esta_conectado():
+                    threading.Thread(
+                        target=self.plc_controller.abrir_cancela,
+                        daemon=True
+                    ).start()
+                    placa_lida = deteccoes[0]["placa"]
+                    self.adicionar_log(f"↑ Cancela aberta — placa lida: {placa_lida}")
             else:
-                self.adicionar_log("Sensor: veículo detectado — placa não lida neste frame", nivel="WARNING")
+                # OCR falhou — cancela NÃO abre
+                self.adicionar_log(
+                    "⚠ Placa não lida — cancela NÃO abre. Acionar agente de segurança.",
+                    nivel="WARNING"
+                )
 
         except Exception as e:
             logger.error(f"Erro no callback de sensor: {e}")

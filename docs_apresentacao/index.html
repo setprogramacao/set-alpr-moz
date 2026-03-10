@@ -496,7 +496,7 @@
           <div class="flow-icon bg-violet-100 text-violet-600"><i class="fa fa-door-open"></i></div>
           <div class="text-center">
             <div class="font-semibold text-sm">Cancela Abre</div>
-            <div class="text-xs text-slate-500">Se cadastrado</div>
+            <div class="text-xs text-slate-500">Se OCR leu placa</div>
             <div class="text-xs text-violet-500">Modbus TCP</div>
           </div>
         </div>
@@ -966,32 +966,32 @@
         <h3 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2"><i class="fa fa-rotate text-violet-500"></i> Fluxo de Abertura da Cancela</h3>
         <div class="space-y-2">
           <div class="flex items-center gap-3">
-            <div class="w-7 h-7 bg-green-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">1</div>
-            <div class="text-sm">Placa cadastrada detectada com confiança ≥ 70%</div>
+            <div class="w-7 h-7 bg-slate-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">1</div>
+            <div class="text-sm">Sensor de laço (DI 0 = True) deteta veículo no portão</div>
           </div>
           <div class="ml-3.5 w-0.5 h-4 bg-slate-200"></div>
           <div class="flex items-center gap-3">
             <div class="w-7 h-7 bg-blue-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">2</div>
-            <div class="text-sm">API confirma registo → Desktop recebe resposta</div>
+            <div class="text-sm">PLCController aciona câmara → OCR processa placa</div>
           </div>
           <div class="ml-3.5 w-0.5 h-4 bg-slate-200"></div>
           <div class="flex items-center gap-3">
-            <div class="w-7 h-7 bg-violet-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">3</div>
-            <div class="text-sm">PLCController escreve <code class="bg-violet-100 px-1 rounded text-xs">Coil 0 = True</code> via Modbus TCP</div>
+            <div class="w-7 h-7 bg-green-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">3</div>
+            <div class="text-sm"><strong>OCR leu placa?</strong> → Movimento registado + <code class="bg-green-100 px-1 rounded text-xs">Coil 0 = True</code> (cancela abre)</div>
           </div>
           <div class="ml-3.5 w-0.5 h-4 bg-slate-200"></div>
           <div class="flex items-center gap-3">
-            <div class="w-7 h-7 bg-orange-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">4</div>
-            <div class="text-sm">Thread monitora <code class="bg-orange-100 px-1 rounded text-xs">DI 0</code> (sensor de laço) a cada 300ms</div>
+            <div class="w-7 h-7 bg-red-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">✕</div>
+            <div class="text-sm text-red-700"><strong>OCR falhou?</strong> → Cancela NÃO abre → Agente de segurança regista e abre manualmente</div>
           </div>
           <div class="ml-3.5 w-0.5 h-4 bg-slate-200"></div>
           <div class="flex items-center gap-3">
-            <div class="w-7 h-7 bg-teal-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">5</div>
-            <div class="text-sm">Veículo passa → sensor vai a False → escreve <code class="bg-teal-100 px-1 rounded text-xs">Coil 0 = False</code></div>
+            <div class="w-7 h-7 bg-teal-500 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">4</div>
+            <div class="text-sm">Sensor OFF (DI 0 = False) → veículo passou → <code class="bg-teal-100 px-1 rounded text-xs">Coil 0 = False</code> (cancela fecha)</div>
           </div>
           <div class="ml-3.5 w-0.5 h-4 bg-slate-200"></div>
           <div class="flex items-center gap-3">
-            <div class="w-7 h-7 bg-red-400 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">⚠</div>
+            <div class="w-7 h-7 bg-orange-400 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0">⚠</div>
             <div class="text-sm text-slate-500">Fallback: se sensor não responder em 8s → cancela fecha por segurança</div>
           </div>
         </div>
