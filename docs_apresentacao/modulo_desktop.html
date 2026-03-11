@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Módulo Desktop — Sistema ALPR UNIPIAGET</title>
+  <style>
+    html { scroll-behavior: smooth; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      color: #111;
+      background: #fff;
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 20mm 25mm;
+    }
+
+    .capa {
+      text-align: center;
+      padding: 40mm 0 30mm;
+      border-bottom: 2px solid #333;
+      margin-bottom: 20mm;
+      page-break-after: always;
+    }
+    .capa .instituicao { font-size: 14pt; font-weight: bold; margin-bottom: 8mm; }
+    .capa .titulo { font-size: 16pt; font-weight: bold; margin: 10mm 0 6mm; line-height: 1.4; }
+    .capa .subtitulo { font-size: 13pt; margin-bottom: 10mm; font-style: italic; }
+    .capa .info { font-size: 11pt; margin-top: 8mm; line-height: 2; }
+
+    h1 { font-size: 14pt; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 2mm; margin: 10mm 0 4mm; }
+    h2 { font-size: 13pt; font-weight: bold; margin: 8mm 0 3mm; }
+    h3 { font-size: 12pt; font-weight: bold; margin: 6mm 0 2mm; }
+
+    p { margin-bottom: 3mm; text-align: justify; }
+
+    table { width: 100%; border-collapse: collapse; margin: 4mm 0 6mm; font-size: 10.5pt; }
+    th { background: #ddd; font-weight: bold; padding: 2mm 3mm; border: 1px solid #999; text-align: left; }
+    td { padding: 2mm 3mm; border: 1px solid #bbb; vertical-align: top; }
+    tr:nth-child(even) td { background: #f7f7f7; }
+    .center { text-align: center; }
+    .bold { font-weight: bold; }
+
+    .figura {
+      border: 1px solid #bbb;
+      border-radius: 3px;
+      padding: 4mm;
+      margin: 5mm 0 7mm;
+      background: #fafafa;
+    }
+    .figura-legenda {
+      font-size: 10pt;
+      font-style: italic;
+      color: #444;
+      margin-top: 2mm;
+      text-align: center;
+    }
+
+    .codigo {
+      background: #f5f5f5;
+      border-left: 3px solid #555;
+      padding: 3mm 5mm;
+      margin: 4mm 0;
+      font-family: "Courier New", monospace;
+      font-size: 9.5pt;
+      line-height: 1.7;
+    }
+
+    .destaque {
+      background: #fffde7;
+      border: 1px solid #f0c030;
+      border-radius: 3px;
+      padding: 3mm 5mm;
+      margin: 4mm 0 6mm;
+      font-size: 10.5pt;
+    }
+
+    .referencias p {
+      text-indent: -12mm;
+      padding-left: 12mm;
+      margin-bottom: 3mm;
+      font-size: 11pt;
+    }
+
+    hr { border: none; border-top: 1px solid #bbb; margin: 8mm 0; }
+
+    svg { display: block; margin: 4mm auto; max-width: 100%; }
+
+    /* ---- BOTÕES FLUTUANTES ---- */
+    .fab-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 999;
+    }
+    .fab {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.28);
+      transition: transform 0.15s, box-shadow 0.15s;
+      font-size: 18px;
+      text-decoration: none;
+    }
+    .fab:hover {
+      transform: scale(1.10);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    }
+    .fab-print { background: #2c3e50; color: #fff; }
+    .fab-index { background: #555; color: #fff; }
+
+    /* ---- ÍNDICE ---- */
+    .indice { margin: 4mm 0 6mm; }
+    .indice a { color: #111; text-decoration: none; }
+    .indice a:hover { text-decoration: underline; color: #1a0dab; }
+    .indice .indice-titulo-grupo { font-weight: bold; margin-top: 5mm; margin-bottom: 1mm; font-size: 11pt; }
+    .indice .sub { padding-left: 8mm; display: block; }
+    .indice .subsub { padding-left: 16mm; display: block; }
+    .indice .linha { display: flex; margin-bottom: 1mm; }
+    .indice .linha .dots { flex: 1; border-bottom: 1px dotted #888; margin: 0 2mm 3px; min-width: 10px; }
+
+    @media print {
+      body { padding: 15mm 20mm; }
+      a { color: #000; text-decoration: none; }
+      .fab-container { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- CAPA -->
+<div class="capa">
+  <div class="instituicao">Universidade Jean Piaget de Moçambique</div>
+  <div style="font-size:12pt; margin-bottom:6mm;">Faculdade de Engenharia, Ciências e Tecnologia<br>Curso de Engenharia Electrónica e de Telecomunicações</div>
+  <div class="titulo">Sistema de Reconhecimento Automático de Placas Veiculares (ALPR) com Controlo de Cancela Electrónica</div>
+  <div class="subtitulo">Módulo Desktop: Arquitectura, Funcionamento e Integração</div>
+  <div class="info">
+    <strong>Estudante:</strong> Salvador Eduardo Tomoecene<br>
+    <strong>Documento:</strong> Descrição Técnica do Módulo Desktop<br>
+    <strong>Ano Lectivo:</strong> 2026
+  </div>
+</div>
+
+<!-- ÍNDICE -->
+<h1 id="indice">Índice</h1>
+
+<div class="indice">
+  <div class="linha"><a href="#sec1">1. Introdução e Papel do Módulo Desktop</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec2">2. Arquitectura Interna</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec3">3. Subcomponentes</a><span class="dots"></span></div>
+  <span class="sub"><div class="linha"><a href="#sec3-1">3.1 Gestor de Câmara (CameraManager)</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec3-2">3.2 Detector de Placas (PlateDetector)</a><span class="dots"></span></div></span>
+  <span class="subsub"><div class="linha"><a href="#sec3-2-1">3.2.1 Detecção com YOLOv8</a><span class="dots"></span></div></span>
+  <span class="subsub"><div class="linha"><a href="#sec3-2-2">3.2.2 Reconhecimento de Texto com OCR</a><span class="dots"></span></div></span>
+  <span class="subsub"><div class="linha"><a href="#sec3-2-3">3.2.3 Lógica de Seleção Híbrida e Correcção</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec3-3">3.3 Cliente da API (APIClient)</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec3-4">3.4 Controlador PLC (PLCController)</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec3-5">3.5 Interface Gráfica (MainWindow)</a><span class="dots"></span></div></span>
+  <div class="linha"><a href="#sec4">4. Fluxo Completo de Detecção e Decisão</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec5">5. Modelo de Concorrência (Threads)</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec6">6. Comunicação com o Módulo Web</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec7">7. Comunicação com o PLC</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec8">8. Tecnologias e Bibliotecas</a><span class="dots"></span></div>
+  <div class="linha"><a href="#refs">9. Referências Bibliográficas</a><span class="dots"></span></div>
+
+  <p class="indice-titulo-grupo">Outros Documentos do Projecto</p>
+  <div class="linha"><a href="hardware_selecao.html">Seleção de Hardware — Sensores, Atuadores e Componentes do Sistema</a><span class="dots"></span></div>
+  <div class="linha"><a href="modulo_web.html">Módulo Web — Arquitectura, API REST, Painel de Administração e Integração</a><span class="dots"></span></div>
+</div>
+
+<hr>
+
+<!-- SECÇÃO 1 -->
+<h1 id="sec1">1. Introdução e Papel do Módulo Desktop</h1>
+
+<p>
+  O módulo Desktop constitui o núcleo operacional do sistema ALPR, sendo a componente responsável
+  por integrar todos os elementos físicos (câmara, PLC, sensor) com a lógica de reconhecimento
+  inteligente de matrículas. Enquanto o módulo Web se dedica à gestão de dados, relatórios e
+  interface de administração, o módulo Desktop opera em tempo real, processando o fluxo de vídeo
+  capturado pela câmara e tomando decisões sobre a abertura ou fecho da cancela electrónica.
+</p>
+<p>
+  Implementado inteiramente em Python 3, o módulo combina visão computacional,
+  aprendizagem profunda (<em>deep learning</em>) e comunicação industrial num único processo
+  que corre numa estação de trabalho ou computador de baixo custo instalado na portaria do campus.
+  A linguagem Python foi escolhida pela sua vasta ecosistema de bibliotecas científicas e de
+  visão computacional, e pela facilidade de integração entre componentes heterogéneos
+  (Van Rossum &amp; Drake, 2009).
+</p>
+<p>
+  O módulo estabelece comunicação com duas entidades externas distintas:
+</p>
+<table>
+  <thead><tr><th>Entidade</th><th>Protocolo</th><th>Finalidade</th></tr></thead>
+  <tbody>
+    <tr><td>Módulo Web (FastAPI)</td><td>HTTP/REST (JSON)</td><td>Registar movimentos de viaturas, consultar histórico, autenticar utilizadores</td></tr>
+    <tr><td>PLC (Siemens LOGO! 8.3)</td><td>Modbus TCP (porta 502)</td><td>Leitura do sensor de laço indutivo (DI 0) e comando da cancela (Coil 0)</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- SECÇÃO 2 -->
+<h1 id="sec2">2. Arquitectura Interna</h1>
+
+<p>
+  O módulo Desktop segue o padrão de arquitectura em camadas, onde cada subcomponente tem
+  responsabilidade única e bem delimitada. A classe central <code>MainWindow</code> orquestra
+  os restantes, inicializando-os na arranque e coordenando o fluxo de dados entre eles.
+  Este princípio, designado na engenharia de software como responsabilidade única
+  (<em>Single Responsibility Principle</em>), facilita a manutenção e a substituição
+  individual de componentes (Martin, 2017).
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 680 420" style="width:100%;">
+  <text x="340" y="20" font-size="12" font-weight="bold" text-anchor="middle" fill="#222">Arquitectura Interna — Módulo Desktop</text>
+
+  <!-- MainWindow (orquestrador central) -->
+  <rect x="215" y="35" width="250" height="50" rx="5" fill="#e8eaf6" stroke="#3949ab" stroke-width="2"/>
+  <text x="340" y="55" font-size="11" font-weight="bold" text-anchor="middle" fill="#1a237e">MainWindow</text>
+  <text x="340" y="70" font-size="9" text-anchor="middle" fill="#3949ab">(Tkinter UI — orquestrador central)</text>
+
+  <!-- CameraManager -->
+  <rect x="30" y="140" width="140" height="50" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="100" y="162" font-size="10" font-weight="bold" text-anchor="middle" fill="#0d47a1">CameraManager</text>
+  <text x="100" y="177" font-size="8.5" text-anchor="middle" fill="#1565c0">Captura de frames RTSP/USB</text>
+
+  <!-- PlateDetector -->
+  <rect x="200" y="140" width="140" height="50" rx="4" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+  <text x="270" y="162" font-size="10" font-weight="bold" text-anchor="middle" fill="#4a148c">PlateDetector</text>
+  <text x="270" y="177" font-size="8.5" text-anchor="middle" fill="#6a1b9a">YOLO + OCR + Validação</text>
+
+  <!-- APIClient -->
+  <rect x="370" y="140" width="140" height="50" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="440" y="162" font-size="10" font-weight="bold" text-anchor="middle" fill="#1b5e20">APIClient</text>
+  <text x="440" y="177" font-size="8.5" text-anchor="middle" fill="#2e7d32">HTTP REST → FastAPI</text>
+
+  <!-- PLCController -->
+  <rect x="510" y="140" width="140" height="50" rx="4" fill="#fff8e1" stroke="#f57f17" stroke-width="1.5"/>
+  <text x="580" y="162" font-size="10" font-weight="bold" text-anchor="middle" fill="#e65100">PLCController</text>
+  <text x="580" y="177" font-size="8.5" text-anchor="middle" fill="#f57f17">Modbus TCP → PLC</text>
+
+  <!-- Setas de MainWindow para subcomponentes -->
+  <line x1="280" y1="85" x2="100" y2="140" stroke="#555" stroke-width="1.2"/>
+  <line x1="310" y1="85" x2="270" y2="140" stroke="#555" stroke-width="1.2"/>
+  <line x1="370" y1="85" x2="440" y2="140" stroke="#555" stroke-width="1.2"/>
+  <line x1="400" y1="85" x2="580" y2="140" stroke="#555" stroke-width="1.2"/>
+  <text x="340" y="115" font-size="8.5" text-anchor="middle" fill="#555">instancia e coordena</text>
+
+  <!-- PlateDetector detalhe interno -->
+  <rect x="120" y="240" width="300" height="120" rx="4" fill="#fafafa" stroke="#9c27b0" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="270" y="258" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#4a148c">PlateDetector — detalhe interno</text>
+  <rect x="130" y="265" width="80" height="35" rx="3" fill="#ce93d8" stroke="#7b1fa2"/>
+  <text x="170" y="280" font-size="8.5" text-anchor="middle" fill="#fff" font-weight="bold">YOLOv8</text>
+  <text x="170" y="293" font-size="7.5" text-anchor="middle" fill="#fff">Localiza placa</text>
+  <rect x="220" y="265" width="80" height="35" rx="3" fill="#ba68c8" stroke="#7b1fa2"/>
+  <text x="260" y="280" font-size="8.5" text-anchor="middle" fill="#fff" font-weight="bold">EasyOCR</text>
+  <text x="260" y="293" font-size="7.5" text-anchor="middle" fill="#fff">Deep learning OCR</text>
+  <rect x="310" y="265" width="80" height="35" rx="3" fill="#ab47bc" stroke="#7b1fa2"/>
+  <text x="350" y="280" font-size="8.5" text-anchor="middle" fill="#fff" font-weight="bold">Tesseract</text>
+  <text x="350" y="293" font-size="7.5" text-anchor="middle" fill="#fff">OCR clássico</text>
+  <!-- Setas internas -->
+  <line x1="210" y1="282" x2="220" y2="282" stroke="#555" stroke-width="1"/>
+  <line x1="300" y1="282" x2="310" y2="282" stroke="#555" stroke-width="1"/>
+  <rect x="130" y="310" width="260" height="35" rx="3" fill="#f3e5f5" stroke="#9c27b0"/>
+  <text x="260" y="325" font-size="8.5" text-anchor="middle" fill="#4a148c" font-weight="bold">Selecção Híbrida + Correcção + Validação</text>
+  <text x="260" y="338" font-size="7.5" text-anchor="middle" fill="#4a148c">Regex: ^[A-Z]{3}[0-9]{3}[A-Z]{2}$</text>
+  <line x1="260" y1="300" x2="260" y2="310" stroke="#9c27b0" stroke-width="1"/>
+
+  <!-- Seta de PlateDetector para o seu detalhe -->
+  <line x1="270" y1="190" x2="270" y2="240" stroke="#9c27b0" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Entidades externas -->
+  <rect x="365" y="310" width="120" height="40" rx="4" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="425" y="328" font-size="9" text-anchor="middle" fill="#1b5e20" font-weight="bold">Módulo Web</text>
+  <text x="425" y="342" font-size="8" text-anchor="middle" fill="#2e7d32">FastAPI (REST)</text>
+  <line x1="440" y1="190" x2="440" y2="310" stroke="#2e7d32" stroke-width="1.2"/>
+  <text x="455" y="255" font-size="8" fill="#2e7d32">HTTP POST</text>
+
+  <rect x="510" y="310" width="120" height="40" rx="4" fill="#fff8e1" stroke="#f57f17"/>
+  <text x="570" y="328" font-size="9" text-anchor="middle" fill="#e65100" font-weight="bold">PLC</text>
+  <text x="570" y="342" font-size="8" text-anchor="middle" fill="#f57f17">Modbus TCP</text>
+  <line x1="580" y1="190" x2="580" y2="310" stroke="#f57f17" stroke-width="1.2"/>
+  <text x="595" y="255" font-size="8" fill="#f57f17">TCP/IP</text>
+
+  <!-- Legenda -->
+  <rect x="30" y="380" width="620" height="30" rx="3" fill="#f5f5f5" stroke="#ccc"/>
+  <text x="40" y="398" font-size="8.5" fill="#333">Linhas sólidas = relação de composição (MainWindow instancia os subcomponentes)</text>
+  <text x="380" y="398" font-size="8.5" fill="#555">Linhas tracejadas = detalhe interno do componente</text>
+</svg>
+<div class="figura-legenda">Figura 1 — Arquitectura interna do módulo Desktop com subcomponentes e entidades externas. Elaboração própria (2026).</div>
+</div>
+
+<hr>
+
+<!-- SECÇÃO 3 -->
+<h1 id="sec3">3. Subcomponentes</h1>
+
+<!-- 3.1 CameraManager -->
+<h2 id="sec3-1">3.1 Gestor de Câmara (CameraManager)</h2>
+
+<p>
+  O <code>CameraManager</code> abstrai a interface com o dispositivo de captura de vídeo.
+  Internamente, utiliza a biblioteca OpenCV (<em>Open Source Computer Vision Library</em>)
+  para estabelecer a ligação à câmara, seja ela local (USB/webcam) ou remota (câmara IP
+  via protocolo RTSP). A abstracção permite que o restante sistema não precise de conhecer
+  o tipo ou a localização física da câmara (Bradski, 2000).
+</p>
+<table>
+  <thead><tr><th>Método</th><th>Descrição</th></tr></thead>
+  <tbody>
+    <tr><td><code>abrir(fonte)</code></td><td>Inicializa o <code>cv2.VideoCapture</code> com o índice do dispositivo local ou URL RTSP da câmara IP</td></tr>
+    <tr><td><code>ler_frame()</code></td><td>Devolve o par <code>(ret, frame)</code> onde <code>ret</code> indica sucesso e <code>frame</code> é a imagem em formato NumPy BGR</td></tr>
+    <tr><td><code>fechar()</code></td><td>Libera os recursos de captura, encerrando a ligação com o dispositivo</td></tr>
+  </tbody>
+</table>
+<p>
+  O URL de acesso à câmara IP segue o padrão RTSP (<em>Real Time Streaming Protocol</em>)
+  amplamente suportado por câmaras de vigilância:
+</p>
+<div class="codigo">rtsp://&lt;utilizador&gt;:&lt;palavra-passe&gt;@&lt;IP&gt;:554/stream</div>
+
+<!-- 3.2 PlateDetector -->
+<h2 id="sec3-2">3.2 Detector de Placas (PlateDetector)</h2>
+
+<p>
+  O <code>PlateDetector</code> encapsula toda a lógica de identificação e leitura de
+  matrículas a partir de fotogramas de vídeo. Opera em dois estágios sequenciais:
+  primeiro localiza a região da matrícula na imagem (detecção), depois converte os pixels
+  dessa região em texto (reconhecimento).
+</p>
+
+<h3 id="sec3-2-1">3.2.1 Detecção com YOLOv8</h3>
+
+<p>
+  A detecção da matrícula é realizada por um modelo da família YOLO
+  (<em>You Only Look Once</em>), na sua oitava versão. O YOLO é uma arquitectura de
+  rede neuronal convolucional (<em>Convolutional Neural Network</em> — CNN) que processa
+  a imagem inteira numa única passagem pela rede, produzindo simultaneamente as caixas
+  delimitadoras (<em>bounding boxes</em>) e as probabilidades de classe de todos os objectos
+  detectados. Esta abordagem é significativamente mais veloz do que métodos em dois estágios
+  como a família R-CNN, tornando-a adequada para aplicações em tempo real (Jocher et al., 2023).
+</p>
+<p>
+  O modelo utilizado foi treinado especificamente para detectar regiões de matrícula em
+  fotogramas de tráfego. A saída da rede inclui, para cada detecção, a caixa delimitadora
+  (coordenadas x, y, largura, altura) e o índice de confiança (valor entre 0 e 1).
+  Apenas detecções com confiança superior ao limiar configurado são consideradas, evitando
+  que regiões irrelevantes da imagem sejam processadas pelo OCR.
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 660 160" style="width:100%;">
+  <text x="330" y="18" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Pipeline de Detecção YOLO</text>
+  <!-- Fotograma -->
+  <rect x="10" y="30" width="100" height="80" rx="3" fill="#e3f2fd" stroke="#1565c0"/>
+  <text x="60" y="65" font-size="9" text-anchor="middle" fill="#0d47a1">Fotograma</text>
+  <text x="60" y="78" font-size="9" text-anchor="middle" fill="#0d47a1">de vídeo</text>
+  <text x="60" y="100" font-size="8" text-anchor="middle" fill="#555">1280×720 px</text>
+  <!-- Pré-processamento -->
+  <polygon points="120,70 140,58 140,82" fill="#555"/>
+  <rect x="140" y="30" width="100" height="80" rx="3" fill="#fce4ec" stroke="#c2185b"/>
+  <text x="190" y="65" font-size="9" text-anchor="middle" fill="#880e4f">Pré-processamento</text>
+  <text x="190" y="78" font-size="9" text-anchor="middle" fill="#880e4f">OpenCV</text>
+  <text x="190" y="100" font-size="8" text-anchor="middle" fill="#555">Resize → 640×640</text>
+  <!-- YOLOv8 -->
+  <polygon points="250,70 270,58 270,82" fill="#555"/>
+  <rect x="270" y="30" width="100" height="80" rx="3" fill="#f3e5f5" stroke="#6a1b9a"/>
+  <text x="320" y="60" font-size="9" text-anchor="middle" fill="#4a148c">YOLOv8</text>
+  <text x="320" y="73" font-size="9" text-anchor="middle" fill="#4a148c">Rede Neuronal</text>
+  <text x="320" y="86" font-size="9" text-anchor="middle" fill="#4a148c">CNN</text>
+  <text x="320" y="100" font-size="8" text-anchor="middle" fill="#555">Inferência GPU/CPU</text>
+  <!-- Bounding box -->
+  <polygon points="380,70 400,58 400,82" fill="#555"/>
+  <rect x="400" y="30" width="110" height="80" rx="3" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="455" y="60" font-size="9" text-anchor="middle" fill="#1b5e20">Bounding Boxes</text>
+  <text x="455" y="73" font-size="9" text-anchor="middle" fill="#1b5e20">+ Confiança</text>
+  <text x="455" y="86" font-size="9" text-anchor="middle" fill="#1b5e20">NMS aplicado</text>
+  <text x="455" y="100" font-size="8" text-anchor="middle" fill="#555">conf ≥ limiar?</text>
+  <!-- Recorte -->
+  <polygon points="520,70 540,58 540,82" fill="#555"/>
+  <rect x="540" y="30" width="110" height="80" rx="3" fill="#fff8e1" stroke="#f57f17"/>
+  <text x="595" y="60" font-size="9" text-anchor="middle" fill="#e65100">Recorte da</text>
+  <text x="595" y="73" font-size="9" text-anchor="middle" fill="#e65100">Matrícula</text>
+  <text x="595" y="86" font-size="9" text-anchor="middle" fill="#e65100">(crop)</text>
+  <text x="595" y="100" font-size="8" text-anchor="middle" fill="#555">→ para OCR</text>
+  <!-- Rótulos inferiores -->
+  <text x="330" y="148" font-size="8.5" text-anchor="middle" fill="#555">NMS = Non-Maximum Suppression (filtragem de detecções sobrepostas)</text>
+</svg>
+<div class="figura-legenda">Figura 2 — Pipeline de detecção YOLO: do fotograma original ao recorte da matrícula. Elaboração própria (2026).</div>
+</div>
+
+<h3 id="sec3-2-2">3.2.2 Reconhecimento de Texto com OCR</h3>
+
+<p>
+  Após o recorte da região da matrícula, aplica-se o reconhecimento óptico de caracteres
+  (<em>Optical Character Recognition</em> — OCR). O sistema implementa dois motores
+  de OCR em paralelo, aproveitando as características complementares de cada um.
+</p>
+
+<p>
+  <strong>EasyOCR</strong> é uma biblioteca de OCR baseada em redes neuronais recorrentes
+  (LSTM — <em>Long Short-Term Memory</em>), capaz de reconhecer texto em condições adversas
+  de iluminação e perspectiva. O seu modelo foi treinado em múltiplos idiomas e conjuntos
+  de fontes tipográficas, o que o torna mais robusto a variações na qualidade da imagem
+  (Baek et al., 2019).
+</p>
+
+<p>
+  <strong>Tesseract OCR</strong>, desenvolvido originalmente pela HP e posteriormente
+  mantido pela Google, é um motor de OCR de código aberto baseado em análise de linha
+  e classificação de caracteres por aprendizagem automática. Produz resultados mais
+  consistentes em imagens de alta qualidade e com texto bem definido (Smith, 2007).
+</p>
+
+<table>
+  <thead>
+    <tr><th>Característica</th><th>EasyOCR</th><th>Tesseract OCR</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Tecnologia base</td><td>Rede neuronal (CNN + LSTM)</td><td>Análise de linha + LSTM (v4)</td></tr>
+    <tr><td>Desempenho em má iluminação</td><td>Bom</td><td>Moderado</td></tr>
+    <tr><td>Velocidade de inferência</td><td>Mais lenta</td><td>Mais rápida</td></tr>
+    <tr><td>Saída de confiança por caractere</td><td>Sim</td><td>Sim (conf. por palavra)</td></tr>
+    <tr><td>Dependência de GPU</td><td>Opcional (CPU funciona)</td><td>Não (apenas CPU)</td></tr>
+    <tr><td>Adequação a matrículas</td><td>Alta</td><td>Alta (com modo PSM 8)</td></tr>
+  </tbody>
+</table>
+
+<h3 id="sec3-2-3">3.2.3 Lógica de Seleção Híbrida e Correcção</h3>
+
+<p>
+  Nenhum dos dois motores de OCR é perfeito em todas as condições. Por essa razão, o sistema
+  implementa uma lógica de selecção que combina os resultados de ambos, escolhendo o mais fiável
+  em cada situação. Esta abordagem de conjunto (<em>ensemble</em>) é comum em sistemas de
+  reconhecimento onde a precisão é crítica (Opitz &amp; Maclin, 1999).
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 660 310" style="width:100%;">
+  <text x="330" y="18" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Lógica de Selecção Híbrida OCR</text>
+
+  <!-- Entrada -->
+  <rect x="255" y="28" width="150" height="35" rx="4" fill="#e3f2fd" stroke="#1565c0"/>
+  <text x="330" y="47" font-size="9.5" text-anchor="middle" fill="#0d47a1">Recorte da matrícula</text>
+  <text x="330" y="58" font-size="8.5" text-anchor="middle" fill="#555">(imagem pré-processada)</text>
+  <line x1="255" y1="45" x2="180" y2="85" stroke="#555" stroke-width="1"/>
+  <line x1="405" y1="45" x2="480" y2="85" stroke="#555" stroke-width="1"/>
+
+  <!-- EasyOCR -->
+  <rect x="100" y="85" width="150" height="40" rx="4" fill="#ce93d8" stroke="#7b1fa2"/>
+  <text x="175" y="103" font-size="9.5" text-anchor="middle" fill="#fff" font-weight="bold">EasyOCR</text>
+  <text x="175" y="117" font-size="8.5" text-anchor="middle" fill="#fff">→ texto_A, conf_A</text>
+
+  <!-- Tesseract -->
+  <rect x="410" y="85" width="150" height="40" rx="4" fill="#ab47bc" stroke="#7b1fa2"/>
+  <text x="485" y="103" font-size="9.5" text-anchor="middle" fill="#fff" font-weight="bold">Tesseract</text>
+  <text x="485" y="117" font-size="8.5" text-anchor="middle" fill="#fff">→ texto_B, conf_B</text>
+
+  <!-- Setas para decisão -->
+  <line x1="175" y1="125" x2="250" y2="155" stroke="#555" stroke-width="1"/>
+  <line x1="485" y1="125" x2="410" y2="155" stroke="#555" stroke-width="1"/>
+
+  <!-- Correcção -->
+  <rect x="205" y="155" width="250" height="40" rx="4" fill="#f5f5f5" stroke="#9e9e9e"/>
+  <text x="330" y="173" font-size="9.5" text-anchor="middle" fill="#333" font-weight="bold">Aplicar tabela de correcção OCR</text>
+  <text x="330" y="186" font-size="8" text-anchor="middle" fill="#555">0↔O, 1↔I, 8↔B, 5↔S, 2↔Z, 6↔G</text>
+  <line x1="330" y1="195" x2="330" y2="215" stroke="#555" stroke-width="1"/>
+
+  <!-- Validação -->
+  <rect x="205" y="215" width="250" height="40" rx="4" fill="#fff9c4" stroke="#f9a825"/>
+  <text x="330" y="233" font-size="9.5" text-anchor="middle" fill="#e65100" font-weight="bold">Validar formato moçambicano</text>
+  <text x="330" y="246" font-size="8" text-anchor="middle" fill="#e65100">Regex: ^[A-Z]{3}[0-9]{3}[A-Z]{2}$</text>
+
+  <!-- Decisão final -->
+  <line x1="330" y1="255" x2="330" y2="268" stroke="#555" stroke-width="1"/>
+  <polygon points="310,268 350,268 330,285" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="330" y="279" font-size="8.5" text-anchor="middle" fill="#1b5e20" font-weight="bold">válido?</text>
+
+  <!-- Sim / Não -->
+  <line x1="350" y1="276" x2="510" y2="276" stroke="#2e7d32" stroke-width="1"/>
+  <text x="430" y="271" font-size="8.5" fill="#2e7d32">Sim</text>
+  <rect x="510" y="262" width="130" height="28" rx="3" fill="#c8e6c9" stroke="#388e3c"/>
+  <text x="575" y="278" font-size="9" text-anchor="middle" fill="#1b5e20">→ Placa aceite</text>
+
+  <line x1="310" y1="276" x2="150" y2="276" stroke="#c62828" stroke-width="1"/>
+  <text x="228" y="271" font-size="8.5" fill="#c62828">Não</text>
+  <rect x="20" y="262" width="130" height="28" rx="3" fill="#ffcdd2" stroke="#c62828"/>
+  <text x="85" y="278" font-size="9" text-anchor="middle" fill="#b71c1c">→ Placa rejeitada</text>
+</svg>
+<div class="figura-legenda">Figura 3 — Lógica de selecção híbrida OCR com correcção e validação. Elaboração própria (2026).</div>
+</div>
+
+<p>
+  A tabela de correcção de erros substitui caracteres que o OCR frequentemente confunde
+  em matrículas, dado que a fonte tipográfica usada nas placas veiculares apresenta
+  semelhanças visuais entre certos algarismos e letras:
+</p>
+
+<table>
+  <thead><tr><th>Contexto</th><th>Erro comum</th><th>Correcção aplicada</th><th>Razão</th></tr></thead>
+  <tbody>
+    <tr><td>Posição de letra (1.ª–3.ª e 7.ª–8.ª)</td><td>0, 1, 8, 5, 2, 6</td><td>O, I, B, S, Z, G</td><td>Nessas posições só podem existir letras</td></tr>
+    <tr><td>Posição de dígito (4.ª–6.ª)</td><td>O, I, B, S, Z, G</td><td>0, 1, 8, 5, 2, 6</td><td>Nessas posições só podem existir números</td></tr>
+  </tbody>
+</table>
+
+<!-- 3.3 APIClient -->
+<h2 id="sec3-3">3.3 Cliente da API (APIClient)</h2>
+
+<p>
+  O <code>APIClient</code> é responsável pela comunicação com o módulo Web, enviando os dados
+  de cada detecção para registo na base de dados e recebendo a confirmação do servidor.
+  Utiliza a biblioteca <code>requests</code> do Python para realizar pedidos HTTP de forma
+  síncrona, correndo em <em>thread</em> separada para não bloquear a interface gráfica.
+</p>
+<table>
+  <thead><tr><th>Método</th><th>Operação HTTP</th><th>Endpoint</th><th>Função</th></tr></thead>
+  <tbody>
+    <tr><td><code>enviar_deteccao()</code></td><td>POST</td><td><code>/api/v1/registros/deteccao</code></td><td>Envia placa, confiança, método OCR e imagem (base64)</td></tr>
+    <tr><td><code>testar_conexao()</code></td><td>GET</td><td><code>/health</code></td><td>Verifica se o servidor Web está acessível</td></tr>
+    <tr><td><code>esta_conectado()</code></td><td>—</td><td>—</td><td>Devolve estado interno da última verificação</td></tr>
+  </tbody>
+</table>
+<p>
+  O payload enviado para cada detecção segue o esquema JSON definido nos
+  <em>schemas</em> partilhados (<code>shared/schemas.py</code>):
+</p>
+<div class="codigo">{
+  "placa_detectada": "MZB123MC",
+  "tipo_movimento": "entrada",
+  "confianca_ocr": 0.92,
+  "metodo_ocr": "easyocr",
+  "imagem_base64": "data:image/jpeg;base64,/9j/4AAQ...",
+  "timestamp": "2026-03-11T14:35:22.410"
+}</div>
+
+<!-- 3.4 PLCController -->
+<h2 id="sec3-4">3.4 Controlador PLC (PLCController)</h2>
+
+<p>
+  O <code>PLCController</code> gere toda a comunicação com o PLC via protocolo Modbus TCP,
+  implementado através da biblioteca <code>pymodbus</code>. Funciona de forma autónoma após
+  a sua inicialização, executando um ciclo contínuo de monitorização do sensor de laço
+  indutivo numa <em>thread</em> dedicada.
+</p>
+<p>
+  O Modbus TCP é uma adaptação do protocolo Modbus RS-485 para redes Ethernet, amplamente
+  adoptado na automação industrial pela sua simplicidade e interoperabilidade. Cada
+  comunicação consiste num pedido do cliente (módulo Desktop) ao servidor (PLC), contendo
+  o código de função (<em>Function Code</em>), o endereço do registo e o valor a ler ou
+  escrever (Modbus Organization, 2012).
+</p>
+<table>
+  <thead><tr><th>Registo Modbus</th><th>Tipo</th><th>Endereço</th><th>Direcção</th><th>Significado</th></tr></thead>
+  <tbody>
+    <tr><td>Discrete Input 0</td><td>Entrada digital</td><td>0</td><td>Leitura (FC02)</td><td>Sensor de laço: True = veículo presente</td></tr>
+    <tr><td>Coil 0</td><td>Saída digital</td><td>0</td><td>Escrita (FC05)</td><td>Comando cancela: True = abrir, False = fechar</td></tr>
+  </tbody>
+</table>
+<p>
+  O comportamento do <code>PLCController</code> segue uma máquina de estados com dois estados
+  principais — sensor activado e sensor desactivado — e uma transição de <em>fallback</em>
+  por <em>timeout</em> para garantir que a cancela não fique indefinidamente aberta em caso
+  de falha do sensor:
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 640 200" style="width:100%;">
+  <text x="320" y="18" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Máquina de Estados — PLCController</text>
+
+  <!-- Estado IDLE -->
+  <ellipse cx="100" cy="110" rx="80" ry="45" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="100" y="105" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#0d47a1">IDLE</text>
+  <text x="100" y="118" font-size="8.5" text-anchor="middle" fill="#1565c0">Sensor OFF</text>
+  <text x="100" y="130" font-size="8" text-anchor="middle" fill="#555">Cancela fechada</text>
+
+  <!-- Estado DETECTANDO -->
+  <ellipse cx="320" cy="110" rx="90" ry="45" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+  <text x="320" y="100" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#4a148c">DETECTANDO</text>
+  <text x="320" y="114" font-size="8.5" text-anchor="middle" fill="#4a148c">Sensor ON</text>
+  <text x="320" y="127" font-size="8" text-anchor="middle" fill="#555">A aguardar OCR</text>
+
+  <!-- Estado ABERTA -->
+  <ellipse cx="540" cy="110" rx="80" ry="45" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="540" y="105" font-size="9.5" font-weight="bold" text-anchor="middle" fill="#1b5e20">ABERTA</text>
+  <text x="540" y="118" font-size="8.5" text-anchor="middle" fill="#2e7d32">Coil 0 = True</text>
+  <text x="540" y="130" font-size="8" text-anchor="middle" fill="#555">OCR bem-sucedido</text>
+
+  <!-- Transições -->
+  <!-- IDLE → DETECTANDO -->
+  <path d="M 180,95 Q 230,70 230,110" fill="none" stroke="#555" stroke-width="1.2" marker-end="url(#arr)"/>
+  <text x="218" y="83" font-size="8" fill="#333">DI 0 = True</text>
+  <text x="205" y="94" font-size="7.5" fill="#555">→ dispara câmara</text>
+
+  <!-- DETECTANDO → ABERTA -->
+  <line x1="410" y1="100" x2="460" y2="100" stroke="#2e7d32" stroke-width="1.2"/>
+  <polygon points="456,96 466,100 456,104" fill="#2e7d32"/>
+  <text x="435" y="93" font-size="8" fill="#2e7d32">OCR OK</text>
+
+  <!-- ABERTA → IDLE -->
+  <path d="M 460,130 Q 350,185 180,130" fill="none" stroke="#c62828" stroke-width="1.2" marker-end="url(#arr2)"/>
+  <text x="330" y="180" font-size="8" fill="#c62828">DI 0 = False (veículo passou)</text>
+
+  <!-- DETECTANDO → IDLE (OCR falhou) -->
+  <path d="M 230,120 Q 185,165 180,130" fill="none" stroke="#e65100" stroke-width="1.2" stroke-dasharray="4,2"/>
+  <text x="155" y="165" font-size="8" fill="#e65100">OCR falhou</text>
+
+  <!-- Fallback -->
+  <path d="M 540,155 Q 540,185 370,185 Q 200,185 180,135" fill="none" stroke="#f57f17" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="445" y="190" font-size="8" fill="#f57f17">Timeout (8 s) → fechar</text>
+
+  <!-- Marcadores de seta -->
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+    <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#c62828"/>
+    </marker>
+  </defs>
+</svg>
+<div class="figura-legenda">Figura 4 — Máquina de estados do PLCController. Elaboração própria (2026).</div>
+</div>
+
+<!-- 3.5 MainWindow -->
+<h2 id="sec3-5">3.5 Interface Gráfica (MainWindow)</h2>
+
+<p>
+  A <code>MainWindow</code> é a classe principal do módulo, construída com o <em>framework</em>
+  Tkinter — a biblioteca de interface gráfica incluída na distribuição padrão do Python.
+  Funciona simultaneamente como controlador (<em>controller</em>) e como vista (<em>view</em>),
+  sendo responsável por inicializar todos os subcomponentes, gerir os seus ciclos de vida
+  e apresentar o estado do sistema ao operador.
+</p>
+<table>
+  <thead><tr><th>Elemento da Interface</th><th>Função</th></tr></thead>
+  <tbody>
+    <tr><td>Preview de vídeo</td><td>Apresenta em tempo real o fotograma actual da câmara com as caixas delimitadoras das detecções</td></tr>
+    <tr><td>Painel "Última Detecção"</td><td>Mostra a última placa lida, o nível de confiança do OCR e o estado do veículo (cadastrado / não cadastrado)</td></tr>
+    <tr><td>Painel de Estatísticas</td><td>Contabiliza fotogramas processados, total de detecções e estado actual da cancela e da API</td></tr>
+    <tr><td>Log de Actividades</td><td>Registo cronológico de todos os eventos com <em>timestamp</em></td></tr>
+    <tr><td>Botões de controlo</td><td>Iniciar / pausar captura, recarregar sistema, configurar API e PLC</td></tr>
+  </tbody>
+</table>
+
+<div class="destaque">
+  A interface gráfica corre exclusivamente na <em>thread</em> principal do processo (a <em>thread</em> do
+  Tkinter). Todas as actualizações visuais provenientes de <em>threads</em> secundárias (câmara,
+  PLC) são agendadas via <code>root.after(0, callback)</code>, mecanismo que garante a execução
+  segura no contexto da <em>thread</em> principal, evitando condições de corrida (<em>race conditions</em>).
+</div>
+
+<hr>
+
+<!-- SECÇÃO 4 -->
+<h1 id="sec4">4. Fluxo Completo de Detecção e Decisão</h1>
+
+<p>
+  O fluxo completo desde a chegada de um veículo ao portão até ao registo do movimento e
+  accionamento da cancela envolve a colaboração de todos os subcomponentes. O diagrama
+  seguinte descreve este processo passo a passo:
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 700 520" style="width:100%;">
+  <text x="350" y="18" font-size="12" font-weight="bold" text-anchor="middle" fill="#222">Fluxo Completo de Detecção — Módulo Desktop</text>
+
+  <!-- Coluna de swimlanes -->
+  <rect x="10" y="30" width="100" height="475" fill="#e3f2fd" opacity="0.4" rx="3"/>
+  <text x="60" y="48" font-size="8.5" font-weight="bold" text-anchor="middle" fill="#0d47a1">PLCController</text>
+  <rect x="115" y="30" width="130" height="475" fill="#f3e5f5" opacity="0.4" rx="3"/>
+  <text x="180" y="48" font-size="8.5" font-weight="bold" text-anchor="middle" fill="#4a148c">PlateDetector</text>
+  <rect x="250" y="30" width="130" height="475" fill="#e8f5e9" opacity="0.4" rx="3"/>
+  <text x="315" y="48" font-size="8.5" font-weight="bold" text-anchor="middle" fill="#1b5e20">MainWindow</text>
+  <rect x="385" y="30" width="130" height="475" fill="#fff8e1" opacity="0.4" rx="3"/>
+  <text x="450" y="48" font-size="8.5" font-weight="bold" text-anchor="middle" fill="#e65100">APIClient</text>
+  <rect x="520" y="30" width="170" height="475" fill="#fce4ec" opacity="0.4" rx="3"/>
+  <text x="605" y="48" font-size="8.5" font-weight="bold" text-anchor="middle" fill="#880e4f">Entidades Externas</text>
+
+  <!-- Passo 1: Sensor ON -->
+  <rect x="15" y="60" width="90" height="35" rx="3" fill="#bbdefb" stroke="#1565c0"/>
+  <text x="60" y="76" font-size="8.5" text-anchor="middle" fill="#0d47a1">1. Sensor (DI 0)</text>
+  <text x="60" y="88" font-size="8" text-anchor="middle" fill="#0d47a1">= True</text>
+  <line x1="105" y1="77" x2="253" y2="77" stroke="#1565c0" stroke-width="1.2"/>
+  <polygon points="250,73 260,77 250,81" fill="#1565c0"/>
+  <text x="177" y="71" font-size="8" fill="#1565c0">callback_veiculo_detectado()</text>
+
+  <!-- Passo 2: Captura frame -->
+  <rect x="255" y="60" width="120" height="35" rx="3" fill="#c8e6c9" stroke="#2e7d32"/>
+  <text x="315" y="76" font-size="8.5" text-anchor="middle" fill="#1b5e20">2. Captura frame</text>
+  <text x="315" y="88" font-size="8" text-anchor="middle" fill="#1b5e20">da câmara</text>
+  <line x1="315" y1="95" x2="315" y2="110" stroke="#555" stroke-width="1"/>
+
+  <!-- Passo 3: YOLO -->
+  <rect x="120" y="110" width="120" height="35" rx="3" fill="#e1bee7" stroke="#7b1fa2"/>
+  <text x="180" y="126" font-size="8.5" text-anchor="middle" fill="#4a148c">3. YOLO detecta</text>
+  <text x="180" y="138" font-size="8" text-anchor="middle" fill="#4a148c">região da matrícula</text>
+  <line x1="255" y1="127" x2="240" y2="127" stroke="#555" stroke-width="1"/>
+  <polygon points="243,123 233,127 243,131" fill="#555"/>
+
+  <!-- Passo 4: OCR -->
+  <rect x="120" y="160" width="120" height="35" rx="3" fill="#ce93d8" stroke="#7b1fa2"/>
+  <text x="180" y="176" font-size="8.5" text-anchor="middle" fill="#fff" font-weight="bold">4. OCR híbrido</text>
+  <text x="180" y="188" font-size="8" text-anchor="middle" fill="#fff">EasyOCR + Tesseract</text>
+  <line x1="180" y1="145" x2="180" y2="160" stroke="#555" stroke-width="1"/>
+
+  <!-- Decisão OCR -->
+  <polygon points="180,210 210,230 180,250 150,230" fill="#fff9c4" stroke="#f9a825" stroke-width="1.5"/>
+  <text x="180" y="227" font-size="8.5" text-anchor="middle" fill="#e65100">OCR</text>
+  <text x="180" y="240" font-size="8.5" text-anchor="middle" fill="#e65100">válido?</text>
+  <line x1="180" y1="195" x2="180" y2="210" stroke="#555" stroke-width="1"/>
+
+  <!-- Ramo SIM -->
+  <line x1="210" y1="230" x2="315" y2="230" stroke="#2e7d32" stroke-width="1.2"/>
+  <polygon points="312,226 322,230 312,234" fill="#2e7d32"/>
+  <text x="255" y="223" font-size="8" fill="#2e7d32">Sim</text>
+
+  <!-- Passo 5a: Registar -->
+  <rect x="255" y="213" width="120" height="35" rx="3" fill="#c8e6c9" stroke="#2e7d32"/>
+  <text x="315" y="229" font-size="8.5" text-anchor="middle" fill="#1b5e20">5a. Chamar</text>
+  <text x="315" y="241" font-size="8" text-anchor="middle" fill="#1b5e20">processar_deteccao()</text>
+  <line x1="375" y1="230" x2="390" y2="230" stroke="#555" stroke-width="1"/>
+  <polygon points="387,226 397,230 387,234" fill="#555"/>
+
+  <!-- Passo 5b: API -->
+  <rect x="390" y="213" width="120" height="35" rx="3" fill="#ffe0b2" stroke="#e65100"/>
+  <text x="450" y="229" font-size="8.5" text-anchor="middle" fill="#e65100">5b. HTTP POST</text>
+  <text x="450" y="241" font-size="8" text-anchor="middle" fill="#e65100">/registros/deteccao</text>
+  <line x1="510" y1="230" x2="525" y2="230" stroke="#555" stroke-width="1"/>
+  <polygon points="522,226 532,230 522,234" fill="#555"/>
+
+  <!-- Módulo Web resposta -->
+  <rect x="530" y="213" width="150" height="35" rx="3" fill="#fce4ec" stroke="#880e4f"/>
+  <text x="605" y="229" font-size="8.5" text-anchor="middle" fill="#880e4f">Módulo Web</text>
+  <text x="605" y="241" font-size="8" text-anchor="middle" fill="#880e4f">→ guarda na BD</text>
+
+  <!-- Passo 6: Abrir cancela -->
+  <rect x="255" y="265" width="120" height="35" rx="3" fill="#c8e6c9" stroke="#2e7d32"/>
+  <text x="315" y="281" font-size="8.5" text-anchor="middle" fill="#1b5e20">6. Chamar</text>
+  <text x="315" y="293" font-size="8" text-anchor="middle" fill="#1b5e20">plc.abrir_cancela()</text>
+  <line x1="315" y1="248" x2="315" y2="265" stroke="#555" stroke-width="1"/>
+
+  <!-- Modbus write -->
+  <line x1="255" y1="282" x2="108" y2="282" stroke="#f57f17" stroke-width="1.2"/>
+  <polygon points="111,278 101,282 111,286" fill="#f57f17"/>
+  <text x="177" y="275" font-size="8" fill="#f57f17">Modbus write_coil(0, True)</text>
+
+  <!-- Cancela abre -->
+  <rect x="15" y="265" width="90" height="35" rx="3" fill="#fff8e1" stroke="#f57f17"/>
+  <text x="60" y="281" font-size="8.5" text-anchor="middle" fill="#e65100">Coil 0 = True</text>
+  <text x="60" y="293" font-size="8" text-anchor="middle" fill="#e65100">Cancela ABRE</text>
+
+  <!-- Ramo NÃO -->
+  <line x1="180" y1="250" x2="180" y2="340" stroke="#c62828" stroke-width="1.2"/>
+  <text x="143" y="300" font-size="8" fill="#c62828">Não</text>
+  <rect x="120" y="340" width="120" height="40" rx="3" fill="#ffcdd2" stroke="#c62828"/>
+  <text x="180" y="358" font-size="8.5" text-anchor="middle" fill="#b71c1c">Log de aviso:</text>
+  <text x="180" y="371" font-size="8" text-anchor="middle" fill="#b71c1c">Acionar segurança</text>
+
+  <!-- Sensor OFF -->
+  <rect x="15" y="340" width="90" height="35" rx="3" fill="#bbdefb" stroke="#1565c0"/>
+  <text x="60" y="356" font-size="8.5" text-anchor="middle" fill="#0d47a1">7. Sensor (DI 0)</text>
+  <text x="60" y="368" font-size="8" text-anchor="middle" fill="#0d47a1">= False</text>
+
+  <!-- Fechar cancela -->
+  <line x1="60" y1="375" x2="60" y2="408" stroke="#555" stroke-width="1"/>
+  <rect x="15" y="408" width="90" height="35" rx="3" fill="#fff8e1" stroke="#f57f17"/>
+  <text x="60" y="424" font-size="8.5" text-anchor="middle" fill="#e65100">Coil 0 = False</text>
+  <text x="60" y="436" font-size="8" text-anchor="middle" fill="#e65100">Cancela FECHA</text>
+
+  <!-- Setas de tempo (verticais implícitas) -->
+  <text x="680" y="60" font-size="8" fill="#999">t↑</text>
+  <text x="680" y="500" font-size="8" fill="#999">t↓</text>
+</svg>
+<div class="figura-legenda">Figura 5 — Fluxo completo de detecção, decisão e controlo da cancela no módulo Desktop. Elaboração própria (2026).</div>
+</div>
+
+<hr>
+
+<!-- SECÇÃO 5 -->
+<h1 id="sec5">5. Modelo de Concorrência (Threads)</h1>
+
+<p>
+  O módulo Desktop opera com múltiplas <em>threads</em> simultâneas para garantir que nenhuma
+  operação bloqueante (captura de vídeo, comunicação de rede, monitorização do sensor) prejudique
+  a responsividade da interface gráfica. Em Python, o módulo <code>threading</code> da biblioteca
+  padrão é utilizado para este efeito, criando <em>threads</em> do tipo <em>daemon</em>, que são
+  automaticamente encerradas quando o processo principal termina (Van Rossum &amp; Drake, 2009).
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 680 280" style="width:100%;">
+  <text x="340" y="18" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Modelo de Threads — Módulo Desktop</text>
+
+  <!-- Thread Principal -->
+  <rect x="10" y="35" width="640" height="50" rx="4" fill="#e8eaf6" stroke="#3949ab" stroke-width="1.5"/>
+  <text x="50" y="55" font-size="9.5" font-weight="bold" fill="#1a237e">Thread Principal (Main Thread)</text>
+  <text x="50" y="70" font-size="8.5" fill="#3949ab">Tkinter event loop — root.mainloop() — processa eventos UI e actualiza widgets</text>
+  <text x="600" y="65" font-size="8.5" fill="#3949ab" text-anchor="end">UI Thread</text>
+
+  <!-- Thread Câmara -->
+  <rect x="10" y="100" width="200" height="50" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="20" y="120" font-size="9.5" font-weight="bold" fill="#0d47a1">Thread: loop_captura</text>
+  <text x="20" y="134" font-size="8" fill="#1565c0">Lê frames a ≈25 fps via OpenCV</text>
+  <text x="20" y="145" font-size="8" fill="#1565c0">→ chama PlateDetector.processar_frame()</text>
+
+  <!-- Thread PLC Sensor -->
+  <rect x="220" y="100" width="200" height="50" rx="4" fill="#fff8e1" stroke="#f57f17" stroke-width="1.5"/>
+  <text x="230" y="120" font-size="9.5" font-weight="bold" fill="#e65100">Thread: PLC-SensorMonitor</text>
+  <text x="230" y="134" font-size="8" fill="#f57f17">Lê DI 0 a cada 300 ms via Modbus TCP</text>
+  <text x="230" y="145" font-size="8" fill="#f57f17">→ dispara callback_veiculo_detectado()</text>
+
+  <!-- Thread callback câmara por sensor -->
+  <rect x="430" y="100" width="220" height="50" rx="4" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+  <text x="440" y="120" font-size="9.5" font-weight="bold" fill="#4a148c">Thread: _on_veiculo_no_sensor</text>
+  <text x="440" y="134" font-size="8" fill="#6a1b9a">Captura frame + YOLO + OCR</text>
+  <text x="440" y="145" font-size="8" fill="#6a1b9a">→ se OK: abrir_cancela() + API POST</text>
+
+  <!-- Setas de sincronização com UI -->
+  <line x1="110" y1="85" x2="110" y2="100" stroke="#1565c0" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="320" y1="85" x2="320" y2="100" stroke="#f57f17" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="540" y1="85" x2="540" y2="100" stroke="#6a1b9a" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- root.after() -->
+  <rect x="10" y="170" width="640" height="35" rx="3" fill="#f5f5f5" stroke="#9e9e9e"/>
+  <text x="340" y="185" font-size="9" text-anchor="middle" fill="#333" font-weight="bold">Sincronização com UI: root.after(0, callback_ui)</text>
+  <text x="340" y="198" font-size="8" text-anchor="middle" fill="#555">Qualquer actualização de widget é agendada na thread principal — evita condições de corrida</text>
+
+  <!-- Threads API e PLC Coil -->
+  <rect x="10" y="225" width="300" height="40" rx="4" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="20" y="243" font-size="9" font-weight="bold" fill="#1b5e20">Thread: APIClient.enviar_deteccao()</text>
+  <text x="20" y="257" font-size="8" fill="#2e7d32">HTTP POST — corre em background sem bloquear UI</text>
+
+  <rect x="325" y="225" width="325" height="40" rx="4" fill="#fff8e1" stroke="#f57f17"/>
+  <text x="335" y="243" font-size="9" font-weight="bold" fill="#e65100">Thread: PLCController.abrir_cancela()</text>
+  <text x="335" y="257" font-size="8" fill="#f57f17">Escrita Modbus TCP — corre em background sem bloquear UI</text>
+</svg>
+<div class="figura-legenda">Figura 6 — Modelo de <em>threads</em> do módulo Desktop. Elaboração própria (2026).</div>
+</div>
+
+<hr>
+
+<!-- SECÇÃO 6 -->
+<h1 id="sec6">6. Comunicação com o Módulo Web</h1>
+
+<p>
+  A comunicação entre o módulo Desktop e o módulo Web segue o estilo arquitectural REST
+  (<em>Representational State Transfer</em>), proposto por Fielding (2000), que define
+  um conjunto de restrições para sistemas distribuídos sobre HTTP. Neste paradigma,
+  os recursos são identificados por URLs e manipulados através dos métodos HTTP padrão
+  (GET, POST, PUT, DELETE). A troca de dados é feita em formato JSON
+  (<em>JavaScript Object Notation</em>), pela sua leveza e legibilidade.
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 660 200" style="width:100%;">
+  <text x="330" y="18" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Comunicação REST — Desktop ↔ Módulo Web</text>
+
+  <!-- Desktop -->
+  <rect x="20" y="40" width="160" height="130" rx="5" fill="#e8eaf6" stroke="#3949ab" stroke-width="1.5"/>
+  <text x="100" y="65" font-size="10" font-weight="bold" text-anchor="middle" fill="#1a237e">Módulo Desktop</text>
+  <text x="100" y="82" font-size="8.5" text-anchor="middle" fill="#3949ab">APIClient</text>
+  <text x="100" y="96" font-size="8" text-anchor="middle" fill="#555">requests.post(url, json=payload)</text>
+  <text x="100" y="130" font-size="8" text-anchor="middle" fill="#888">porta 8000 (default)</text>
+
+  <!-- Seta POST -->
+  <line x1="180" y1="90" x2="280" y2="90" stroke="#2e7d32" stroke-width="1.5"/>
+  <polygon points="276,86 288,90 276,94" fill="#2e7d32"/>
+  <text x="230" y="83" font-size="8.5" text-anchor="middle" fill="#2e7d32" font-weight="bold">HTTP POST</text>
+  <text x="230" y="95" font-size="8" text-anchor="middle" fill="#555">/api/v1/registros/deteccao</text>
+  <text x="230" y="106" font-size="8" text-anchor="middle" fill="#555">Content-Type: application/json</text>
+
+  <!-- Seta resposta -->
+  <line x1="280" y1="120" x2="180" y2="120" stroke="#1565c0" stroke-width="1.5"/>
+  <polygon points="184,116 172,120 184,124" fill="#1565c0"/>
+  <text x="230" y="113" font-size="8.5" text-anchor="middle" fill="#1565c0" font-weight="bold">HTTP 200 (JSON)</text>
+  <text x="230" y="124" font-size="8" text-anchor="middle" fill="#555">{ sucesso, cadastrado, mensagem }</text>
+
+  <!-- Web Module -->
+  <rect x="288" y="40" width="160" height="130" rx="5" fill="#fce4ec" stroke="#880e4f" stroke-width="1.5"/>
+  <text x="368" y="65" font-size="10" font-weight="bold" text-anchor="middle" fill="#880e4f">Módulo Web</text>
+  <text x="368" y="82" font-size="8.5" text-anchor="middle" fill="#880e4f">FastAPI Router</text>
+  <text x="368" y="96" font-size="8" text-anchor="middle" fill="#555">→ DeteccaoService</text>
+  <text x="368" y="110" font-size="8" text-anchor="middle" fill="#555">→ SQLite (SQLAlchemy)</text>
+  <text x="368" y="130" font-size="8" text-anchor="middle" fill="#888">Valida + Toggle + Guarda</text>
+
+  <!-- Seta GET health -->
+  <line x1="448" y1="90" x2="548" y2="90" stroke="#888" stroke-width="1" stroke-dasharray="4,2"/>
+  <polygon points="544,86 556,90 544,94" fill="#888"/>
+  <text x="500" y="83" font-size="8" text-anchor="middle" fill="#888">GET /health</text>
+
+  <!-- Resposta health -->
+  <line x1="548" y1="110" x2="448" y2="110" stroke="#888" stroke-width="1" stroke-dasharray="4,2"/>
+  <polygon points="452,106 440,110 452,114" fill="#888"/>
+  <text x="500" y="125" font-size="8" text-anchor="middle" fill="#888">200 OK / timeout</text>
+
+  <!-- Testar conexão -->
+  <rect x="556" y="70" width="90" height="50" rx="3" fill="#f5f5f5" stroke="#bbb"/>
+  <text x="601" y="93" font-size="8.5" text-anchor="middle" fill="#555">Verificação</text>
+  <text x="601" y="106" font-size="8" text-anchor="middle" fill="#555">periódica de</text>
+  <text x="601" y="119" font-size="8" text-anchor="middle" fill="#555">disponibilidade</text>
+</svg>
+<div class="figura-legenda">Figura 7 — Comunicação REST entre o módulo Desktop e o módulo Web. Elaboração própria (2026).</div>
+</div>
+
+<p>
+  O módulo Desktop envia o seguinte payload para cada detecção processada. O campo
+  <code>tipo_movimento</code> é enviado como marcador de posição e ignorado pelo servidor,
+  que determina automaticamente o sentido do movimento (entrada ou saída) com base no
+  histórico da placa na base de dados:
+</p>
+
+<table>
+  <thead><tr><th>Campo JSON</th><th>Tipo</th><th>Descrição</th></tr></thead>
+  <tbody>
+    <tr><td><code>placa_detectada</code></td><td>string</td><td>Matrícula lida pelo OCR, normalizada para maiúsculas sem hífens</td></tr>
+    <tr><td><code>tipo_movimento</code></td><td>string</td><td>"entrada" (valor ignorado pelo servidor — apenas marcador)</td></tr>
+    <tr><td><code>confianca_ocr</code></td><td>float [0–1]</td><td>Nível de confiança do resultado OCR seleccionado</td></tr>
+    <tr><td><code>metodo_ocr</code></td><td>string</td><td>"easyocr", "tesseract" ou "hibrido"</td></tr>
+    <tr><td><code>imagem_base64</code></td><td>string | null</td><td>Recorte da matrícula em Base64 (opcional, para arquivo)</td></tr>
+    <tr><td><code>timestamp</code></td><td>datetime</td><td>Data e hora da captura no formato ISO 8601</td></tr>
+  </tbody>
+</table>
+
+<p>
+  O servidor responde com um objecto JSON que inclui, entre outros campos, o indicador
+  <code>duplicata</code> (verdadeiro se a mesma placa foi registada nos últimos 5 minutos)
+  e <code>veiculo_cadastrado</code> (verdadeiro se a matrícula consta da base de dados).
+  Estes campos são utilizados pelo módulo Desktop para personalizar as mensagens de log
+  apresentadas ao operador.
+</p>
+
+<hr>
+
+<!-- SECÇÃO 7 -->
+<h1 id="sec7">7. Comunicação com o PLC</h1>
+
+<p>
+  A comunicação industrial com o PLC é estabelecida através do protocolo Modbus TCP,
+  normalizado pela Modbus Organization (2012). Nesta arquitectura, o módulo Desktop
+  actua como <em>cliente Modbus</em> (designado <em>Master</em> na nomenclatura clássica),
+  enquanto o PLC desempenha o papel de <em>servidor</em> (<em>Slave</em>). Toda a
+  troca de mensagens segue o modelo de pedido-resposta sobre TCP/IP na porta 502.
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 660 220" style="width:100%;">
+  <text x="330" y="18" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Comunicação Modbus TCP — Desktop ↔ PLC</text>
+
+  <!-- Desktop -->
+  <rect x="20" y="40" width="190" height="155" rx="5" fill="#e8eaf6" stroke="#3949ab" stroke-width="1.5"/>
+  <text x="115" y="60" font-size="10" font-weight="bold" text-anchor="middle" fill="#1a237e">Módulo Desktop</text>
+  <text x="115" y="77" font-size="8.5" text-anchor="middle" fill="#3949ab">PLCController (pymodbus)</text>
+  <rect x="30" y="85" width="170" height="28" rx="3" fill="#fff8e1" stroke="#f57f17"/>
+  <text x="115" y="99" font-size="8.5" text-anchor="middle" fill="#e65100">Lê DI 0 (FC02)</text>
+  <text x="115" y="110" font-size="7.5" text-anchor="middle" fill="#555">read_discrete_inputs(0, 1)</text>
+  <rect x="30" y="120" width="170" height="28" rx="3" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="115" y="134" font-size="8.5" text-anchor="middle" fill="#1b5e20">Escreve Coil 0 (FC05)</text>
+  <text x="115" y="145" font-size="7.5" text-anchor="middle" fill="#555">write_coil(0, True/False)</text>
+  <text x="115" y="180" font-size="8" text-anchor="middle" fill="#888">porta 502 (Modbus TCP)</text>
+
+  <!-- Rede -->
+  <rect x="245" y="95" width="100" height="35" rx="3" fill="#f5f5f5" stroke="#bbb"/>
+  <text x="295" y="110" font-size="8.5" text-anchor="middle" fill="#555">Rede Ethernet</text>
+  <text x="295" y="123" font-size="8" text-anchor="middle" fill="#888">TCP/IP</text>
+
+  <!-- Setas Modbus -->
+  <line x1="210" y1="99" x2="245" y2="105" stroke="#f57f17" stroke-width="1.2"/>
+  <line x1="245" y1="108" x2="210" y2="105" stroke="#f57f17" stroke-width="1.2" stroke-dasharray="3,2"/>
+  <line x1="210" y1="134" x2="245" y2="120" stroke="#2e7d32" stroke-width="1.2"/>
+  <line x1="245" y1="123" x2="210" y2="130" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="3,2"/>
+  <line x1="345" y1="105" x2="395" y2="99" stroke="#f57f17" stroke-width="1.2"/>
+  <line x1="395" y1="105" x2="345" y2="108" stroke="#f57f17" stroke-width="1.2" stroke-dasharray="3,2"/>
+  <line x1="345" y1="120" x2="395" y2="134" stroke="#2e7d32" stroke-width="1.2"/>
+  <line x1="395" y1="130" x2="345" y2="123" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="3,2"/>
+
+  <!-- PLC -->
+  <rect x="395" y="40" width="250" height="155" rx="5" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="520" y="60" font-size="10" font-weight="bold" text-anchor="middle" fill="#1b5e20">PLC (Siemens LOGO! 8.3)</text>
+  <text x="520" y="77" font-size="8.5" text-anchor="middle" fill="#2e7d32">Servidor Modbus TCP (porta 502)</text>
+  <rect x="405" y="85" width="110" height="50" rx="3" fill="#c8e6c9" stroke="#388e3c"/>
+  <text x="460" y="105" font-size="8.5" text-anchor="middle" fill="#1b5e20">Discrete Input 0</text>
+  <text x="460" y="118" font-size="8" text-anchor="middle" fill="#388e3c">← Sensor de laço</text>
+  <text x="460" y="130" font-size="8" text-anchor="middle" fill="#555">(True = veículo)</text>
+  <rect x="525" y="85" width="110" height="50" rx="3" fill="#a5d6a7" stroke="#388e3c"/>
+  <text x="580" y="105" font-size="8.5" text-anchor="middle" fill="#1b5e20">Coil 0</text>
+  <text x="580" y="118" font-size="8" text-anchor="middle" fill="#388e3c">→ Motor cancela</text>
+  <text x="580" y="130" font-size="8" text-anchor="middle" fill="#555">(True = abrir)</text>
+  <text x="520" y="180" font-size="8" text-anchor="middle" fill="#888">Actualização a cada 300 ms (polling)</text>
+
+  <!-- Legenda -->
+  <text x="30" y="210" font-size="8" fill="#f57f17">─────</text>
+  <text x="65" y="210" font-size="8" fill="#555">Pedido (cliente → servidor)</text>
+  <text x="200" y="210" font-size="8" fill="#f57f17">- - - - -</text>
+  <text x="235" y="210" font-size="8" fill="#555">Resposta (servidor → cliente)</text>
+  <text x="400" y="210" font-size="8" fill="#2e7d32">─────</text>
+  <text x="435" y="210" font-size="8" fill="#555">Escrita coil</text>
+  <text x="510" y="210" font-size="8" fill="#2e7d32">- - - - -</text>
+  <text x="545" y="210" font-size="8" fill="#555">Confirmação</text>
+</svg>
+<div class="figura-legenda">Figura 8 — Troca de mensagens Modbus TCP entre o módulo Desktop e o PLC. Elaboração própria (2026).</div>
+</div>
+
+<p>
+  O ciclo de monitorização do sensor ocorre na <em>thread</em> <code>PLC-SensorMonitor</code>,
+  que consulta o registo Discrete Input 0 a cada 300 ms. Este intervalo representa um compromisso
+  entre a latência de resposta (menor que 300 ms é imperceptível para o utilizador) e a carga
+  gerada na rede e no PLC. A sequência completa de operações Modbus é:
+</p>
+<table>
+  <thead><tr><th>Operação</th><th>FC</th><th>Registo</th><th>Valor</th><th>Momento</th></tr></thead>
+  <tbody>
+    <tr><td>Leitura do sensor</td><td>02 (Read Discrete Inputs)</td><td>0</td><td>True / False</td><td>A cada 300 ms (polling)</td></tr>
+    <tr><td>Abrir cancela</td><td>05 (Write Single Coil)</td><td>0</td><td>True (0xFF00)</td><td>Após OCR com sucesso</td></tr>
+    <tr><td>Fechar cancela</td><td>05 (Write Single Coil)</td><td>0</td><td>False (0x0000)</td><td>Após sensor desactivar</td></tr>
+    <tr><td>Garantia de segurança</td><td>05 (Write Single Coil)</td><td>0</td><td>False (0x0000)</td><td>Desconexão ou timeout (8 s)</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- SECÇÃO 8 -->
+<h1 id="sec8">8. Tecnologias e Bibliotecas</h1>
+
+<table>
+  <thead><tr><th>Biblioteca / Tecnologia</th><th>Versão</th><th>Função no módulo Desktop</th><th>Referência</th></tr></thead>
+  <tbody>
+    <tr><td>Python 3</td><td>≥ 3.10</td><td>Linguagem de implementação; gestão de <em>threads</em>, E/S de ficheiros e rede</td><td>Van Rossum &amp; Drake (2009)</td></tr>
+    <tr><td>OpenCV (<code>cv2</code>)</td><td>≥ 4.8</td><td>Captura de vídeo (câmara IP via RTSP), processamento de imagem e pré-processamento para OCR</td><td>Bradski (2000)</td></tr>
+    <tr><td>Ultralytics YOLOv8</td><td>≥ 8.0</td><td>Detecção da região da matrícula em fotogramas de vídeo</td><td>Jocher et al. (2023)</td></tr>
+    <tr><td>EasyOCR</td><td>≥ 1.7</td><td>Reconhecimento de texto por rede neuronal (CNN + LSTM)</td><td>Baek et al. (2019)</td></tr>
+    <tr><td>Tesseract OCR</td><td>≥ 5.0</td><td>Reconhecimento de texto alternativo; selecção híbrida com EasyOCR</td><td>Smith (2007)</td></tr>
+    <tr><td>Tkinter</td><td>(stdlib)</td><td>Interface gráfica — janela principal, diálogos de configuração, log de actividades</td><td>Van Rossum &amp; Drake (2009)</td></tr>
+    <tr><td>Pillow (PIL)</td><td>≥ 10.0</td><td>Conversão de imagens NumPy para o formato PhotoImage do Tkinter</td><td>—</td></tr>
+    <tr><td>requests</td><td>≥ 2.31</td><td>Pedidos HTTP para o módulo Web (envio de detecções)</td><td>—</td></tr>
+    <tr><td>pymodbus</td><td>3.9.2</td><td>Cliente e servidor Modbus TCP para comunicação com o PLC</td><td>Modbus Organization (2012)</td></tr>
+    <tr><td>NumPy</td><td>≥ 1.24</td><td>Representação matricial de imagens para processamento com OpenCV e YOLOv8</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- REFERÊNCIAS -->
+<h1 id="refs">9. Referências Bibliográficas</h1>
+
+<div class="referencias">
+
+  <p>
+    Baek, J., Kim, G., Lee, J., Park, S., Han, D., Yun, S., Oh, S. J., &amp; Lee, H. (2019).
+    What is wrong with scene text recognition model comparisons? Dataset and model analysis.
+    Em <em>Proceedings of the IEEE/CVF International Conference on Computer Vision</em>
+    (pp. 4715–4723). IEEE. https://doi.org/10.1109/ICCV.2019.00481
+  </p>
+
+  <p>
+    Bradski, G. (2000). The OpenCV library. <em>Dr. Dobb's Journal of Software Tools</em>,
+    <em>25</em>(11), 120–125.
+  </p>
+
+  <p>
+    Fielding, R. T. (2000). <em>Architectural styles and the design of network-based software
+    architectures</em> [Dissertação de doutoramento, University of California, Irvine].
+    https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm
+  </p>
+
+  <p>
+    Jocher, G., Chaurasia, A., &amp; Qiu, J. (2023). <em>Ultralytics YOLO</em> (versão 8.0)
+    [Software]. https://doi.org/10.5281/zenodo.5563715
+  </p>
+
+  <p>
+    Martin, R. C. (2017). <em>Clean architecture: A craftsman's guide to software structure and
+    design</em>. Prentice Hall.
+  </p>
+
+  <p>
+    Modbus Organization. (2012). <em>Modbus messaging on TCP/IP implementation guide</em>
+    (Rev. 1.0b). http://www.modbus.org/docs/Modbus_Messaging_Implementation_Guide_V1_0b.pdf
+  </p>
+
+  <p>
+    Opitz, D., &amp; Maclin, R. (1999). Popular ensemble methods: An empirical study.
+    <em>Journal of Artificial Intelligence Research</em>, <em>11</em>, 169–198.
+    https://doi.org/10.1613/jair.614
+  </p>
+
+  <p>
+    Smith, R. (2007, Setembro). An overview of the Tesseract OCR engine.
+    Em <em>Proceedings of the Ninth International Conference on Document Analysis and Recognition</em>
+    (Vol. 2, pp. 629–633). IEEE. https://doi.org/10.1109/ICDAR.2007.4376991
+  </p>
+
+  <p>
+    Van Rossum, G., &amp; Drake, F. L. (2009). <em>Python 3 reference manual</em>.
+    CreateSpace Independent Publishing Platform.
+  </p>
+
+</div>
+
+<hr>
+<p style="font-size:9pt; color:#666; text-align:center; margin-top:6mm;">
+  Documento elaborado para fins académicos — TCC, Universidade Jean Piaget de Moçambique, 2026.<br>
+  O conteúdo é de elaboração própria, com citação das fontes consultadas segundo a norma APA (7.ª edição).
+</p>
+
+<!-- BOTÕES FLUTUANTES -->
+<div class="fab-container">
+  <button class="fab fab-print" onclick="window.print()" title="Imprimir página">🖨</button>
+  <a class="fab fab-index" href="#indice" title="Ir ao Índice">☰</a>
+</div>
+
+</body>
+</html>

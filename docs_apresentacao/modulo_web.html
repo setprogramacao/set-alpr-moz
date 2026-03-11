@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Módulo Web — Sistema ALPR UNIPIAGET</title>
+  <style>
+    html { scroll-behavior: smooth; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      color: #111;
+      background: #fff;
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 20mm 25mm;
+    }
+
+    /* ---- CAPA ---- */
+    .capa {
+      text-align: center;
+      padding: 40mm 0 30mm;
+      border-bottom: 2px solid #333;
+      margin-bottom: 20mm;
+      page-break-after: always;
+    }
+    .capa .instituicao { font-size: 14pt; font-weight: bold; margin-bottom: 8mm; }
+    .capa .titulo { font-size: 16pt; font-weight: bold; margin: 10mm 0 6mm; line-height: 1.4; }
+    .capa .subtitulo { font-size: 13pt; margin-bottom: 10mm; font-style: italic; }
+    .capa .info { font-size: 11pt; margin-top: 8mm; line-height: 2; }
+
+    /* ---- HEADINGS ---- */
+    h1 { font-size: 14pt; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 2mm; margin: 10mm 0 4mm; }
+    h2 { font-size: 13pt; font-weight: bold; margin: 8mm 0 3mm; }
+    h3 { font-size: 12pt; font-weight: bold; margin: 6mm 0 2mm; }
+
+    p { margin-bottom: 3mm; text-align: justify; }
+
+    /* ---- TABLES ---- */
+    table { width: 100%; border-collapse: collapse; margin: 4mm 0 6mm; font-size: 10.5pt; }
+    th { background: #ddd; font-weight: bold; padding: 2mm 3mm; border: 1px solid #999; text-align: left; }
+    td { padding: 2mm 3mm; border: 1px solid #bbb; vertical-align: top; }
+    tr:nth-child(even) td { background: #f7f7f7; }
+    .center { text-align: center; }
+    .bold { font-weight: bold; }
+
+    /* ---- FIGURES ---- */
+    .figura {
+      border: 1px solid #bbb;
+      border-radius: 3px;
+      padding: 4mm;
+      margin: 5mm 0 7mm;
+      background: #fafafa;
+    }
+    .figura-legenda {
+      font-size: 10pt;
+      font-style: italic;
+      color: #444;
+      margin-top: 2mm;
+      text-align: center;
+    }
+
+    /* ---- CODE ---- */
+    .codigo {
+      background: #f5f5f5;
+      border-left: 3px solid #555;
+      padding: 3mm 5mm;
+      margin: 4mm 0;
+      font-family: "Courier New", monospace;
+      font-size: 9.5pt;
+      line-height: 1.7;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* ---- DESTAQUE ---- */
+    .destaque {
+      background: #fffde7;
+      border: 1px solid #f0c030;
+      border-radius: 3px;
+      padding: 3mm 5mm;
+      margin: 4mm 0 6mm;
+      font-size: 10.5pt;
+    }
+
+    /* ---- ÍNDICE ---- */
+    .indice { margin: 4mm 0 6mm; }
+    .indice a {
+      color: #111;
+      text-decoration: none;
+    }
+    .indice a:hover { text-decoration: underline; color: #1a0dab; }
+    .indice .indice-titulo-grupo {
+      font-weight: bold;
+      margin-top: 5mm;
+      margin-bottom: 1mm;
+      font-size: 11pt;
+    }
+    .indice .sub { padding-left: 8mm; display: block; }
+    .indice .subsub { padding-left: 16mm; display: block; }
+    .indice .linha { display: flex; margin-bottom: 1mm; }
+    .indice .linha .dots {
+      flex: 1;
+      border-bottom: 1px dotted #888;
+      margin: 0 2mm 3px;
+      min-width: 10px;
+    }
+
+    /* ---- REFERENCES ---- */
+    .referencias p {
+      text-indent: -12mm;
+      padding-left: 12mm;
+      margin-bottom: 3mm;
+      font-size: 11pt;
+    }
+
+    /* ---- MISC ---- */
+    hr { border: none; border-top: 1px solid #bbb; margin: 8mm 0; }
+    svg { display: block; margin: 4mm auto; max-width: 100%; }
+    ul, ol { margin: 3mm 0 4mm 10mm; }
+    li { margin-bottom: 1mm; }
+    code {
+      font-family: "Courier New", monospace;
+      font-size: 10pt;
+      background: #f0f0f0;
+      padding: 0 2px;
+    }
+
+    /* ---- BOTÕES FLUTUANTES ---- */
+    .fab-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 999;
+    }
+    .fab {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.28);
+      transition: transform 0.15s, box-shadow 0.15s;
+      font-size: 18px;
+      text-decoration: none;
+    }
+    .fab:hover {
+      transform: scale(1.10);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    }
+    .fab-print { background: #2c3e50; color: #fff; }
+    .fab-index { background: #555; color: #fff; }
+    .fab title { display: none; }
+
+    @media print {
+      body { padding: 15mm 20mm; }
+      a { color: #000; text-decoration: none; }
+      .fab-container { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================ CAPA -->
+<div class="capa">
+  <div class="instituicao">Universidade Jean Piaget de Moçambique</div>
+  <div style="font-size:12pt; margin-bottom:6mm;">Faculdade de Engenharia, Ciências e Tecnologia<br>Curso de Engenharia Electrónica e de Telecomunicações</div>
+  <div class="titulo">Sistema de Reconhecimento Automático de Placas Veiculares (ALPR) com Controlo de Cancela Electrónica</div>
+  <div class="subtitulo">Módulo Web: Arquitectura, API REST, Painel de Administração e Integração</div>
+  <div class="info">
+    <strong>Estudante:</strong> Salvador Eduardo Tomoecene<br>
+    <strong>Documento:</strong> Descrição Técnica do Módulo Web<br>
+    <strong>Ano Lectivo:</strong> 2026
+  </div>
+</div>
+
+<!-- ============================================================= ÍNDICE -->
+<h1 id="indice">Índice</h1>
+
+<div class="indice">
+
+  <!-- Secções deste documento -->
+  <div class="linha"><a href="#sec1">1. Introdução</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec2">2. Estrutura Interna e Organização de Ficheiros</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec3">3. Modelos de Dados (Base de Dados Relacional)</a><span class="dots"></span></div>
+  <span class="sub"><div class="linha"><a href="#sec3-1">3.1 Descrição das Entidades</a><span class="dots"></span></div></span>
+  <div class="linha"><a href="#sec4">4. Serviço de Deteção — Lógica Central de Negócio</a><span class="dots"></span></div>
+  <span class="sub"><div class="linha"><a href="#sec4-1">4.1 Lógica de Toggle Entrada/Saída</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec4-2">4.2 Deteção de Duplicatas</a><span class="dots"></span></div></span>
+  <div class="linha"><a href="#sec5">5. API RESTful — Endpoints Disponíveis</a><span class="dots"></span></div>
+  <span class="sub"><div class="linha"><a href="#sec5-1">5.1 Endpoint Crítico: Receção de Deteções do Desktop</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec5-2">5.2 Endpoints por Grupo</a><span class="dots"></span></div></span>
+  <div class="linha"><a href="#sec6">6. Autenticação e Autorização</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec7">7. Painel Web — Interface de Administração</a><span class="dots"></span></div>
+  <span class="sub"><div class="linha"><a href="#sec7-1">7.1 Visualizações do Dashboard</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec7-2">7.2 Exportação de Dados</a><span class="dots"></span></div></span>
+  <div class="linha"><a href="#sec8">8. Comunicação com o Módulo Desktop</a><span class="dots"></span></div>
+  <span class="sub"><div class="linha"><a href="#sec8-1">8.1 Exemplo de Payload</a><span class="dots"></span></div></span>
+  <div class="linha"><a href="#sec9">9. Configuração e Implantação</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec10">10. Tecnologias Utilizadas</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec11">11. Visão Global — Integração com os Demais Módulos</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec12">12. Considerações de Segurança</a><span class="dots"></span></div>
+  <div class="linha"><a href="#refs">Referências Bibliográficas</a><span class="dots"></span></div>
+
+  <!-- Outros documentos do projecto -->
+  <p class="indice-titulo-grupo">Outros Documentos do Projecto</p>
+  <div class="linha"><a href="hardware_selecao.html">Seleção de Hardware — Sensores, Atuadores e Componentes do Sistema</a><span class="dots"></span></div>
+  <div class="linha"><a href="modulo_desktop.html">Módulo Desktop — Arquitectura, Funcionamento e Integração</a><span class="dots"></span></div>
+
+</div>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 1 -->
+<h1 id="sec1">1. Introdução</h1>
+
+<p>
+  O módulo web do sistema ALPR UNIPIAGET constitui o núcleo de gestão centralizada da plataforma.
+  Desenvolvido sobre a biblioteca FastAPI (Ramírez, 2018), este módulo assume três responsabilidades
+  principais: (i) expor uma interface de programação de aplicações (API RESTful) que recebe as
+  deteções enviadas pelo módulo desktop; (ii) processar e persistir os registos de acesso numa base
+  de dados relacional; e (iii) disponibilizar ao utilizador um painel de administração acessível
+  por navegador web, que apresenta estatísticas, histórico de movimentos, relatórios e ferramentas
+  de gestão.
+</p>
+<p>
+  A separação em módulos independentes — desktop e web — segue o princípio arquitectónico de
+  separação de preocupações (<em>separation of concerns</em>), pelo qual cada componente do sistema
+  é responsável por um conjunto coeso e delimitado de tarefas (Martin, 2017). O módulo web não
+  realiza captura de imagem nem processamento de visão computacional; limita-se a receber dados
+  estruturados do módulo desktop e a expô-los de forma organizada para os utilizadores
+  administrativos.
+</p>
+
+<table>
+  <thead><tr><th>Entidade</th><th>Protocolo</th><th>Finalidade</th></tr></thead>
+  <tbody>
+    <tr><td>Módulo Desktop</td><td>HTTP/REST (JSON)</td><td>Receber deteções de placas e registar movimentos de viaturas</td></tr>
+    <tr><td>Navegador Web (Admin)</td><td>HTTP + JWT</td><td>Painel de administração, consulta de registos e relatórios</td></tr>
+    <tr><td>Base de Dados</td><td>SQLAlchemy ORM</td><td>Persistência de veículos, proprietários, registos e utilizadores</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 2 -->
+<h1 id="sec2">2. Estrutura Interna e Organização de Ficheiros</h1>
+
+<p>
+  O módulo web segue uma organização em camadas horizontais, amplamente recomendada em projectos
+  FastAPI de média e grande dimensão (Percival &amp; Gregory, 2020). Cada camada possui
+  responsabilidades bem definidas e comunica com a camada adjacente através de interfaces
+  controladas.
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 680 320" style="width:100%;">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+  </defs>
+  <!-- Routes layer -->
+  <rect x="10" y="15" width="660" height="55" rx="5" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+  <text x="340" y="38" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e5c1e">Camada de Rotas (routes/)</text>
+  <text x="340" y="58" text-anchor="middle" font-size="9.5" fill="#2d6a2d">auth.py · veiculos.py · proprietarios.py · registros.py · dashboard.py · relatorios.py</text>
+  <!-- Services layer -->
+  <rect x="10" y="90" width="660" height="55" rx="5" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+  <text x="340" y="113" text-anchor="middle" font-size="11" font-weight="bold" fill="#1a3a7a">Camada de Serviços (services/)</text>
+  <text x="340" y="133" text-anchor="middle" font-size="9.5" fill="#1a3a7a">deteccao_service.py — Lógica de negócio      |      auth_service.py — Autenticação JWT</text>
+  <!-- Models layer -->
+  <rect x="10" y="165" width="660" height="55" rx="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+  <text x="340" y="188" text-anchor="middle" font-size="11" font-weight="bold" fill="#7d5f00">Camada de Modelos (models/ + database/)</text>
+  <text x="340" y="208" text-anchor="middle" font-size="9.5" fill="#7d5f00">Proprietario · Veiculo · RegistroAcesso · Usuario · Configuracao · LogAuditoria</text>
+  <!-- Templates -->
+  <rect x="10" y="240" width="320" height="55" rx="5" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
+  <text x="170" y="263" text-anchor="middle" font-size="10" font-weight="bold" fill="#6e1f1f">Apresentação (templates/)</text>
+  <text x="170" y="281" text-anchor="middle" font-size="9.5" fill="#6e1f1f">9 templates Jinja2 + Tailwind CSS v4</text>
+  <!-- Static -->
+  <rect x="350" y="240" width="320" height="55" rx="5" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+  <text x="510" y="263" text-anchor="middle" font-size="10" font-weight="bold" fill="#4a1860">Ficheiros Estáticos (static/)</text>
+  <text x="510" y="281" text-anchor="middle" font-size="9.5" fill="#4a1860">CSS · JavaScript · Imagens</text>
+  <!-- Arrows -->
+  <line x1="340" y1="70" x2="340" y2="88" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="340" y1="145" x2="340" y2="163" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="175" y1="220" x2="170" y2="238" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="500" y1="220" x2="510" y2="238" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+</svg>
+<p class="figura-legenda">Figura 1 — Organização em camadas do módulo web.</p>
+</div>
+
+<p>A raiz do módulo contém o ficheiro <code>main.py</code>, responsável pela inicialização da
+aplicação FastAPI, pelo registo dos routers e pela configuração de middleware CORS. A estrutura
+completa de directórios é apresentada na Tabela 1.</p>
+
+<table>
+  <thead>
+    <tr><th>Ficheiro / Directório</th><th>Função</th><th>Linhas aprox.</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>main.py</code></td><td>Inicialização da app, CORS, routers, tratamento de erros</td><td>266</td></tr>
+    <tr><td><code>database/__init__.py</code></td><td>Configuração SQLAlchemy, engine, sessões, criação de tabelas</td><td>386</td></tr>
+    <tr><td><code>models/__init__.py</code></td><td>Definição dos modelos ORM (6 tabelas)</td><td>175</td></tr>
+    <tr><td><code>services/deteccao_service.py</code></td><td>Lógica de processamento de deteções, toggle entrada/saída</td><td>486</td></tr>
+    <tr><td><code>services/auth_service.py</code></td><td>JWT, bcrypt, controlo de acesso por papel</td><td>337</td></tr>
+    <tr><td><code>routes/auth.py</code></td><td>Endpoints de autenticação (/login, /me, /logout)</td><td>366</td></tr>
+    <tr><td><code>routes/veiculos.py</code></td><td>CRUD de veículos</td><td>288</td></tr>
+    <tr><td><code>routes/proprietarios.py</code></td><td>CRUD de proprietários</td><td>293</td></tr>
+    <tr><td><code>routes/registros.py</code></td><td>Receção de deteções + histórico de acessos</td><td>349</td></tr>
+    <tr><td><code>routes/dashboard.py</code></td><td>KPIs, veículos no campus, alertas, gráficos</td><td>404</td></tr>
+    <tr><td><code>routes/relatorios.py</code></td><td>Geração de relatórios e exportação CSV</td><td>524</td></tr>
+    <tr><td><code>templates/</code></td><td>9 templates Jinja2 (base + páginas)</td><td>~5 000</td></tr>
+    <tr class="bold"><td><strong>Total Python</strong></td><td>14 ficheiros</td><td>~3 850</td></tr>
+  </tbody>
+</table>
+<p class="figura-legenda">Tabela 1 — Ficheiros do módulo web e respectivas responsabilidades.</p>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 3 -->
+<h1 id="sec3">3. Modelos de Dados (Base de Dados Relacional)</h1>
+
+<p>
+  A persistência de dados é gerida através do ORM SQLAlchemy (Bayer, 2012), que abstrai as
+  operações SQL e permite compatibilidade com SQLite (ambiente de desenvolvimento) e PostgreSQL
+  (ambiente de produção) sem alteração do código da aplicação. O esquema relacional compreende seis
+  entidades principais, cujos relacionamentos são ilustrados na Figura 2.
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 680 360" style="width:100%;">
+  <defs>
+    <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+  </defs>
+  <!-- Proprietario -->
+  <rect x="10" y="60" width="175" height="125" rx="4" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+  <rect x="10" y="60" width="175" height="22" rx="4" fill="#82b366"/>
+  <text x="97" y="75" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">Proprietario</text>
+  <text x="18" y="97" font-size="9" fill="#333">PK  id</text>
+  <text x="18" y="111" font-size="9" fill="#333">     nome</text>
+  <text x="18" y="125" font-size="9" fill="#333">     categoria (docente/aluno/…)</text>
+  <text x="18" y="139" font-size="9" fill="#333">     departamento</text>
+  <text x="18" y="153" font-size="9" fill="#333">     email · telefone</text>
+  <text x="18" y="167" font-size="9" fill="#333">     ativo · data_cadastro</text>
+  <!-- Veiculo -->
+  <rect x="260" y="60" width="175" height="125" rx="4" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+  <rect x="260" y="60" width="175" height="22" rx="4" fill="#6c8ebf"/>
+  <text x="347" y="75" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">Veiculo</text>
+  <text x="268" y="97" font-size="9" fill="#333">PK  id</text>
+  <text x="268" y="111" font-size="9" fill="#333">     placa (único)</text>
+  <text x="268" y="125" font-size="9" fill="#333">     modelo · cor</text>
+  <text x="268" y="139" font-size="9" fill="#333">FK  proprietario_id → Proprietario</text>
+  <text x="268" y="153" font-size="9" fill="#333">     observacoes</text>
+  <text x="268" y="167" font-size="9" fill="#333">     data_cadastro</text>
+  <!-- RegistroAcesso -->
+  <rect x="510" y="10" width="165" height="145" rx="4" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+  <rect x="510" y="10" width="165" height="22" rx="4" fill="#d6b656"/>
+  <text x="592" y="25" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">RegistroAcesso</text>
+  <text x="518" y="47" font-size="9" fill="#333">PK  id</text>
+  <text x="518" y="61" font-size="9" fill="#333">FK  veiculo_id → Veiculo (nullable)</text>
+  <text x="518" y="75" font-size="9" fill="#333">     placa_detectada</text>
+  <text x="518" y="89" font-size="9" fill="#333">     tipo_movimento (entrada/saida)</text>
+  <text x="518" y="103" font-size="9" fill="#333">     data_hora</text>
+  <text x="518" y="117" font-size="9" fill="#333">     confianca_ocr · metodo_ocr</text>
+  <text x="518" y="131" font-size="9" fill="#333">     imagem_path</text>
+  <text x="518" y="145" font-size="9" fill="#333">     cadastrado (bool)</text>
+  <!-- Usuario -->
+  <rect x="10" y="240" width="175" height="110" rx="4" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
+  <rect x="10" y="240" width="175" height="22" rx="4" fill="#b85450"/>
+  <text x="97" y="255" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">Usuario</text>
+  <text x="18" y="277" font-size="9" fill="#333">PK  id</text>
+  <text x="18" y="291" font-size="9" fill="#333">     username (único)</text>
+  <text x="18" y="305" font-size="9" fill="#333">     senha_hash</text>
+  <text x="18" y="319" font-size="9" fill="#333">     nivel_acesso (admin/op./vis.)</text>
+  <text x="18" y="333" font-size="9" fill="#333">     ativo</text>
+  <!-- LogAuditoria -->
+  <rect x="260" y="250" width="175" height="95" rx="4" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+  <rect x="260" y="250" width="175" height="22" rx="4" fill="#9673a6"/>
+  <text x="347" y="265" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">LogAuditoria</text>
+  <text x="268" y="287" font-size="9" fill="#333">PK  id</text>
+  <text x="268" y="301" font-size="9" fill="#333">FK  usuario_id → Usuario</text>
+  <text x="268" y="315" font-size="9" fill="#333">     acao · detalhes</text>
+  <text x="268" y="329" font-size="9" fill="#333">     data_hora</text>
+  <!-- Configuracao -->
+  <rect x="510" y="200" width="165" height="95" rx="4" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+  <rect x="510" y="200" width="165" height="22" rx="4" fill="#82b366"/>
+  <text x="592" y="215" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">Configuracao</text>
+  <text x="518" y="237" font-size="9" fill="#333">PK  id</text>
+  <text x="518" y="251" font-size="9" fill="#333">     chave (único)</text>
+  <text x="518" y="265" font-size="9" fill="#333">     valor · tipo</text>
+  <text x="518" y="279" font-size="9" fill="#333">     descricao</text>
+  <!-- Relations -->
+  <line x1="185" y1="122" x2="258" y2="122" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="195" y="116" font-size="8" fill="#555">1</text>
+  <text x="246" y="116" font-size="8" fill="#555">N</text>
+  <line x1="435" y1="100" x2="508" y2="78" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="448" y="93" font-size="8" fill="#555">1</text>
+  <text x="495" y="78" font-size="8" fill="#555">N</text>
+  <line x1="185" y1="295" x2="258" y2="295" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="195" y="289" font-size="8" fill="#555">1</text>
+  <text x="246" y="289" font-size="8" fill="#555">N</text>
+</svg>
+<p class="figura-legenda">Figura 2 — Diagrama entidade-relacionamento simplificado do módulo web.</p>
+</div>
+
+<h2 id="sec3-1">3.1 Descrição das Entidades</h2>
+
+<table>
+  <thead><tr><th>Entidade</th><th>Finalidade</th><th>Campos Principais</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Proprietario</strong></td><td>Regista as pessoas autorizadas a trazer veículos ao campus</td><td>nome, categoria, departamento, email, ativo</td></tr>
+    <tr><td><strong>Veiculo</strong></td><td>Representa cada veículo cadastrado no sistema</td><td>placa (único), modelo, cor, FK proprietario_id</td></tr>
+    <tr><td><strong>RegistroAcesso</strong></td><td>Historial de cada passagem pelo portão (entrada ou saída)</td><td>placa_detectada, tipo_movimento, data_hora, confianca_ocr, metodo_ocr, imagem_path</td></tr>
+    <tr><td><strong>Usuario</strong></td><td>Utilizadores do painel web (admin, operador, visualizador)</td><td>username, senha_hash, nivel_acesso, ativo</td></tr>
+    <tr><td><strong>LogAuditoria</strong></td><td>Rasto de acções realizadas pelos utilizadores no sistema</td><td>usuario_id, acao, detalhes, data_hora</td></tr>
+    <tr><td><strong>Configuracao</strong></td><td>Parâmetros configuráveis do sistema em formato chave-valor</td><td>chave, valor, tipo, descricao</td></tr>
+  </tbody>
+</table>
+<p class="figura-legenda">Tabela 2 — Descrição das entidades da base de dados.</p>
+
+<p>
+  A entidade <em>RegistroAcesso</em> aceita <code>veiculo_id</code> nulo de forma intencional:
+  quando o sistema reconhece uma placa que não se encontra cadastrada na base de dados, o registo é
+  criado igualmente, vinculando apenas a matrícula lida e o momento da passagem. Esta decisão
+  garante que nenhum veículo que transite pelo portão deixa de ser registado, independentemente de
+  o proprietário estar ou não cadastrado.
+</p>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 4 -->
+<h1 id="sec4">4. Serviço de Deteção — Lógica Central de Negócio</h1>
+
+<p>
+  O ficheiro <code>services/deteccao_service.py</code> concentra a lógica de negócio mais crítica
+  do módulo web. Quando o módulo desktop envia uma deteção via HTTP POST, este serviço é invocado
+  e executa os passos ilustrados na Figura 3.
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 620 430" style="width:100%;">
+  <defs>
+    <marker id="arr3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+  </defs>
+  <!-- Start -->
+  <ellipse cx="310" cy="22" rx="110" ry="16" fill="#2c3e50"/>
+  <text x="310" y="27" text-anchor="middle" font-size="10" fill="#fff">POST /registros/deteccao</text>
+  <line x1="310" y1="38" x2="310" y2="55" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <!-- Step 1 -->
+  <rect x="150" y="55" width="320" height="32" rx="5" fill="#dae8fc" stroke="#6c8ebf"/>
+  <text x="310" y="75" text-anchor="middle" font-size="10" fill="#222">1. Validar formato da placa (regex Moçambique)</text>
+  <line x1="310" y1="87" x2="310" y2="104" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <!-- Diamond valid? -->
+  <polygon points="310,104 420,128 310,152 200,128" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+  <text x="310" y="132" text-anchor="middle" font-size="9" fill="#333">Formato válido?</text>
+  <!-- No → error -->
+  <line x1="420" y1="128" x2="480" y2="128" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <text x="452" y="122" font-size="8" fill="#555">Não</text>
+  <rect x="482" y="112" width="120" height="32" rx="5" fill="#f8cecc" stroke="#b85450"/>
+  <text x="542" y="132" text-anchor="middle" font-size="9.5" fill="#a00">400 Bad Request</text>
+  <!-- Yes → Step 2 -->
+  <line x1="310" y1="152" x2="310" y2="170" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <text x="317" y="165" font-size="8" fill="#555">Sim</text>
+  <!-- Step 2 -->
+  <rect x="150" y="170" width="320" height="32" rx="5" fill="#dae8fc" stroke="#6c8ebf"/>
+  <text x="310" y="190" text-anchor="middle" font-size="10" fill="#222">2. Pesquisar placa na tabela Veiculo</text>
+  <line x1="310" y1="202" x2="310" y2="220" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <!-- Diamond duplicate? -->
+  <polygon points="310,220 420,244 310,268 200,244" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+  <text x="310" y="248" text-anchor="middle" font-size="9" fill="#333">Duplicata &lt; 5 min?</text>
+  <!-- Duplicate yes -->
+  <line x1="420" y1="244" x2="480" y2="244" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <text x="452" y="238" font-size="8" fill="#555">Sim</text>
+  <rect x="482" y="228" width="128" height="32" rx="5" fill="#f8cecc" stroke="#b85450"/>
+  <text x="546" y="248" text-anchor="middle" font-size="9" fill="#a00">200 + duplicata:true</text>
+  <!-- No → Step 3 -->
+  <line x1="310" y1="268" x2="310" y2="285" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <text x="317" y="280" font-size="8" fill="#555">Não</text>
+  <!-- Step 3 -->
+  <rect x="150" y="285" width="320" height="32" rx="5" fill="#d5e8d4" stroke="#82b366"/>
+  <text x="310" y="305" text-anchor="middle" font-size="10" fill="#222">3. Determinar tipo de movimento (toggle)</text>
+  <line x1="310" y1="317" x2="310" y2="334" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <!-- Step 4 -->
+  <rect x="150" y="334" width="320" height="32" rx="5" fill="#d5e8d4" stroke="#82b366"/>
+  <text x="310" y="354" text-anchor="middle" font-size="10" fill="#222">4. Criar RegistroAcesso na BD + guardar imagem</text>
+  <line x1="310" y1="366" x2="310" y2="383" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <!-- Step 5 -->
+  <rect x="150" y="383" width="320" height="36" rx="5" fill="#2c3e50"/>
+  <text x="310" y="405" text-anchor="middle" font-size="10" fill="#fff">5. Responder: 201 + DeteccaoResponse</text>
+</svg>
+<p class="figura-legenda">Figura 3 — Fluxo interno de processamento de uma deteção recebida pelo módulo web.</p>
+</div>
+
+<h2 id="sec4-1">4.1 Lógica de Toggle Entrada/Saída</h2>
+
+<p>
+  Uma das funcionalidades mais relevantes do serviço de deteção é a determinação automática do tipo
+  de movimento (entrada ou saída). Em vez de depender do valor enviado pelo módulo desktop — que
+  transmite sempre "entrada" como marcador de posição — o servidor executa a seguinte lógica:
+</p>
+<ol>
+  <li>Consultar o último registo existente para a placa recebida.</li>
+  <li>Se não houver registo anterior, o tipo é definido como <strong>entrada</strong>.</li>
+  <li>Se o último registo for <em>entrada</em>, o próximo será <em>saída</em>, e vice-versa.</li>
+</ol>
+<p>
+  Este mecanismo garante que o sistema mantém coerência no historial de movimentos,
+  independentemente do estado interno do módulo desktop. A responsabilidade sobre o tipo de
+  movimento reside exclusivamente no servidor, garantindo fonte única de verdade
+  (<em>single source of truth</em>).
+</p>
+
+<h2 id="sec4-2">4.2 Deteção de Duplicatas</h2>
+
+<p>
+  Para evitar registos redundantes provocados por deteções repetidas da mesma placa num curto
+  intervalo de tempo (por exemplo, o veículo demora a atravessar o portão), o serviço verifica se
+  já existe um registo para a mesma matrícula nos últimos N minutos (por omissão, 5 minutos, valor
+  configurável na tabela <em>Configuracao</em>). Caso seja identificada uma duplicata, a resposta
+  inclui o campo <code>duplicata: true</code> e o tempo decorrido desde o último registo, mas não
+  cria um novo registo na base de dados.
+</p>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 5 -->
+<h1 id="sec5">5. API RESTful — Endpoints Disponíveis</h1>
+
+<p>
+  A interface de programação de aplicações do módulo web segue os princípios REST definidos por
+  Fielding (2000), onde os recursos são identificados por URI e manipulados por verbos HTTP
+  normalizados (GET, POST, PUT, DELETE). A documentação interactiva é gerada automaticamente pelo
+  FastAPI em <code>/docs</code> (Swagger UI) e <code>/redoc</code> (ReDoc).
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 660 310" style="width:100%;">
+  <defs>
+    <marker id="arr4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+  </defs>
+  <!-- Central FastAPI -->
+  <rect x="240" y="120" width="180" height="50" rx="8" fill="#2c3e50"/>
+  <text x="330" y="142" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">FastAPI App</text>
+  <text x="330" y="158" text-anchor="middle" font-size="9" fill="#aad">/api/v1/</text>
+  <!-- Routers left -->
+  <rect x="10" y="10" width="115" height="36" rx="4" fill="#dae8fc" stroke="#6c8ebf"/>
+  <text x="67" y="32" text-anchor="middle" font-size="9.5" fill="#222">/auth/</text>
+  <line x1="125" y1="28" x2="238" y2="132" stroke="#6c8ebf" stroke-width="1.2"/>
+  <rect x="10" y="60" width="115" height="36" rx="4" fill="#d5e8d4" stroke="#82b366"/>
+  <text x="67" y="82" text-anchor="middle" font-size="9.5" fill="#222">/veiculos/</text>
+  <line x1="125" y1="78" x2="238" y2="140" stroke="#82b366" stroke-width="1.2"/>
+  <rect x="10" y="110" width="115" height="36" rx="4" fill="#d5e8d4" stroke="#82b366"/>
+  <text x="67" y="132" text-anchor="middle" font-size="9.5" fill="#222">/proprietarios/</text>
+  <line x1="125" y1="128" x2="238" y2="145" stroke="#82b366" stroke-width="1.2"/>
+  <rect x="10" y="160" width="115" height="36" rx="4" fill="#fff2cc" stroke="#d6b656"/>
+  <text x="67" y="182" text-anchor="middle" font-size="9.5" fill="#222">/registros/</text>
+  <line x1="125" y1="178" x2="238" y2="152" stroke="#d6b656" stroke-width="1.2"/>
+  <rect x="10" y="210" width="115" height="36" rx="4" fill="#f8cecc" stroke="#b85450"/>
+  <text x="67" y="232" text-anchor="middle" font-size="9.5" fill="#222">/dashboard/</text>
+  <line x1="125" y1="228" x2="238" y2="158" stroke="#b85450" stroke-width="1.2"/>
+  <rect x="10" y="260" width="115" height="36" rx="4" fill="#e1d5e7" stroke="#9673a6"/>
+  <text x="67" y="282" text-anchor="middle" font-size="9.5" fill="#222">/relatorios/</text>
+  <line x1="125" y1="278" x2="238" y2="165" stroke="#9673a6" stroke-width="1.2"/>
+  <!-- Right connections -->
+  <rect x="425" y="50" width="220" height="46" rx="4" fill="#fafafa" stroke="#999"/>
+  <text x="535" y="70" text-anchor="middle" font-size="10" font-weight="bold" fill="#333">Templates Jinja2</text>
+  <text x="535" y="85" text-anchor="middle" font-size="9" fill="#555">Renderização HTML server-side</text>
+  <line x1="420" y1="135" x2="425" y2="78" stroke="#999" stroke-width="1.2"/>
+  <rect x="425" y="130" width="220" height="46" rx="4" fill="#fff2cc" stroke="#d6b656"/>
+  <text x="535" y="150" text-anchor="middle" font-size="10" font-weight="bold" fill="#333">Módulo Desktop</text>
+  <text x="535" y="165" text-anchor="middle" font-size="9" fill="#555">POST /registros/deteccao</text>
+  <line x1="420" y1="145" x2="425" y2="153" stroke="#d6b656" stroke-width="1.5"/>
+  <rect x="425" y="210" width="220" height="46" rx="4" fill="#dae8fc" stroke="#6c8ebf"/>
+  <text x="535" y="230" text-anchor="middle" font-size="10" font-weight="bold" fill="#333">Base de Dados</text>
+  <text x="535" y="245" text-anchor="middle" font-size="9" fill="#555">SQLite / PostgreSQL via ORM</text>
+  <line x1="420" y1="155" x2="425" y2="233" stroke="#6c8ebf" stroke-width="1.2"/>
+</svg>
+<p class="figura-legenda">Figura 4 — Routers registados na aplicação FastAPI e respectivas ligações.</p>
+</div>
+
+<h2 id="sec5-1">5.1 Endpoint Crítico: Receção de Deteções do Desktop</h2>
+
+<p>
+  O endpoint mais importante do sistema, do ponto de vista da integração entre módulos, é o
+  <code>POST /api/v1/registros/deteccao</code>. Este endpoint não requer autenticação, pois é
+  destinado ao módulo desktop que opera em rede local. As Tabelas 3 e 4 descrevem o contrato de
+  dados deste endpoint.
+</p>
+
+<table>
+  <thead>
+    <tr><th colspan="3">POST /api/v1/registros/deteccao — Corpo da Requisição (JSON)</th></tr>
+    <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>placa_detectada</code></td><td>string</td><td>Matrícula reconhecida pelo OCR (ex.: <code>MP123AB</code>)</td></tr>
+    <tr><td><code>tipo_movimento</code></td><td>string</td><td>Marcador enviado pelo desktop — ignorado pelo servidor</td></tr>
+    <tr><td><code>confianca_ocr</code></td><td>float</td><td>Grau de confiança do OCR (0.0–1.0)</td></tr>
+    <tr><td><code>metodo_ocr</code></td><td>string</td><td>Motor utilizado: "easyocr", "tesseract" ou "hibrido"</td></tr>
+    <tr><td><code>imagem_base64</code></td><td>string?</td><td>Imagem do veículo em Base64 (opcional)</td></tr>
+    <tr><td><code>timestamp</code></td><td>string</td><td>Data e hora da deteção (ISO 8601)</td></tr>
+  </tbody>
+</table>
+<p class="figura-legenda">Tabela 3 — Campos do payload enviado pelo módulo desktop.</p>
+
+<table>
+  <thead>
+    <tr><th colspan="3">POST /api/v1/registros/deteccao — Corpo da Resposta (JSON)</th></tr>
+    <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>sucesso</code></td><td>bool</td><td>Indica se o registo foi criado com sucesso</td></tr>
+    <tr><td><code>mensagem</code></td><td>string</td><td>Mensagem descritiva (ex.: "Deteção registada [ENTRADA]")</td></tr>
+    <tr><td><code>registro_id</code></td><td>int</td><td>ID do registo criado na BD</td></tr>
+    <tr><td><code>veiculo_cadastrado</code></td><td>bool</td><td>Indica se o veículo está cadastrado</td></tr>
+    <tr><td><code>veiculo</code></td><td>object?</td><td>Dados do veículo e proprietário (se cadastrado)</td></tr>
+    <tr><td><code>duplicata</code></td><td>bool</td><td>True se o registo foi ignorado por duplicata</td></tr>
+    <tr><td><code>tempo_desde_ultimo_registro</code></td><td>int?</td><td>Segundos desde o último registo (se duplicata)</td></tr>
+  </tbody>
+</table>
+<p class="figura-legenda">Tabela 4 — Campos da resposta retornada ao módulo desktop.</p>
+
+<h2 id="sec5-2">5.2 Endpoints por Grupo</h2>
+
+<table>
+  <thead><tr><th>Grupo</th><th>Método</th><th>Endpoint</th><th>Finalidade</th></tr></thead>
+  <tbody>
+    <tr><td rowspan="3"><strong>Autenticação</strong></td><td>POST</td><td>/auth/login</td><td>Obter token JWT</td></tr>
+    <tr><td>GET</td><td>/auth/me</td><td>Dados do utilizador actual</td></tr>
+    <tr><td>POST</td><td>/auth/logout</td><td>Encerrar sessão (stateless)</td></tr>
+    <tr><td rowspan="4"><strong>Veículos</strong></td><td>POST</td><td>/veiculos</td><td>Registar veículo</td></tr>
+    <tr><td>GET</td><td>/veiculos</td><td>Listar com filtros</td></tr>
+    <tr><td>GET</td><td>/veiculos/placa/{placa}</td><td>Pesquisar por matrícula</td></tr>
+    <tr><td>PUT/DELETE</td><td>/veiculos/{id}</td><td>Editar / remover</td></tr>
+    <tr><td rowspan="3"><strong>Proprietários</strong></td><td>POST</td><td>/proprietarios</td><td>Registar proprietário</td></tr>
+    <tr><td>GET</td><td>/proprietarios</td><td>Listar com filtros</td></tr>
+    <tr><td>PUT/DELETE</td><td>/proprietarios/{id}</td><td>Editar / remover</td></tr>
+    <tr><td rowspan="4"><strong>Registos</strong></td><td>POST</td><td>/registros/deteccao</td><td>Receber deteção do desktop</td></tr>
+    <tr><td>GET</td><td>/registros</td><td>Histórico com filtros</td></tr>
+    <tr><td>GET</td><td>/registros/hoje</td><td>Registos do dia actual</td></tr>
+    <tr><td>GET</td><td>/registros/historico/placa/{p}</td><td>Histórico por matrícula</td></tr>
+    <tr><td rowspan="5"><strong>Dashboard</strong></td><td>GET</td><td>/dashboard/estatisticas</td><td>KPIs principais</td></tr>
+    <tr><td>GET</td><td>/dashboard/veiculos-no-campus</td><td>Veículos presentes</td></tr>
+    <tr><td>GET</td><td>/dashboard/alertas</td><td>Alertas de ausência</td></tr>
+    <tr><td>GET</td><td>/dashboard/grafico-semanal</td><td>Dados dos últimos 7 dias</td></tr>
+    <tr><td>GET</td><td>/dashboard/atividade-recente</td><td>Feed de actividade</td></tr>
+    <tr><td rowspan="3"><strong>Relatórios</strong></td><td>POST</td><td>/relatorios/proprietarios</td><td>Relatório de proprietários</td></tr>
+    <tr><td>POST</td><td>/relatorios/veiculos</td><td>Relatório de veículos</td></tr>
+    <tr><td>GET</td><td>/relatorios/exportar/registros</td><td>Exportar CSV</td></tr>
+  </tbody>
+</table>
+<p class="figura-legenda">Tabela 5 — Principais endpoints da API REST.</p>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 6 -->
+<h1 id="sec6">6. Autenticação e Autorização</h1>
+
+<p>
+  O acesso ao painel web é protegido por um mecanismo de autenticação baseado em JSON Web Tokens
+  (JWT), conforme especificado por Jones et al. (2015). A palavra-passe é armazenada em formato
+  irreversível através do algoritmo bcrypt, que incorpora um valor aleatório de sal (<em>salt</em>)
+  em cada hash, tornando ataques por dicionário ineficazes mesmo em caso de comprometimento da
+  base de dados (Provos &amp; Mazières, 1999).
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 640 230" style="width:100%;">
+  <defs>
+    <marker id="arr5" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+  </defs>
+  <!-- Browser -->
+  <rect x="10" y="80" width="110" height="55" rx="5" fill="#dae8fc" stroke="#6c8ebf"/>
+  <text x="65" y="103" text-anchor="middle" font-size="10" font-weight="bold" fill="#333">Navegador</text>
+  <text x="65" y="118" text-anchor="middle" font-size="9" fill="#555">Utilizador</text>
+  <!-- POST login -->
+  <line x1="120" y1="107" x2="188" y2="107" stroke="#555" stroke-width="1.5" marker-end="url(#arr5)"/>
+  <text x="154" y="101" text-anchor="middle" font-size="8" fill="#555">POST /auth/login</text>
+  <text x="154" y="120" text-anchor="middle" font-size="8" fill="#555">{username, password}</text>
+  <!-- Auth Service -->
+  <rect x="190" y="68" width="145" height="75" rx="5" fill="#d5e8d4" stroke="#82b366"/>
+  <text x="262" y="90" text-anchor="middle" font-size="10" font-weight="bold" fill="#333">auth_service</text>
+  <text x="262" y="106" text-anchor="middle" font-size="8.5" fill="#555">verificar_senha (bcrypt)</text>
+  <text x="262" y="120" text-anchor="middle" font-size="8.5" fill="#555">criar_token_acesso (JWT)</text>
+  <!-- Return token -->
+  <line x1="190" y1="122" x2="120" y2="122" stroke="#555" stroke-width="1.5" marker-end="url(#arr5)"/>
+  <text x="154" y="138" text-anchor="middle" font-size="8" fill="#555">Token JWT (24 h)</text>
+  <!-- Subsequent requests -->
+  <line x1="335" y1="107" x2="398" y2="107" stroke="#555" stroke-width="1.5" marker-end="url(#arr5)"/>
+  <text x="366" y="100" text-anchor="middle" font-size="8" fill="#555">GET /registros</text>
+  <text x="366" y="118" text-anchor="middle" font-size="8" fill="#555">Authorization: Bearer…</text>
+  <!-- Router Guard -->
+  <rect x="400" y="68" width="150" height="75" rx="5" fill="#fff2cc" stroke="#d6b656"/>
+  <text x="475" y="90" text-anchor="middle" font-size="10" font-weight="bold" fill="#333">Router Guard</text>
+  <text x="475" y="106" text-anchor="middle" font-size="8.5" fill="#555">verificar_token (JWT)</text>
+  <text x="475" y="120" text-anchor="middle" font-size="8.5" fill="#555">verificar_nivel_acesso</text>
+  <!-- Allow / Deny -->
+  <line x1="550" y1="88" x2="600" y2="68" stroke="#2d6a2d" stroke-width="1.5" marker-end="url(#arr5)"/>
+  <text x="575" y="63" text-anchor="middle" font-size="8" fill="#2d6a2d">200 OK</text>
+  <line x1="550" y1="120" x2="600" y2="140" stroke="#b00" stroke-width="1.5" marker-end="url(#arr5)"/>
+  <text x="575" y="153" text-anchor="middle" font-size="8" fill="#b00">401 / 403</text>
+  <!-- Roles legend -->
+  <rect x="10" y="168" width="620" height="52" rx="4" fill="#f0f0f0" stroke="#ccc"/>
+  <text x="320" y="184" text-anchor="middle" font-size="9" font-weight="bold" fill="#333">Níveis de Acesso</text>
+  <text x="105" y="200" text-anchor="middle" font-size="8.5" fill="#b85450">● visualizador — só leitura</text>
+  <text x="315" y="200" text-anchor="middle" font-size="8.5" fill="#6c8ebf">● operador — leitura + criação/edição</text>
+  <text x="535" y="200" text-anchor="middle" font-size="8.5" fill="#2d6a2d">● admin — acesso total + gestão de utilizadores</text>
+  <text x="105" y="213" font-size="8" fill="#777">nível mín. 1</text>
+  <text x="300" y="213" font-size="8" fill="#777">nível mín. 2</text>
+  <text x="505" y="213" font-size="8" fill="#777">nível mín. 3</text>
+</svg>
+<p class="figura-legenda">Figura 5 — Fluxo de autenticação JWT e hierarquia de níveis de acesso.</p>
+</div>
+
+<p>
+  O token JWT é armazenado no <em>localStorage</em> do navegador e enviado em cada requisição
+  subsequente no cabeçalho HTTP <code>Authorization: Bearer &lt;token&gt;</code>. O servidor valida
+  a assinatura criptográfica do token a cada pedido, sem necessidade de consultar a base de dados,
+  o que permite escalabilidade horizontal (Fielding, 2000). O token expira ao fim de 24 horas, após
+  o qual o utilizador deve autenticar-se novamente.
+</p>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 7 -->
+<h1 id="sec7">7. Painel Web — Interface de Administração</h1>
+
+<p>
+  A interface de administração é renderizada no servidor através de templates Jinja2, a linguagem de
+  templates oficial do ecossistema Flask/FastAPI (Ronacher, 2008). A estilização visual utiliza
+  Tailwind CSS v4, uma biblioteca utilitária que permite construir layouts responsivos sem escrever
+  CSS personalizado. A Tabela 6 resume as páginas disponíveis.
+</p>
+
+<table>
+  <thead><tr><th>Template</th><th>Rota</th><th>Conteúdo Principal</th></tr></thead>
+  <tbody>
+    <tr><td><code>base.html</code></td><td>—</td><td>Layout base: barra lateral colapsável, tema claro/escuro, cabeçalho de utilizador</td></tr>
+    <tr><td><code>index.html</code></td><td>/</td><td>Dashboard: KPIs, gráficos de entradas/saídas, veículos no campus, alertas</td></tr>
+    <tr><td><code>login.html</code></td><td>/login</td><td>Formulário de autenticação</td></tr>
+    <tr><td><code>veiculos.html</code></td><td>/veiculos</td><td>CRUD de veículos com validação de matrícula moçambicana</td></tr>
+    <tr><td><code>proprietarios.html</code></td><td>/proprietarios</td><td>CRUD de proprietários por categoria e departamento</td></tr>
+    <tr><td><code>registros.html</code></td><td>/registros</td><td>Tabela de histórico de acessos com filtros e exportação CSV</td></tr>
+    <tr><td><code>relatorios.html</code></td><td>/relatorios</td><td>Relatórios por proprietário/veículo com gráficos Chart.js</td></tr>
+    <tr><td><code>usuarios.html</code></td><td>/usuarios</td><td>Gestão de utilizadores do sistema (apenas admin)</td></tr>
+    <tr><td><code>404.html</code></td><td>—</td><td>Página de erro com botão de retorno</td></tr>
+  </tbody>
+</table>
+<p class="figura-legenda">Tabela 6 — Templates Jinja2 do painel de administração.</p>
+
+<h2 id="sec7-1">7.1 Visualizações do Dashboard</h2>
+
+<p>
+  O dashboard (página inicial após autenticação) é a principal ferramenta operacional do sistema.
+  Apresenta os seguintes componentes visuais, todos actualizados por chamadas assíncronas à API REST:
+</p>
+<ul>
+  <li><strong>Cartões de KPI</strong> — total de veículos cadastrados, total de proprietários, ocupação actual do campus, e número de entradas e saídas do dia.</li>
+  <li><strong>Gráfico de barras — actividade horária</strong> — entradas e saídas agrupadas por hora nas últimas 24 horas, renderizado com Chart.js (Chart.js, 2023).</li>
+  <li><strong>Gráfico de linha — tendência semanal</strong> — total de movimentos por dia nos últimos 7 dias.</li>
+  <li><strong>Gráfico circular — distribuição por categoria</strong> — proporção de docentes, alunos, técnicos e visitantes nos registos do período.</li>
+  <li><strong>Lista de veículos no campus</strong> — matrículas com entrada registada e sem saída correspondente, com o tempo de permanência calculado.</li>
+  <li><strong>Alertas</strong> — docentes ausentes por mais de 3 dias consecutivos e permanências anormalmente curtas (menos de 1 hora).</li>
+</ul>
+
+<h2 id="sec7-2">7.2 Exportação de Dados</h2>
+
+<p>
+  O módulo web oferece exportação de registos de acesso e relatórios de proprietários em formato
+  CSV (<em>Comma-Separated Values</em>), compatível com Microsoft Excel e LibreOffice Calc. A
+  exportação é gerada dinamicamente pelo servidor e transferida directamente para o dispositivo do
+  utilizador através de um cabeçalho HTTP <code>Content-Disposition: attachment</code>.
+</p>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 8 -->
+<h1 id="sec8">8. Comunicação com o Módulo Desktop</h1>
+
+<p>
+  A comunicação entre o módulo desktop e o módulo web ocorre de forma unidirecional: o desktop
+  envia dados, o web responde. Não existe comunicação no sentido inverso (o servidor não aciona
+  comandos no módulo desktop). A Figura 6 ilustra o fluxo completo de uma deteção, desde o sensor
+  de laço indutivo até ao registo na base de dados.
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 660 370" style="width:100%;">
+  <defs>
+    <marker id="arr6" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+  </defs>
+  <!-- Swimlane backgrounds -->
+  <rect x="0" y="0" width="165" height="370" fill="#f0f4f8" stroke="#ccc"/>
+  <rect x="166" y="0" width="165" height="370" fill="#f9f9f9" stroke="#ccc"/>
+  <rect x="332" y="0" width="165" height="370" fill="#f0f4f8" stroke="#ccc"/>
+  <rect x="498" y="0" width="162" height="370" fill="#f9f9f9" stroke="#ccc"/>
+  <!-- Headers -->
+  <text x="82" y="16" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#2c3e50">Hardware / Sensor</text>
+  <text x="248" y="16" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#2c3e50">Módulo Desktop</text>
+  <text x="414" y="16" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#2c3e50">Módulo Web</text>
+  <text x="579" y="16" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#2c3e50">Base de Dados</text>
+  <!-- Step 1 -->
+  <rect x="8" y="30" width="148" height="30" rx="4" fill="#d6b656" stroke="#b8940e"/>
+  <text x="82" y="49" text-anchor="middle" font-size="9" fill="#fff">Sensor DI 0 = True</text>
+  <line x1="156" y1="45" x2="172" y2="75" stroke="#555" stroke-width="1.5" marker-end="url(#arr6)"/>
+  <!-- Step 2 -->
+  <rect x="174" y="75" width="148" height="40" rx="4" fill="#6c8ebf" stroke="#4a6ea8"/>
+  <text x="248" y="91" text-anchor="middle" font-size="9" fill="#fff">Câmara captura frame</text>
+  <text x="248" y="107" text-anchor="middle" font-size="9" fill="#fff">YOLO + OCR → placa</text>
+  <!-- POST arrow -->
+  <line x1="322" y1="95" x2="338" y2="135" stroke="#555" stroke-width="1.5" marker-end="url(#arr6)"/>
+  <text x="326" y="120" font-size="8" fill="#555">POST /api/v1/</text>
+  <text x="326" y="131" font-size="8" fill="#555">registros/deteccao</text>
+  <!-- Step 3 web -->
+  <rect x="340" y="135" width="148" height="38" rx="4" fill="#82b366" stroke="#5e9e42"/>
+  <text x="414" y="151" text-anchor="middle" font-size="9" fill="#fff">Valida placa, toggle,</text>
+  <text x="414" y="165" text-anchor="middle" font-size="9" fill="#fff">verifica duplicata</text>
+  <!-- Step 4 DB -->
+  <line x1="488" y1="154" x2="504" y2="154" stroke="#555" stroke-width="1.5" marker-end="url(#arr6)"/>
+  <rect x="506" y="135" width="148" height="38" rx="4" fill="#9673a6" stroke="#7a5490"/>
+  <text x="580" y="158" text-anchor="middle" font-size="9" fill="#fff">INSERT RegistroAcesso</text>
+  <!-- Response -->
+  <line x1="340" y1="185" x2="322" y2="210" stroke="#555" stroke-width="1.5" marker-end="url(#arr6)"/>
+  <text x="328" y="204" font-size="8" fill="#555">{sucesso, veiculo…}</text>
+  <!-- Step 5 open gate -->
+  <rect x="174" y="210" width="148" height="40" rx="4" fill="#d6b656" stroke="#b8940e"/>
+  <text x="248" y="226" text-anchor="middle" font-size="9" fill="#fff">sucesso=True?</text>
+  <text x="248" y="242" text-anchor="middle" font-size="9" fill="#fff">→ Abrir cancela (PLC)</text>
+  <!-- Sensor OFF -->
+  <line x1="195" y1="250" x2="100" y2="290" stroke="#555" stroke-width="1.5" marker-end="url(#arr6)"/>
+  <rect x="8" y="285" width="148" height="30" rx="4" fill="#d6b656" stroke="#b8940e"/>
+  <text x="82" y="304" text-anchor="middle" font-size="9" fill="#fff">Sensor DI 0 = False</text>
+  <line x1="156" y1="300" x2="186" y2="300" stroke="#555" stroke-width="1.5" marker-end="url(#arr6)"/>
+  <rect x="188" y="285" width="127" height="30" rx="4" fill="#6c8ebf" stroke="#4a6ea8"/>
+  <text x="251" y="304" text-anchor="middle" font-size="9" fill="#fff">PLC fecha cancela</text>
+</svg>
+<p class="figura-legenda">Figura 6 — Diagrama de sequência completo: do sensor físico ao registo na base de dados.</p>
+</div>
+
+<h2 id="sec8-1">8.1 Exemplo de Payload</h2>
+
+<p>O exemplo seguinte ilustra uma transação típica entre o módulo desktop e o módulo web, após o
+sistema OCR identificar a matrícula <code>MP123AB</code> com 95% de confiança:</p>
+
+<div class="codigo">POST /api/v1/registros/deteccao HTTP/1.1
+Host: 192.168.1.100:8000
+Content-Type: application/json
+
+{
+  "placa_detectada": "MP123AB",
+  "tipo_movimento": "entrada",
+  "confianca_ocr": 0.95,
+  "metodo_ocr": "hibrido",
+  "imagem_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+  "timestamp": "2025-03-11T14:30:00"
+}
+
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+{
+  "sucesso": true,
+  "mensagem": "Detecção registada [ENTRADA] — Dr. João Silva (docente)",
+  "registro_id": 145,
+  "veiculo_cadastrado": true,
+  "veiculo": {
+    "placa": "MP123AB",
+    "modelo": "Toyota Corolla",
+    "proprietario": {
+      "nome": "Dr. João Silva",
+      "categoria": "docente",
+      "departamento": "Engenharia Informática"
+    }
+  },
+  "duplicata": false,
+  "tempo_desde_ultimo_registro": null
+}</div>
+
+<div class="destaque">
+  <strong>Nota:</strong> O campo <code>tipo_movimento</code> no payload de requisição é ignorado
+  pelo servidor. O módulo web determina autonomamente se o movimento é entrada ou saída, com base
+  no historial de registos daquela matrícula, garantindo consistência independente do estado do
+  módulo desktop.
+</div>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 9 -->
+<h1 id="sec9">9. Configuração e Implantação</h1>
+
+<p>
+  O módulo web é configurado através de variáveis de ambiente, carregadas automaticamente de um
+  ficheiro <code>.env</code> na raiz do projecto. A Tabela 7 lista as variáveis mais relevantes.
+</p>
+
+<table>
+  <thead><tr><th>Variável</th><th>Valor Padrão</th><th>Descrição</th></tr></thead>
+  <tbody>
+    <tr><td><code>DATABASE_URL</code></td><td><code>sqlite:///./alpr.db</code></td><td>URL de ligação à base de dados</td></tr>
+    <tr><td><code>SECRET_KEY</code></td><td>(definir em produção)</td><td>Chave de assinatura JWT</td></tr>
+    <tr><td><code>ACCESS_TOKEN_EXPIRE_MINUTES</code></td><td>1440</td><td>Duração do token JWT (24 horas)</td></tr>
+    <tr><td><code>ALLOWED_ORIGINS</code></td><td>localhost:8000</td><td>Origens permitidas pelo CORS</td></tr>
+    <tr><td><code>SALVAR_IMAGENS</code></td><td>true</td><td>Guardar imagens das deteções em disco</td></tr>
+    <tr><td><code>INTERVALO_DUPLICATA_MIN</code></td><td>5</td><td>Intervalo mínimo entre registos da mesma matrícula</td></tr>
+  </tbody>
+</table>
+<p class="figura-legenda">Tabela 7 — Variáveis de ambiente do módulo web.</p>
+
+<p>Para iniciar o módulo web em modo de desenvolvimento, executa-se o seguinte comando na raiz do
+projecto:</p>
+
+<div class="codigo">cd alpr_ujpm
+uvicorn web_module.main:app --host 0.0.0.0 --port 8000 --reload</div>
+
+<p>A inicialização da aplicação cria automaticamente as tabelas na base de dados (caso não
+existam) e insere um utilizador administrador padrão (<code>admin / admin123</code>), que deve ser
+substituído por credenciais seguras antes da primeira utilização em ambiente de produção.</p>
+
+<hr>
+
+<!-- ========================================================== SECÇÃO 10 -->
+<h1 id="sec10">10. Tecnologias Utilizadas</h1>
+
+<table>
+  <thead><tr><th>Biblioteca / Tecnologia</th><th>Versão</th><th>Função no Módulo Web</th></tr></thead>
+  <tbody>
+    <tr><td>FastAPI</td><td>≥ 0.100</td><td>Framework web assíncrono, roteamento, validação automática de schemas</td></tr>
+    <tr><td>SQLAlchemy</td><td>≥ 2.0</td><td>ORM para mapeamento objecto-relacional e gestão de sessões de BD</td></tr>
+    <tr><td>Pydantic v2</td><td>≥ 2.0</td><td>Validação e serialização de dados (schemas de entrada/saída)</td></tr>
+    <tr><td>Uvicorn</td><td>≥ 0.23</td><td>Servidor ASGI de alto desempenho para executar a aplicação FastAPI</td></tr>
+    <tr><td>python-jose</td><td>≥ 3.3</td><td>Geração e verificação de tokens JWT</td></tr>
+    <tr><td>passlib[bcrypt]</td><td>≥ 1.7</td><td>Hashing de palavras-passe com bcrypt</td></tr>
+    <tr><td>Jinja2</td><td>≥ 3.1</td><td>Motor de templates para renderização HTML server-side</td></tr>
+    <tr><td>Tailwind CSS v4</td><td>4.x (CDN)</td><td>Framework de estilos utilitário para o painel web</td></tr>
+    <tr><td>Chart.js</td><td>≥ 4.0 (CDN)</td><td>Gráficos de barras, linhas e circulares no dashboard</td></tr>
+    <tr><td>SQLite / PostgreSQL</td><td>—</td><td>Armazenamento relacional (SQLite em desenvolvimento, PostgreSQL em produção)</td></tr>
+  </tbody>
+</table>
+<p class="figura-legenda">Tabela 8 — Tecnologias utilizadas no módulo web.</p>
+
+<hr>
+
+<!-- ========================================================== SECÇÃO 11 -->
+<h1 id="sec11">11. Visão Global — Integração com os Demais Módulos</h1>
+
+<p>
+  O módulo web posiciona-se como a camada de gestão e persistência da arquitectura global do
+  sistema. A Figura 7 apresenta a relação entre os três módulos principais do projecto ALPR
+  UNIPIAGET, com os protocolos de comunicação utilizados em cada interface.
+</p>
+
+<div class="figura">
+<svg viewBox="0 0 660 250" style="width:100%;">
+  <defs>
+    <marker id="arr7" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+  </defs>
+  <!-- Hardware -->
+  <rect x="10" y="70" width="145" height="110" rx="7" fill="#fff2cc" stroke="#d6b656" stroke-width="2"/>
+  <text x="82" y="108" text-anchor="middle" font-size="11" font-weight="bold" fill="#7d5f00">Hardware</text>
+  <text x="82" y="126" text-anchor="middle" font-size="9" fill="#666">PLC + Sensor de Laço</text>
+  <text x="82" y="140" text-anchor="middle" font-size="9" fill="#666">Câmara IP 4MP</text>
+  <text x="82" y="154" text-anchor="middle" font-size="9" fill="#666">Cancela CAME ZA3P</text>
+  <!-- Desktop Module -->
+  <rect x="240" y="50" width="175" height="150" rx="7" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+  <text x="327" y="88" text-anchor="middle" font-size="11" font-weight="bold" fill="#1a3a7a">Módulo Desktop</text>
+  <text x="327" y="106" text-anchor="middle" font-size="9" fill="#555">Tkinter UI</text>
+  <text x="327" y="120" text-anchor="middle" font-size="9" fill="#555">YOLO v8 (deteção)</text>
+  <text x="327" y="134" text-anchor="middle" font-size="9" fill="#555">EasyOCR + Tesseract</text>
+  <text x="327" y="148" text-anchor="middle" font-size="9" fill="#555">PLCController (Modbus)</text>
+  <text x="327" y="162" text-anchor="middle" font-size="9" fill="#555">HTTP Client (requests)</text>
+  <!-- Web Module -->
+  <rect x="500" y="30" width="155" height="190" rx="7" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+  <text x="577" y="68" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e5c1e">Módulo Web</text>
+  <text x="577" y="86" text-anchor="middle" font-size="9" fill="#555">FastAPI (REST API)</text>
+  <text x="577" y="100" text-anchor="middle" font-size="9" fill="#555">SQLAlchemy ORM</text>
+  <text x="577" y="114" text-anchor="middle" font-size="9" fill="#555">Jinja2 Templates</text>
+  <text x="577" y="128" text-anchor="middle" font-size="9" fill="#555">JWT Auth</text>
+  <text x="577" y="142" text-anchor="middle" font-size="9" fill="#555">Dashboard + Relatórios</text>
+  <text x="577" y="156" text-anchor="middle" font-size="9" fill="#555">Exportação CSV</text>
+  <text x="577" y="170" text-anchor="middle" font-size="9" fill="#555">Alertas e KPIs</text>
+  <text x="577" y="184" text-anchor="middle" font-size="9" fill="#555">SQLite / PostgreSQL</text>
+  <!-- Arrows Hardware ↔ Desktop -->
+  <line x1="155" y1="112" x2="238" y2="112" stroke="#d6b656" stroke-width="2" marker-end="url(#arr7)"/>
+  <line x1="238" y1="125" x2="155" y2="125" stroke="#d6b656" stroke-width="2" marker-end="url(#arr7)"/>
+  <text x="196" y="105" text-anchor="middle" font-size="8" fill="#7d5f00">Modbus TCP</text>
+  <text x="196" y="137" text-anchor="middle" font-size="8" fill="#7d5f00">RTSP (vídeo)</text>
+  <!-- Arrows Desktop → Web -->
+  <line x1="415" y1="120" x2="498" y2="120" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arr7)"/>
+  <line x1="498" y1="133" x2="415" y2="133" stroke="#82b366" stroke-width="2" marker-end="url(#arr7)"/>
+  <text x="456" y="112" text-anchor="middle" font-size="8" fill="#1a3a7a">HTTP POST (JSON)</text>
+  <text x="456" y="145" text-anchor="middle" font-size="8" fill="#1e5c1e">DeteccaoResponse</text>
+  <!-- Admin browser -->
+  <rect x="500" y="232" width="155" height="16" rx="3" fill="#f0f0f0" stroke="#999"/>
+  <text x="577" y="243" text-anchor="middle" font-size="8" fill="#555">Administrador (Navegador Web)</text>
+  <line x1="577" y1="220" x2="577" y2="230" stroke="#82b366" stroke-width="1.5" marker-end="url(#arr7)"/>
+</svg>
+<p class="figura-legenda">Figura 7 — Diagrama de integração entre os três módulos do sistema ALPR UNIPIAGET.</p>
+</div>
+
+<p>
+  O módulo web é o único com acesso directo à base de dados. Os módulos desktop e shared não
+  escrevem na base de dados diretamente — toda a persistência ocorre exclusivamente através das
+  chamadas à API REST do módulo web. Esta arquitectura centraliza a integridade dos dados e facilita
+  a escalabilidade futura do sistema, nomeadamente a adição de novos clientes (aplicações móveis,
+  outros postos de controlo) sem necessidade de alterar a lógica de negócio.
+</p>
+
+<hr>
+
+<!-- ========================================================== SECÇÃO 12 -->
+<h1 id="sec12">12. Considerações de Segurança</h1>
+
+<p>
+  O desenvolvimento do módulo web incorporou as seguintes práticas de segurança recomendadas para
+  sistemas de informação em ambiente universitário:
+</p>
+<ul>
+  <li><strong>Palavras-passe com bcrypt</strong> — O algoritmo bcrypt é resistente a ataques de força bruta por ser computacionalmente custoso por design; o factor de custo pode ser aumentado à medida que o hardware evolui (Provos &amp; Mazières, 1999).</li>
+  <li><strong>CORS configurável</strong> — Apenas origens explicitamente autorizadas podem interagir com a API a partir de um navegador, prevenindo ataques de falsificação de pedidos entre sítios (<em>cross-site request forgery</em>).</li>
+  <li><strong>Validação de dados com Pydantic</strong> — Todos os dados recebidos pela API são validados contra schemas rígidos antes de chegarem à camada de serviços, prevenindo injeção de dados malformados.</li>
+  <li><strong>ORM com queries parametrizadas</strong> — O SQLAlchemy utiliza consultas parametrizadas internamente, eliminando o risco de injeção SQL.</li>
+  <li><strong>Rastreabilidade via LogAuditoria</strong> — Todas as acções relevantes dos utilizadores são registadas com data e hora, permitindo auditoria posterior em caso de incidente.</li>
+  <li><strong>Endpoint de deteção sem autenticação</strong> — O endpoint <code>POST /registros/deteccao</code> não requer autenticação por operar exclusivamente em rede local (LAN do campus). Em implantações expostas à Internet, recomenda-se a adição de uma chave de API estática.</li>
+</ul>
+
+<hr>
+
+<!-- ========================================================= REFERÊNCIAS -->
+<h1 id="refs">Referências Bibliográficas</h1>
+
+<div class="referencias">
+
+<p>Bayer, M. (2012). SQLAlchemy. In A. Brown &amp; G. Wilson (Eds.), <em>The architecture of open source applications</em> (Vol. 2). Lulu.com.</p>
+
+<p>Chart.js Contributors. (2023). <em>Chart.js — Simple yet flexible JavaScript charting for designers &amp; developers</em> (Versão 4.x). Disponível em https://www.chartjs.org/</p>
+
+<p>Fielding, R. T. (2000). <em>Architectural styles and the design of network-based software architectures</em> [Tese de doutoramento, University of California, Irvine].</p>
+
+<p>Jones, M., Bradley, J., &amp; Sakimura, N. (2015). <em>JSON Web Token (JWT)</em> (RFC 7519). Internet Engineering Task Force. https://doi.org/10.17487/RFC7519</p>
+
+<p>Martin, R. C. (2017). <em>Clean architecture: A craftsman's guide to software structure and design</em>. Prentice Hall.</p>
+
+<p>Percival, H., &amp; Gregory, B. (2020). <em>Architecture patterns with Python: Enabling test-driven development, domain-driven design, and event-driven microservices</em>. O'Reilly Media.</p>
+
+<p>Provos, N., &amp; Mazières, D. (1999). A future-adaptable password scheme. <em>Proceedings of the 1999 USENIX Annual Technical Conference</em>, 81–91. USENIX Association.</p>
+
+<p>Ramírez, S. (2018). <em>FastAPI — Framework, alto desempenho, fácil de aprender, rápido de programar, pronto para produção</em>. Disponível em https://fastapi.tiangolo.com/</p>
+
+<p>Ronacher, A. (2008). <em>Jinja2 — Template engine for Python</em>. Disponível em https://jinja.palletsprojects.com/</p>
+
+<p>Van Rossum, G., &amp; Drake, F. L. (2009). <em>Python 3 reference manual</em>. CreateSpace Independent Publishing Platform.</p>
+
+</div>
+
+<hr>
+<p class="center" style="font-size:9.5pt; color:#666; margin-top:6mm;">
+  Documento produzido para o Trabalho de Conclusão de Curso — Universidade Jean Piaget de Moçambique, 2026.
+</p>
+
+<!-- BOTÕES FLUTUANTES -->
+<div class="fab-container">
+  <button class="fab fab-print" onclick="window.print()" title="Imprimir página">🖨</button>
+  <a class="fab fab-index" href="#indice" title="Ir ao Índice">☰</a>
+</div>
+
+</body>
+</html>

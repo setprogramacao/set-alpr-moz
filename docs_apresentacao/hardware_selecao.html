@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seleção de Hardware — Sistema ALPR UNIPIAGET</title>
+  <style>
+    html { scroll-behavior: smooth; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      color: #111;
+      background: #fff;
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 20mm 25mm;
+    }
+
+    /* ---- CAPA ---- */
+    .capa {
+      text-align: center;
+      padding: 40mm 0 30mm;
+      border-bottom: 2px solid #333;
+      margin-bottom: 20mm;
+      page-break-after: always;
+    }
+    .capa .instituicao { font-size: 14pt; font-weight: bold; margin-bottom: 8mm; }
+    .capa .titulo { font-size: 16pt; font-weight: bold; margin: 10mm 0 6mm; line-height: 1.4; }
+    .capa .subtitulo { font-size: 13pt; margin-bottom: 10mm; font-style: italic; }
+    .capa .info { font-size: 11pt; margin-top: 8mm; line-height: 2; }
+
+    /* ---- HEADINGS ---- */
+    h1 { font-size: 14pt; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 2mm; margin: 10mm 0 4mm; }
+    h2 { font-size: 13pt; font-weight: bold; margin: 8mm 0 3mm; }
+    h3 { font-size: 12pt; font-weight: bold; margin: 6mm 0 2mm; }
+
+    p { margin-bottom: 3mm; text-align: justify; }
+
+    /* ---- TABLES ---- */
+    table { width: 100%; border-collapse: collapse; margin: 4mm 0 6mm; font-size: 10.5pt; }
+    th { background: #ddd; font-weight: bold; padding: 2mm 3mm; border: 1px solid #999; text-align: left; }
+    td { padding: 2mm 3mm; border: 1px solid #bbb; vertical-align: top; }
+    tr:nth-child(even) td { background: #f7f7f7; }
+    .center { text-align: center; }
+    .bold { font-weight: bold; }
+    .highlight td { background: #e8f5e9 !important; font-weight: bold; }
+
+    /* ---- FIGURES ---- */
+    .figura {
+      border: 1px solid #bbb;
+      border-radius: 3px;
+      padding: 4mm;
+      margin: 5mm 0 7mm;
+      background: #fafafa;
+    }
+    .figura-legenda {
+      font-size: 10pt;
+      font-style: italic;
+      color: #444;
+      margin-top: 2mm;
+      text-align: center;
+    }
+    .figura-img-placeholder {
+      background: #eee;
+      border: 1px dashed #aaa;
+      text-align: center;
+      padding: 8mm;
+      font-size: 10pt;
+      color: #555;
+      margin-bottom: 2mm;
+    }
+    .figura-url {
+      font-size: 9.5pt;
+      color: #1a0dab;
+      word-break: break-all;
+      font-family: monospace;
+      margin-top: 1mm;
+      text-align: center;
+    }
+
+    /* ---- CALCULO / FORMULA ---- */
+    .formula-box {
+      background: #f5f5f5;
+      border-left: 3px solid #555;
+      padding: 3mm 5mm;
+      margin: 4mm 0;
+      font-family: "Courier New", monospace;
+      font-size: 10.5pt;
+      line-height: 1.8;
+    }
+    .formula-box .formula-title {
+      font-family: "Times New Roman", serif;
+      font-weight: bold;
+      font-style: italic;
+      margin-bottom: 2mm;
+    }
+
+    /* ---- JUSTIFICATIVA ---- */
+    .justificativa {
+      background: #fffde7;
+      border: 1px solid #f0c030;
+      border-radius: 3px;
+      padding: 3mm 5mm;
+      margin: 4mm 0 6mm;
+      font-size: 10.5pt;
+    }
+    .justificativa::before {
+      content: "Justificativa: ";
+      font-weight: bold;
+    }
+
+    /* ---- SVG DIAGRAMS ---- */
+    svg { display: block; margin: 4mm auto; max-width: 100%; }
+
+    /* ---- REFERENCES ---- */
+    .referencias { margin-top: 8mm; }
+    .referencias p { text-indent: -12mm; padding-left: 12mm; margin-bottom: 3mm; font-size: 11pt; }
+
+    /* ---- NOTA RODAPÉ ---- */
+    .nota {
+      font-size: 9.5pt;
+      color: #555;
+      border-top: 1px solid #ccc;
+      padding-top: 2mm;
+      margin-top: 4mm;
+    }
+
+    /* ---- SEPARADOR ---- */
+    hr { border: none; border-top: 1px solid #bbb; margin: 8mm 0; }
+
+    /* ---- BOTÕES FLUTUANTES ---- */
+    .fab-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 999;
+    }
+    .fab {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.28);
+      transition: transform 0.15s, box-shadow 0.15s;
+      font-size: 18px;
+      text-decoration: none;
+    }
+    .fab:hover {
+      transform: scale(1.10);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    }
+    .fab-print { background: #2c3e50; color: #fff; }
+    .fab-index { background: #555; color: #fff; }
+
+    /* ---- ÍNDICE ---- */
+    .indice { margin: 4mm 0 6mm; }
+    .indice a { color: #111; text-decoration: none; }
+    .indice a:hover { text-decoration: underline; color: #1a0dab; }
+    .indice .indice-titulo-grupo { font-weight: bold; margin-top: 5mm; margin-bottom: 1mm; font-size: 11pt; }
+    .indice .sub { padding-left: 8mm; display: block; }
+    .indice .subsub { padding-left: 16mm; display: block; }
+    .indice .linha { display: flex; margin-bottom: 1mm; }
+    .indice .linha .dots { flex: 1; border-bottom: 1px dotted #888; margin: 0 2mm 3px; min-width: 10px; }
+
+    /* ---- PRINT ---- */
+    @media print {
+      body { padding: 15mm 20mm; }
+      .figura-url { color: #000; }
+      a { color: #000; text-decoration: none; }
+      .fab-container { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================ CAPA -->
+<div class="capa">
+  <div class="instituicao">Universidade Jean Piaget de Moçambique</div>
+  <div style="font-size:12pt; margin-bottom:6mm;">Faculdade de Engenharia, Ciências e Tecnologia<br>Curso de Engenharia Electrónica e de Telecomunicações</div>
+  <div class="titulo">Sistema de Reconhecimento Automático de Placas Veiculares (ALPR) com Controlo de Cancela Electrónica</div>
+  <div class="subtitulo">Seleção de Hardware: Sensores, Atuadores e Componentes do Sistema</div>
+  <div class="info">
+    <strong>Estudante:</strong> Salvador Eduardo Tomoecene<br>
+    <strong>Documento:</strong> Anexo Técnico — Seleção de Hardware<br>
+    <strong>Ano Lectivo:</strong> 2026
+  </div>
+</div>
+
+<!-- ============================================================= SUMÁRIO -->
+<h1 id="indice">Índice</h1>
+
+<div class="indice">
+  <div class="linha"><a href="#sec1">1. Introdução e Objectivos</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec2">2. Arquitectura Geral do Sistema</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec3">3. Diagrama de Instalação Física</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec4">4. Componentes Seleccionados</a><span class="dots"></span></div>
+  <span class="sub"><div class="linha"><a href="#sec4-1">4.1 Controlador Lógico Programável (PLC)</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec4-2">4.2 Câmara IP</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec4-3">4.3 Sensor de Laço Indutivo (Detector de Laço)</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec4-4">4.4 Atuador / Motor da Cancela</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec4-5">4.5 Tipo de Cancela (Estrutura Mecânica)</a><span class="dots"></span></div></span>
+  <div class="linha"><a href="#sec5">5. Cálculos de Seleção</a><span class="dots"></span></div>
+  <span class="sub"><div class="linha"><a href="#sec5-1">5.1 Resolução Mínima da Câmara e Distância de Instalação</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec5-2">5.2 Dimensionamento do Laço Indutivo</a><span class="dots"></span></div></span>
+  <span class="sub"><div class="linha"><a href="#sec5-3">5.3 Orçamento de Potência do Sistema</a><span class="dots"></span></div></span>
+  <div class="linha"><a href="#sec6">6. Distâncias e Posicionamento de Instalação</a><span class="dots"></span></div>
+  <div class="linha"><a href="#sec7">7. Interação Entre Componentes</a><span class="dots"></span></div>
+  <div class="linha"><a href="#refs">8. Referências Bibliográficas</a><span class="dots"></span></div>
+
+  <p class="indice-titulo-grupo">Outros Documentos do Projecto</p>
+  <div class="linha"><a href="modulo_desktop.html">Módulo Desktop — Arquitectura, Funcionamento e Integração</a><span class="dots"></span></div>
+  <div class="linha"><a href="modulo_web.html">Módulo Web — Arquitectura, API REST, Painel de Administração e Integração</a><span class="dots"></span></div>
+</div>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 1 -->
+<h1 id="sec1">1. Introdução e Objectivos</h1>
+
+<p>
+  O presente documento descreve o processo de seleção dos componentes de hardware que integram o
+  sistema de Reconhecimento Automático de Placas Veiculares (do inglês <em>Automatic License Plate
+  Recognition</em> — ALPR), desenvolvido como Trabalho de Conclusão de Curso (TCC) na Universidade
+  Jean Piaget de Moçambique.
+</p>
+<p>
+  O sistema tem como finalidade controlar o acesso de viaturas ao campus universitário, identificando
+  automaticamente a matrícula (placa) de cada veículo e registando o respectivo movimento (entrada
+  ou saída) numa base de dados central. A decisão de abrir ou manter fechada a cancela electrónica
+  é tomada com base no resultado da leitura óptica da placa, conforme descrito na arquitectura do
+  sistema.
+</p>
+<p>
+  A seleção dos componentes físicos (hardware) obedece aos seguintes critérios:
+</p>
+<table>
+  <thead>
+    <tr><th>Critério</th><th>Requisito</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Protocolo de comunicação</td><td>Modbus TCP sobre Ethernet (compatível com o módulo de software)</td></tr>
+    <tr><td>Resolução de câmara</td><td>Mínimo 4 MP para garantir leitura fiável de matrículas</td></tr>
+    <tr><td>Detecção de veículos</td><td>Sensor capaz de detectar veículos independentemente da câmara</td></tr>
+    <tr><td>Robustez</td><td>Componentes de grau industrial ou semi-industrial</td></tr>
+    <tr><td>Disponibilidade</td><td>Produtos de marcas internacionais com suporte técnico disponível</td></tr>
+    <tr><td>Custo-benefício</td><td>Relação qualidade/preço adequada para ambiente universitário</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 2 -->
+<h1 id="sec2">2. Arquitectura Geral do Sistema</h1>
+
+<p>
+  O sistema é composto por dois módulos de software (Desktop e Web) e um conjunto de componentes
+  físicos que interagem entre si conforme o diagrama seguinte. O sensor de laço indutivo é o
+  elemento central de detecção: quando detecta a presença de uma viatura, acciona a câmara para
+  capturar a imagem e processar a matrícula via OCR. Apenas se a matrícula for lida com sucesso
+  é enviado o comando de abertura à cancela.
+</p>
+
+<!-- Diagrama SVG da arquitectura -->
+<svg viewBox="0 0 720 380" style="border:1px solid #bbb; background:#fafafa; width:100%;">
+  <!-- Título -->
+  <text x="360" y="22" font-size="13" font-weight="bold" text-anchor="middle" fill="#222">Arquitectura do Sistema ALPR — Componentes Físicos e Software</text>
+
+  <!-- -------- PORTÃO FÍSICO -------- -->
+  <rect x="30" y="40" width="150" height="300" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="105" y="58" font-size="10" font-weight="bold" text-anchor="middle" fill="#1565c0">PORTÃO FÍSICO</text>
+
+  <!-- Laço indutivo -->
+  <rect x="45" y="65" width="120" height="50" rx="4" fill="#bbdefb" stroke="#1976d2" stroke-width="1"/>
+  <text x="105" y="84" font-size="9" font-weight="bold" text-anchor="middle" fill="#0d47a1">Sensor de Laço</text>
+  <text x="105" y="96" font-size="8.5" text-anchor="middle" fill="#0d47a1">Indutivo (CAME ZA3P)</text>
+  <text x="105" y="108" font-size="8" text-anchor="middle" fill="#444">DI 0 → PLC</text>
+
+  <!-- Câmara -->
+  <rect x="45" y="128" width="120" height="50" rx="4" fill="#bbdefb" stroke="#1976d2" stroke-width="1"/>
+  <text x="105" y="147" font-size="9" font-weight="bold" text-anchor="middle" fill="#0d47a1">Câmara IP 4MP</text>
+  <text x="105" y="159" font-size="8.5" text-anchor="middle" fill="#0d47a1">Hikvision DS-2CD2T47G2-L</text>
+  <text x="105" y="171" font-size="8" text-anchor="middle" fill="#444">RTSP → Módulo Desktop</text>
+
+  <!-- Motor / Cancela -->
+  <rect x="45" y="191" width="120" height="50" rx="4" fill="#bbdefb" stroke="#1976d2" stroke-width="1"/>
+  <text x="105" y="210" font-size="9" font-weight="bold" text-anchor="middle" fill="#0d47a1">Motor / Cancela</text>
+  <text x="105" y="222" font-size="8.5" text-anchor="middle" fill="#0d47a1">FAAC 615 BPR (24 V DC)</text>
+  <text x="105" y="234" font-size="8" text-anchor="middle" fill="#444">Coil 0 ← PLC</text>
+
+  <!-- PLC -->
+  <rect x="45" y="254" width="120" height="50" rx="4" fill="#c8e6c9" stroke="#2e7d32" stroke-width="1"/>
+  <text x="105" y="273" font-size="9" font-weight="bold" text-anchor="middle" fill="#1b5e20">PLC</text>
+  <text x="105" y="285" font-size="8.5" text-anchor="middle" fill="#1b5e20">Siemens LOGO! 8.3</text>
+  <text x="105" y="297" font-size="8" text-anchor="middle" fill="#444">Modbus TCP (porta 502)</text>
+
+  <!-- -------- SWITCH ETHERNET -------- -->
+  <rect x="240" y="175" width="100" height="40" rx="4" fill="#fff9c4" stroke="#f9a825" stroke-width="1.5"/>
+  <text x="290" y="192" font-size="9" font-weight="bold" text-anchor="middle" fill="#e65100">Switch</text>
+  <text x="290" y="205" font-size="8.5" text-anchor="middle" fill="#e65100">Ethernet / PoE</text>
+
+  <!-- -------- MÓDULO DESKTOP -------- -->
+  <rect x="390" y="40" width="150" height="130" rx="6" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+  <text x="465" y="58" font-size="10" font-weight="bold" text-anchor="middle" fill="#6a1b9a">MÓDULO DESKTOP</text>
+  <text x="465" y="74" font-size="8.5" text-anchor="middle" fill="#444">(PC com Python)</text>
+  <text x="465" y="92" font-size="8.5" text-anchor="middle" fill="#4a148c">YOLOv8 — Detecção YOLO</text>
+  <text x="465" y="106" font-size="8.5" text-anchor="middle" fill="#4a148c">EasyOCR / Tesseract</text>
+  <text x="465" y="120" font-size="8.5" text-anchor="middle" fill="#4a148c">PLCController (Modbus TCP)</text>
+  <text x="465" y="134" font-size="8.5" text-anchor="middle" fill="#4a148c">FastAPI Client (REST)</text>
+  <text x="465" y="148" font-size="8.5" text-anchor="middle" fill="#4a148c">Tkinter UI</text>
+
+  <!-- -------- MÓDULO WEB -------- -->
+  <rect x="390" y="190" width="150" height="100" rx="6" fill="#fce4ec" stroke="#880e4f" stroke-width="1.5"/>
+  <text x="465" y="208" font-size="10" font-weight="bold" text-anchor="middle" fill="#880e4f">MÓDULO WEB</text>
+  <text x="465" y="224" font-size="8.5" text-anchor="middle" fill="#444">(Servidor FastAPI)</text>
+  <text x="465" y="240" font-size="8.5" text-anchor="middle" fill="#880e4f">REST API (/api/v1/)</text>
+  <text x="465" y="254" font-size="8.5" text-anchor="middle" fill="#880e4f">SQLite / SQLAlchemy</text>
+  <text x="465" y="268" font-size="8.5" text-anchor="middle" fill="#880e4f">Dashboard Web (Jinja2)</text>
+
+  <!-- -------- BROWSER -------- -->
+  <rect x="590" y="190" width="100" height="60" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1"/>
+  <text x="640" y="215" font-size="9" font-weight="bold" text-anchor="middle" fill="#1b5e20">Browser</text>
+  <text x="640" y="229" font-size="8" text-anchor="middle" fill="#444">Dashboard / Relatórios</text>
+  <text x="640" y="241" font-size="8" text-anchor="middle" fill="#444">Agente de Segurança</text>
+
+  <!-- -------- SETAS / LIGAÇÕES -------- -->
+  <!-- Laço → PLC: DI 0 -->
+  <line x1="105" y1="115" x2="105" y2="254" stroke="#1976d2" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="112" y="188" font-size="7.5" fill="#1976d2">DI 0</text>
+
+  <!-- PLC ↔ Switch (Modbus TCP) -->
+  <line x1="165" y1="275" x2="240" y2="200" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="196" y="232" font-size="7.5" fill="#2e7d32" transform="rotate(-35 196 232)">Modbus TCP</text>
+
+  <!-- Câmara → Switch (RTSP/PoE) -->
+  <line x1="165" y1="155" x2="240" y2="190" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="196" y="167" font-size="7.5" fill="#1976d2">RTSP/PoE</text>
+
+  <!-- Motor ← PLC (Coil 0) -->
+  <line x1="105" y1="241" x2="105" y2="254" stroke="#e65100" stroke-width="1.5"/>
+
+  <!-- Switch ↔ Desktop -->
+  <line x1="340" y1="193" x2="390" y2="110" stroke="#555" stroke-width="1.5"/>
+  <text x="357" y="148" font-size="7.5" fill="#555">Ethernet</text>
+
+  <!-- Switch ↔ Web -->
+  <line x1="340" y1="198" x2="390" y2="230" stroke="#555" stroke-width="1.5"/>
+  <text x="348" y="222" font-size="7.5" fill="#555">Ethernet</text>
+
+  <!-- Desktop ↔ Web (REST) -->
+  <line x1="465" y1="170" x2="465" y2="190" stroke="#880e4f" stroke-width="1.5"/>
+  <text x="472" y="183" font-size="7.5" fill="#880e4f">REST API</text>
+
+  <!-- Web ↔ Browser -->
+  <line x1="540" y1="225" x2="590" y2="220" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="555" y="217" font-size="7.5" fill="#2e7d32">HTTP</text>
+
+  <!-- Legenda -->
+  <rect x="30" y="330" width="660" height="40" rx="3" fill="#f5f5f5" stroke="#ccc" stroke-width="1"/>
+  <text x="40" y="346" font-size="8.5" fill="#333">Legenda:</text>
+  <line x1="90" y1="340" x2="115" y2="340" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="118" y="344" font-size="8" fill="#333">Sinal digital / PoE</text>
+  <line x1="200" y1="340" x2="225" y2="340" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="228" y="344" font-size="8" fill="#333">Modbus TCP</text>
+  <line x1="300" y1="340" x2="325" y2="340" stroke="#880e4f" stroke-width="1.5"/>
+  <text x="328" y="344" font-size="8" fill="#333">REST API (HTTP)</text>
+  <line x1="415" y1="340" x2="440" y2="340" stroke="#555" stroke-width="1.5"/>
+  <text x="443" y="344" font-size="8" fill="#333">Ethernet (LAN)</text>
+
+  <text x="40" y="362" font-size="8.5" fill="#333">DI = Discrete Input (entrada digital PLC) · Coil = Saída digital PLC · RTSP = protocolo streaming de vídeo</text>
+</svg>
+<div class="figura-legenda">Figura 1 — Arquitectura geral do sistema ALPR com componentes físicos e software. Elaboração própria (2026).</div>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 3 -->
+<h1 id="sec3">3. Diagrama de Instalação Física</h1>
+
+<p>
+  O diagrama seguinte ilustra o posicionamento físico dos componentes no portão de acesso ao campus,
+  indicando as distâncias recomendadas de instalação calculadas na Secção 5.
+</p>
+
+<svg viewBox="0 0 700 280" style="border:1px solid #bbb; background:#f9f9f9; width:100%;">
+  <!-- Estrada -->
+  <rect x="0" y="160" width="700" height="80" fill="#d0d0d0"/>
+  <line x1="0" y1="200" x2="700" y2="200" stroke="#fff" stroke-width="2" stroke-dasharray="30,20"/>
+  <text x="350" y="235" font-size="10" text-anchor="middle" fill="#555">FAIXA DE CIRCULAÇÃO DE VEÍCULOS</text>
+
+  <!-- Bermas -->
+  <rect x="0" y="140" width="700" height="20" fill="#8bc34a" opacity="0.5"/>
+  <rect x="0" y="240" width="700" height="20" fill="#8bc34a" opacity="0.5"/>
+
+  <!-- -------- LAÇO INDUTIVO -------- -->
+  <rect x="90" y="162" width="80" height="76" fill="none" stroke="#e53935" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="130" y="197" font-size="8.5" font-weight="bold" text-anchor="middle" fill="#c62828">LAÇO</text>
+  <text x="130" y="208" font-size="8" text-anchor="middle" fill="#c62828">INDUTIVO</text>
+  <text x="130" y="219" font-size="7.5" text-anchor="middle" fill="#c62828">2.0 m × 0.9 m</text>
+
+  <!-- -------- POSTE / CÂMARA -------- -->
+  <!-- Poste -->
+  <rect x="195" y="50" width="8" height="110" fill="#555"/>
+  <!-- Braço do poste -->
+  <rect x="195" y="50" width="55" height="6" fill="#555"/>
+  <!-- Câmara -->
+  <rect x="240" y="38" width="30" height="20" rx="3" fill="#1565c0" stroke="#0d47a1" stroke-width="1"/>
+  <circle cx="255" cy="48" r="6" fill="#2196f3" stroke="#0d47a1" stroke-width="1"/>
+  <text x="285" y="44" font-size="9" fill="#0d47a1" font-weight="bold">Câmara IP 4MP</text>
+  <text x="285" y="55" font-size="8" fill="#444">h = 2,8 m</text>
+
+  <!-- Linha de visão da câmara -->
+  <line x1="255" y1="58" x2="130" y2="162" stroke="#1976d2" stroke-width="1" stroke-dasharray="5,3" opacity="0.7"/>
+  <text x="178" y="100" font-size="8" fill="#1976d2" transform="rotate(-30 178 100)">linha de visão</text>
+
+  <!-- -------- CANCELA -------- -->
+  <!-- Poste da cancela -->
+  <rect x="195" y="100" width="10" height="62" fill="#795548"/>
+  <!-- Motor -->
+  <rect x="185" y="100" width="30" height="22" rx="3" fill="#ff8f00" stroke="#e65100" stroke-width="1"/>
+  <text x="200" y="113" font-size="7.5" text-anchor="middle" fill="#fff" font-weight="bold">MOTOR</text>
+  <!-- Braço da cancela (horizontal = aberta, diagonal = posição) -->
+  <rect x="205" y="103" width="150" height="7" rx="3" fill="#e53935" stroke="#c62828" stroke-width="1"/>
+  <text x="280" y="98" font-size="8" text-anchor="middle" fill="#c62828" font-weight="bold">BRAÇO CANCELA (3,0 m)</text>
+
+  <!-- -------- PLC / ARMÁRIO -------- -->
+  <rect x="30" y="90" width="55" height="65" rx="3" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="57" y="112" font-size="8" font-weight="bold" text-anchor="middle" fill="#1b5e20">PLC</text>
+  <text x="57" y="123" font-size="7.5" text-anchor="middle" fill="#1b5e20">LOGO! 8.3</text>
+  <text x="57" y="136" font-size="7" text-anchor="middle" fill="#444">Armário</text>
+  <text x="57" y="146" font-size="7" text-anchor="middle" fill="#444">Técnico</text>
+
+  <!-- Cabos PLC -->
+  <line x1="85" y1="130" x2="195" y2="111" stroke="#2e7d32" stroke-width="1" stroke-dasharray="4,2"/>
+  <line x1="85" y1="140" x2="90" y2="162" stroke="#e53935" stroke-width="1" stroke-dasharray="4,2"/>
+
+  <!-- -------- COTA: Câmara ao Laço (distância horizontal) -------- -->
+  <line x1="130" y1="155" x2="255" y2="155" stroke="#666" stroke-width="0.8"/>
+  <line x1="130" y1="150" x2="130" y2="160" stroke="#666" stroke-width="0.8"/>
+  <line x1="255" y1="150" x2="255" y2="160" stroke="#666" stroke-width="0.8"/>
+  <text x="193" y="150" font-size="8" text-anchor="middle" fill="#333">D ≈ 3,0 – 4,0 m</text>
+
+  <!-- -------- COTA: Laço à cancela -------- -->
+  <line x1="170" y1="248" x2="200" y2="248" stroke="#c62828" stroke-width="0.8"/>
+  <line x1="170" y1="244" x2="170" y2="252" stroke="#c62828" stroke-width="0.8"/>
+  <line x1="200" y1="244" x2="200" y2="252" stroke="#c62828" stroke-width="0.8"/>
+  <text x="185" y="263" font-size="7.5" text-anchor="middle" fill="#c62828">0,5 – 1,0 m</text>
+
+  <!-- -------- SENTIDO DO VEÍCULO -------- -->
+  <text x="500" y="185" font-size="10" fill="#333">→ SENTIDO DE CIRCULAÇÃO</text>
+  <!-- Veículo simplificado -->
+  <rect x="450" y="165" width="60" height="30" rx="4" fill="#78909c" stroke="#546e7a" stroke-width="1"/>
+  <rect x="460" y="158" width="40" height="18" rx="3" fill="#90a4ae" stroke="#546e7a" stroke-width="1"/>
+  <circle cx="463" cy="197" r="6" fill="#333"/>
+  <circle cx="497" cy="197" r="6" fill="#333"/>
+
+  <!-- Legenda -->
+  <rect x="380" y="40" width="300" height="95" rx="3" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <text x="530" y="58" font-size="9" font-weight="bold" text-anchor="middle" fill="#333">Legenda</text>
+  <rect x="390" y="65" width="12" height="8" fill="none" stroke="#e53935" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="408" y="73" font-size="8.5" fill="#333">Laço indutivo (embebido no pavimento)</text>
+  <rect x="390" y="82" width="12" height="8" rx="2" fill="#1565c0"/>
+  <text x="408" y="90" font-size="8.5" fill="#333">Câmara IP (montada em poste)</text>
+  <rect x="390" y="99" width="30" height="5" rx="2" fill="#e53935"/>
+  <text x="426" y="105" font-size="8.5" fill="#333">Braço da cancela</text>
+  <rect x="390" y="115" width="12" height="12" rx="2" fill="#ff8f00"/>
+  <text x="408" y="124" font-size="8.5" fill="#333">Motor / atuador da cancela</text>
+</svg>
+<div class="figura-legenda">Figura 2 — Diagrama de instalação física dos componentes no portão de acesso. Elaboração própria (2026).</div>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 4 -->
+<h1 id="sec4">4. Componentes Seleccionados</h1>
+
+<!-- ---- 4.1 PLC ---- -->
+<h2 id="sec4-1">4.1 Controlador Lógico Programável (PLC)</h2>
+
+<h3>4.1.1 Análise Comparativa</h3>
+<table>
+  <thead>
+    <tr><th>Parâmetro</th><th>Siemens LOGO! 8.3</th><th>Schneider M221</th><th>Arduino Mega (alternativa DIY)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Grau industrial</td><td>Sim (IEC 61131-3)</td><td>Sim (IEC 61131-3)</td><td>Não (educacional)</td></tr>
+    <tr><td>Modbus TCP</td><td>Sim (nativo)</td><td>Sim (nativo)</td><td>Não (requer biblioteca)</td></tr>
+    <tr><td>Entradas digitais</td><td>8 DI</td><td>14 DI</td><td>54 pinos digitais</td></tr>
+    <tr><td>Saídas digitais</td><td>4 DO (relay)</td><td>10 DO</td><td>54 pinos digitais</td></tr>
+    <tr><td>Temperatura de operação</td><td>–25 °C a +55 °C</td><td>–25 °C a +70 °C</td><td>–40 °C a +85 °C (PCB)</td></tr>
+    <tr><td>MTBF</td><td>&gt;50.000 h</td><td>&gt;50.000 h</td><td>Não especificado</td></tr>
+    <tr><td>Preço estimado (USD)</td><td>150 – 200</td><td>180 – 250</td><td>30 – 50</td></tr>
+    <tr class="highlight"><td>Selecionado</td><td>✔ Sim</td><td>—</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<h3>4.1.2 Especificações Técnicas — Siemens LOGO! 8.3</h3>
+
+<div class="figura">
+  <div class="figura-img-placeholder">
+    [Imagem: Siemens LOGO! 8.3 — Vista frontal do módulo com display e botões de configuração]<br>
+    Referência de modelo: <strong>6ED1052-1FB08-0BA1</strong>
+  </div>
+  <div class="figura-url">Imagem disponível em: https://mall.industry.siemens.com/mall/en/WW/Catalog/Product/6ED1052-1FB08-0BA1</div>
+  <div class="figura-legenda">Figura 3 — Siemens LOGO! 8.3 (6ED1052-1FB08-0BA1). Fonte: Siemens AG (2022).</div>
+</div>
+
+<table>
+  <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>
+  <tbody>
+    <tr><td>Modelo</td><td>Siemens LOGO! 8.3 (6ED1052-1FB08-0BA1)</td></tr>
+    <tr><td>Tensão de alimentação</td><td>24 V DC</td></tr>
+    <tr><td>Consumo próprio</td><td>≤ 5,5 W</td></tr>
+    <tr><td>Entradas digitais</td><td>8 × DI (24 V DC, lógica positiva)</td></tr>
+    <tr><td>Saídas</td><td>4 × relé (230 V AC / 10 A)</td></tr>
+    <tr><td>Interface de rede</td><td>Ethernet 10/100 Mbit/s</td></tr>
+    <tr><td>Protocolos</td><td>Modbus TCP (server/client), OPC UA, servidor web integrado</td></tr>
+    <tr><td>Temperatura de operação</td><td>–25 °C a +55 °C</td></tr>
+    <tr><td>Grau de protecção</td><td>IP20</td></tr>
+    <tr><td>Montagem</td><td>Calha DIN 35 mm</td></tr>
+    <tr><td>Norma</td><td>IEC 61131-3, CE, UL</td></tr>
+  </tbody>
+</table>
+
+<div class="justificativa">
+  O Siemens LOGO! 8.3 foi seleccionado por suportar nativamente o protocolo Modbus TCP — protocolo
+  adoptado pelo módulo de software para leitura dos sensores e controlo da cancela. A sua robustez
+  industrial (MTBF &gt;50.000 h), o display integrado para diagnóstico no local e a ampla documentação
+  disponível tornam-no a escolha mais adequada para um protótipo funcional com capacidade de escalagem
+  para produção. O Arduino, apesar do baixo custo, não oferece garantias de fiabilidade em ambiente
+  industrial nem suporte nativo a Modbus TCP (Siemens AG, 2022).
+</div>
+
+<!-- ---- 4.2 CÂMARA ---- -->
+<h2 id="sec4-2">4.2 Câmara IP</h2>
+
+<h3>4.2.1 Análise Comparativa</h3>
+<table>
+  <thead>
+    <tr><th>Parâmetro</th><th>Hikvision DS-2CD2T47G2-L</th><th>Dahua IPC-HFW2849S</th><th>Axis P3245-V</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Resolução</td><td>4 MP (2688 × 1520)</td><td>8 MP (3840 × 2160)</td><td>2 MP (1920 × 1080)</td></tr>
+    <tr><td>Sensor</td><td>1/3" CMOS progressivo</td><td>1/2.7" CMOS</td><td>1/2.8" CMOS</td></tr>
+    <tr><td>Iluminação mínima</td><td>0 lux (luz branca 60 m)</td><td>0,003 lux (IR)</td><td>0,3 lux</td></tr>
+    <tr><td>PoE</td><td>Sim (IEEE 802.3af)</td><td>Sim</td><td>Sim</td></tr>
+    <tr><td>Ângulo de lente</td><td>2,8 mm / 4 mm (opções)</td><td>2,8 mm / 3,6 mm</td><td>3–9 mm varifocal</td></tr>
+    <tr><td>Protecção</td><td>IP67, IK10</td><td>IP67</td><td>IK10</td></tr>
+    <tr><td>Norma de compressão</td><td>H.265+, H.264+</td><td>H.265+</td><td>H.265</td></tr>
+    <tr><td>Preço estimado (USD)</td><td>80 – 130</td><td>90 – 150</td><td>300 – 450</td></tr>
+    <tr class="highlight"><td>Selecionado</td><td>✔ Sim</td><td>—</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<h3>4.2.2 Especificações Técnicas — Hikvision DS-2CD2T47G2-L</h3>
+
+<div class="figura">
+  <div class="figura-img-placeholder">
+    [Imagem: Hikvision DS-2CD2T47G2-L — Câmara bullet exterior com iluminação LED branca integrada]<br>
+    Referência de modelo: <strong>DS-2CD2T47G2-L</strong> com lente de 4 mm
+  </div>
+  <div class="figura-url">Imagem disponível em: https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Pro-Series-EasyIP-/DS-2CD2T47G2-L/</div>
+  <div class="figura-legenda">Figura 4 — Câmara Hikvision DS-2CD2T47G2-L (ColorVu 4MP). Fonte: Hikvision (2023).</div>
+</div>
+
+<table>
+  <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>
+  <tbody>
+    <tr><td>Modelo</td><td>Hikvision DS-2CD2T47G2-L</td></tr>
+    <tr><td>Resolução</td><td>4 MP — 2688 × 1520 pixels</td></tr>
+    <tr><td>Sensor de imagem</td><td>1/3" CMOS Progressivo Scan</td></tr>
+    <tr><td>Taxa de fotogramas</td><td>até 25 fps (@ 4MP)</td></tr>
+    <tr><td>Lente disponível</td><td>2,8 mm (FOV 107°) ou 4 mm (FOV 78°)</td></tr>
+    <tr><td>Iluminação mínima (cor)</td><td>0,0005 lux (luz branca 60 m)</td></tr>
+    <tr><td>Compressão de vídeo</td><td>H.265+, H.264+, MJPEG</td></tr>
+    <tr><td>Protocolo de streaming</td><td>RTSP, ONVIF Perfil S/G/T</td></tr>
+    <tr><td>Alimentação</td><td>PoE (IEEE 802.3af) — 12 W máximo</td></tr>
+    <tr><td>Temperatura de operação</td><td>–30 °C a +60 °C</td></tr>
+    <tr><td>Grau de protecção</td><td>IP67 (água e poeira), IK10 (impacto)</td></tr>
+    <tr><td>Dimensões</td><td>Ø95,3 mm × 273 mm</td></tr>
+  </tbody>
+</table>
+
+<div class="justificativa">
+  A câmara Hikvision DS-2CD2T47G2-L com lente de 4 mm foi seleccionada por satisfazer o requisito
+  mínimo de 4 MP, garantindo resolução suficiente para leitura de matrículas a distâncias de 3 a 5 m
+  (conforme calculado na Secção 5.1). A tecnologia ColorVu permite captura de imagem a cores mesmo em
+  condições de baixa luminosidade, essencial para operação nocturna. O suporte a PoE elimina a
+  necessidade de cablagem separada para alimentação e o protocolo RTSP é compatível com o módulo
+  de captura em Python/OpenCV (Hikvision, 2023).
+</div>
+
+<!-- ---- 4.3 SENSOR DE LAÇO ---- -->
+<h2 id="sec4-3">4.3 Sensor de Laço Indutivo (Detector de Laço)</h2>
+
+<h3>4.3.1 Análise Comparativa</h3>
+<table>
+  <thead>
+    <tr><th>Parâmetro</th><th>CAME ZA3P</th><th>Cedes LD100</th><th>Sensor PIR Exterior</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Tecnologia</td><td>Laço indutivo</td><td>Laço indutivo</td><td>Infravermelhos passivos</td></tr>
+    <tr><td>Detecta veículos pelas chassi metálico</td><td>Sim</td><td>Sim</td><td>Não (detecta calor)</td></tr>
+    <tr><td>Imune a chuva / reflectos</td><td>Sim</td><td>Sim</td><td>Não (falsos alarmes)</td></tr>
+    <tr><td>Tensão de alimentação</td><td>12 / 24 V AC/DC</td><td>12 / 24 V AC/DC</td><td>12 V DC</td></tr>
+    <tr><td>Saída</td><td>Relé (NO/NC)</td><td>Relé (NO/NC)</td><td>TTL / relé</td></tr>
+    <tr><td>Faixa de indutância</td><td>20 – 2000 µH</td><td>20 – 1000 µH</td><td>N/A</td></tr>
+    <tr><td>Sensibilidade ajustável</td><td>Sim (6 níveis)</td><td>Sim</td><td>Sim</td></tr>
+    <tr><td>Preço estimado (USD)</td><td>35 – 55</td><td>50 – 80</td><td>10 – 25</td></tr>
+    <tr class="highlight"><td>Selecionado</td><td>✔ Sim</td><td>—</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<h3>4.3.2 Especificações Técnicas — CAME ZA3P</h3>
+
+<div class="figura">
+  <div class="figura-img-placeholder">
+    [Imagem: CAME ZA3P — Detector de laço indutivo de canal único, montagem em calha DIN]<br>
+    Referência de modelo: <strong>ZA3P</strong>
+  </div>
+  <div class="figura-url">Imagem disponível em: https://www.came.com/en/products/accessories/detectors/ZA3P</div>
+  <div class="figura-legenda">Figura 5 — Detector de laço indutivo CAME ZA3P. Fonte: CAME Group (2022).</div>
+</div>
+
+<table>
+  <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>
+  <tbody>
+    <tr><td>Modelo</td><td>CAME ZA3P</td></tr>
+    <tr><td>Tensão de alimentação</td><td>12 – 24 V AC/DC (±10%)</td></tr>
+    <tr><td>Consumo</td><td>≤ 2 W</td></tr>
+    <tr><td>Frequência de operação</td><td>20 – 170 kHz (seleccionável para evitar interferências)</td></tr>
+    <tr><td>Faixa de indutância aceite</td><td>20 – 2000 µH</td></tr>
+    <tr><td>Sensibilidade</td><td>6 níveis ajustáveis por DIP switch</td></tr>
+    <tr><td>Tipo de saída</td><td>Relé SPDT (NO / NC) — 8 A, 250 V AC</td></tr>
+    <tr><td>Saída digital</td><td>Open collector NPN (para interface com PLC)</td></tr>
+    <tr><td>Tempo de resposta</td><td>&lt; 100 ms</td></tr>
+    <tr><td>Tempo de retenção (tempo livre)</td><td>0,5 – 5 s (ajustável)</td></tr>
+    <tr><td>Temperatura de operação</td><td>–25 °C a +55 °C</td></tr>
+    <tr><td>Montagem</td><td>Calha DIN 35 mm (4 módulos)</td></tr>
+    <tr><td>Norma</td><td>EN 12453, EN 60068</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Laço indutivo (cabo de sensor):</strong> O laço físico é um cabo de cobre de secção 1,5 mm² isolado em XLPE, encastrado num rasgo no pavimento e preenchido com material vedante. As dimensões e cálculo de indutância são apresentados na Secção 5.2.</p>
+
+<div class="justificativa">
+  O detector de laço indutivo CAME ZA3P foi seleccionado por ser o método de detecção de veículos mais
+  fiável e imune a falsas detecções em ambiente exterior (Klein, 2006). Ao contrário dos sensores
+  infravermelhos ou câmaras de detecção de movimento, o laço indutivo detecta apenas objectos metálicos
+  com massa suficiente, eliminando falsos alarmes causados por animais, folhas ou chuva. A saída em
+  relé é directamente ligada à entrada digital (DI 0) do PLC, sem necessidade de condicionamento
+  adicional de sinal (CAME Group, 2022).
+</div>
+
+<!-- ---- 4.4 MOTOR DA CANCELA ---- -->
+<h2 id="sec4-4">4.4 Atuador / Motor da Cancela</h2>
+
+<h3>4.4.1 Análise Comparativa</h3>
+<table>
+  <thead>
+    <tr><th>Parâmetro</th><th>FAAC 615 BPR</th><th>Nice ERA Evo</th><th>Came Gard 3500</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Tensão</td><td>24 V DC</td><td>24 V DC</td><td>24 V DC</td></tr>
+    <tr><td>Comprimento máximo do braço</td><td>4,5 m</td><td>3,5 m</td><td>3,5 m</td></tr>
+    <tr><td>Ciclos/hora</td><td>Uso intensivo (≥ 1.500 ciclos/dia)</td><td>Uso médio (300 ciclos/dia)</td><td>Uso médio (300 ciclos/dia)</td></tr>
+    <tr><td>Tempo de abertura (3 m)</td><td>4 s</td><td>5 s</td><td>4,5 s</td></tr>
+    <tr><td>Desencravamento manual</td><td>Sim (chave)</td><td>Sim</td><td>Sim</td></tr>
+    <tr><td>Classe ambiental</td><td>IP44</td><td>IP44</td><td>IP44</td></tr>
+    <tr><td>Preço estimado (USD)</td><td>350 – 500</td><td>280 – 400</td><td>300 – 430</td></tr>
+    <tr class="highlight"><td>Selecionado</td><td>✔ Sim</td><td>—</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<h3>4.4.2 Especificações Técnicas — FAAC 615 BPR</h3>
+
+<div class="figura">
+  <div class="figura-img-placeholder">
+    [Imagem: FAAC 615 BPR — Motor de cancela de uso intensivo, montagem em coluna, com braço articulado]<br>
+    Referência de modelo: <strong>FAAC 615 BPR</strong> (referência: 104615B002)
+  </div>
+  <div class="figura-url">Imagem disponível em: https://www.faac.co.uk/product/615-bpr/</div>
+  <div class="figura-legenda">Figura 6 — Motor de cancela FAAC 615 BPR. Fonte: FAAC Group (2021).</div>
+</div>
+
+<table>
+  <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>
+  <tbody>
+    <tr><td>Modelo</td><td>FAAC 615 BPR</td></tr>
+    <tr><td>Tensão de alimentação</td><td>230 V AC / 50 Hz (com transformador integrado para 24 V DC)</td></tr>
+    <tr><td>Potência absorvida</td><td>180 W (pico de arranque)</td></tr>
+    <tr><td>Potência em regime</td><td>50 W (nominal)</td></tr>
+    <tr><td>Comprimento máximo do braço</td><td>4,5 m (braço rígido) / 6 m (opcional)</td></tr>
+    <tr><td>Tempo de abertura (braço 3 m)</td><td>≈ 4 s</td></tr>
+    <tr><td>Ciclos de trabalho</td><td>Uso intensivo — ilimitado com pausa térmica</td></tr>
+    <tr><td>Temperatura de operação</td><td>–20 °C a +55 °C</td></tr>
+    <tr><td>Interface de comando</td><td>Entradas: abertura, fecho, stop, pedestre (24 V DC / relé)</td></tr>
+    <tr><td>Saídas de monitorização</td><td>OPEN (saída a relé): sinaliza cancela totalmente aberta</td></tr>
+    <tr><td>Grau de protecção</td><td>IP44 (motor em coluna metálica)</td></tr>
+    <tr><td>Desencravamento manual</td><td>Sim (chave triangular) — para abertura em caso de falha de energia</td></tr>
+    <tr><td>Certificações</td><td>CE, EN 12604, EN 12453</td></tr>
+  </tbody>
+</table>
+
+<p>
+  <strong>Interface com o PLC:</strong> O PLC activa a saída relé (Coil 0) conectada à entrada de
+  "abertura" do FAAC 615 BPR. Quando o relé é activado (contacto NO fecha), o motor inicia a abertura
+  do braço. O PLC desactiva o relé após detecção do fim-de-curso de abertura ou transcorrido o tempo
+  máximo configurado.
+</p>
+
+<div class="justificativa">
+  O FAAC 615 BPR foi seleccionado pela sua capacidade de uso intensivo, adequada ao fluxo de veículos
+  num campus universitário com múltiplos acessos diários. O comprimento de braço de até 4,5 m cobre
+  a largura padrão de uma faixa de circulação (3,0 – 3,5 m) com margem de segurança. A interface de
+  comando a 24 V DC é directamente compatível com as saídas relé do PLC Siemens LOGO!, simplificando
+  a integração eléctrica (FAAC Group, 2021).
+</div>
+
+<!-- ---- 4.5 TIPO DE CANCELA ---- -->
+<h2 id="sec4-5">4.5 Tipo de Cancela (Estrutura Mecânica)</h2>
+
+<p>
+  Para o controlo de acesso de viaturas, existem três tipos principais de cancela electrónica
+  (Bianchi &amp; Boschetti, 2015):
+</p>
+
+<table>
+  <thead>
+    <tr><th>Tipo</th><th>Descrição</th><th>Vantagens</th><th>Desvantagens</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Cancela de braço rígido</strong> (boom barrier)</td><td>Braço horizontal articulado, levanta verticalmente</td><td>Baixo custo, instalação simples, rápida operação</td><td>Vulnerável a impacto lateral</td></tr>
+    <tr><td>Cancela pivotante</td><td>Coluna que roda 90° para abrir passagem</td><td>Muito resistente a impacto</td><td>Espaço lateral necessário, custo elevado</td></tr>
+    <tr><td>Cancela de guilhotina</td><td>Braço move-se verticalmente para baixo</td><td>Segurança anti-intrusão elevada</td><td>Instalação complexa, custo muito elevado</td></tr>
+    <tr class="highlight"><td><strong>Seleccionado</strong></td><td>Braço rígido — compatível com FAAC 615 BPR</td><td></td><td></td></tr>
+  </tbody>
+</table>
+
+<p>
+  <strong>Braço seleccionado:</strong> Braço rígido em alumínio lacado de comprimento 3,0 m
+  (referência FAAC 391015 ou equivalente), com perfil octogonal para maior rigidez, fita reflectora
+  para visibilidade nocturna e saias de borracha anti-esmagamento nas extremidades laterais.
+</p>
+
+<div class="figura">
+  <div class="figura-img-placeholder">
+    [Imagem: Braço rígido em alumínio FAAC 391015 — comprimento 3,0 m com fita reflectora e saias de segurança]
+  </div>
+  <div class="figura-url">Imagem disponível em: https://www.faac.co.uk/product/boom-arms-accessories/</div>
+  <div class="figura-legenda">Figura 7 — Braço rígido FAAC 391015 (3 m). Fonte: FAAC Group (2021).</div>
+</div>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 5 -->
+<h1 id="sec5">5. Cálculos de Seleção</h1>
+
+<!-- ---- 5.1 CÂMARA ---- -->
+<h2 id="sec5-1">5.1 Resolução Mínima da Câmara e Distância de Instalação</h2>
+
+<p>
+  O objectivo é garantir que a imagem capturada contenha pixels suficientes sobre a matrícula
+  para que o algoritmo OCR (<em>Optical Character Recognition</em>) consiga ler os caracteres com
+  fiabilidade. O critério adoptado é o mínimo de <strong>40 pixels de altura sobre a placa</strong>,
+  valor estabelecido como limiar mínimo na literatura de sistemas LPR/ALPR (Kaplan et al., 2011;
+  Openalpr, 2023).
+</p>
+
+<h3>5.1.1 Dimensões da Matrícula Moçambicana</h3>
+<p>
+  As matrículas veiculares de Moçambique seguem o formato padrão internacional de placa rectangular,
+  com dimensões aproximadas de:
+</p>
+<div class="formula-box">
+  L<sub>placa</sub> = 520 mm (largura) × H<sub>placa</sub> = 110 mm (altura)
+</div>
+
+<h3>5.1.2 Campo Visual (FOV) da Câmara</h3>
+<p>
+  Para a câmara seleccionada (Hikvision DS-2CD2T47G2-L, sensor 1/3", resolução 2688 × 1520 px),
+  com lente de <strong>f = 4 mm</strong>, o campo visual vertical é calculado como:
+</p>
+<div class="formula-box">
+  <div class="formula-title">Equação 1 — Campo Visual Vertical (FOV<sub>v</sub>)</div>
+  FOV<sub>v</sub> = 2 × arctan( h<sub>sensor</sub> / (2 × f) )<br><br>
+  onde:<br>
+  &nbsp;&nbsp;h<sub>sensor</sub> = dimensão vertical do sensor = 3,00 mm (sensor 1/3")<br>
+  &nbsp;&nbsp;f = distância focal da lente = 4,0 mm<br><br>
+  FOV<sub>v</sub> = 2 × arctan( 3,00 / (2 × 4,0) )<br>
+  FOV<sub>v</sub> = 2 × arctan( 0,375 )<br>
+  FOV<sub>v</sub> = 2 × 20,56°<br>
+  FOV<sub>v</sub> = <strong>41,1°</strong>
+</div>
+
+<h3>5.1.3 Cobertura Vertical em Função da Distância</h3>
+<p>
+  A cobertura vertical da câmara a uma distância D (em metros) é:
+</p>
+<div class="formula-box">
+  <div class="formula-title">Equação 2 — Cobertura Vertical</div>
+  C<sub>v</sub>(D) = 2 × D × tan( FOV<sub>v</sub> / 2 ) = 2 × D × tan(20,56°) = 2 × D × 0,375<br><br>
+  C<sub>v</sub>(D) = 0,750 × D &nbsp;&nbsp;[m]
+</div>
+
+<h3>5.1.4 Pixels Sobre a Placa em Função da Distância</h3>
+<p>
+  O número de pixels que a câmara projecta sobre a altura da matrícula é:
+</p>
+<div class="formula-box">
+  <div class="formula-title">Equação 3 — Pixels sobre a placa</div>
+  P<sub>placa</sub>(D) = ( H<sub>placa</sub> / C<sub>v</sub>(D) ) × N<sub>px,v</sub><br><br>
+  onde N<sub>px,v</sub> = 1520 px (resolução vertical da câmara)<br><br>
+  P<sub>placa</sub>(D) = ( 0,110 / (0,750 × D) ) × 1520<br>
+  P<sub>placa</sub>(D) = <strong>222,9 / D</strong> &nbsp;&nbsp;[px]
+</div>
+
+<h3>5.1.5 Distância Máxima de Instalação</h3>
+<p>
+  Impondo o critério mínimo P<sub>placa</sub> ≥ 40 px:
+</p>
+<div class="formula-box">
+  <div class="formula-title">Equação 4 — Distância máxima</div>
+  D<sub>máx</sub> = 222,9 / P<sub>placa,min</sub> = 222,9 / 40 = <strong>5,57 m</strong>
+</div>
+
+<h3>5.1.6 Tabela de Verificação</h3>
+<table>
+  <thead>
+    <tr><th>Distância D (m)</th><th>Cobertura vertical C<sub>v</sub> (m)</th><th>Pixels na placa</th><th>Válido (≥ 40 px)?</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="center">2,0</td><td class="center">1,50</td><td class="center bold">111,5</td><td class="center">✔ Sim</td></tr>
+    <tr><td class="center">3,0</td><td class="center">2,25</td><td class="center bold">74,3</td><td class="center">✔ Sim</td></tr>
+    <tr><td class="center">4,0</td><td class="center">3,00</td><td class="center bold">55,7</td><td class="center">✔ Sim</td></tr>
+    <tr><td class="center">5,0</td><td class="center">3,75</td><td class="center bold">44,6</td><td class="center">✔ Sim</td></tr>
+    <tr><td class="center">5,5</td><td class="center">4,13</td><td class="center bold">40,5</td><td class="center">✔ Sim (limite)</td></tr>
+    <tr><td class="center">6,0</td><td class="center">4,50</td><td class="center bold">37,2</td><td class="center">✗ Não</td></tr>
+  </tbody>
+</table>
+
+<p>
+  <strong>Conclusão:</strong> A câmara Hikvision DS-2CD2T47G2-L com lente de 4 mm garante leitura
+  fiável de matrículas para distâncias de instalação entre <strong>2,0 m e 5,5 m</strong>.
+  A distância recomendada é de <strong>3,0 a 4,0 m</strong>, proporcionando
+  margem de segurança adequada e pixels mais que suficientes (55–74 px) para operação fiável do OCR.
+</p>
+
+<div class="nota">
+  <strong>Nota sobre ângulo de instalação:</strong> O ângulo horizontal da câmara em relação à faixa
+  deve ser mantido entre 15° e 25° para reduzir reflexos nas matrículas. O ângulo vertical de
+  inclinação (para baixo) deve ser entre 15° e 30°, garantindo boa visibilidade da placa dianteira
+  sem distorção excessiva (Kaplan et al., 2011).
+</div>
+
+<!-- ---- 5.2 LAÇO INDUTIVO ---- -->
+<h2 id="sec5-2">5.2 Dimensionamento do Laço Indutivo</h2>
+
+<p>
+  O laço indutivo é um circuito oscilatório LC formado pelo cabo de cobre encastrado no pavimento
+  e a electrónica interna do detector. A presença de uma viatura metálica sobre o laço altera
+  a sua indutância, modificando a frequência de oscilação e activando a saída do detector
+  (Klein, 2006, p. 46–51).
+</p>
+
+<h3>5.2.1 Dimensões Recomendadas do Laço</h3>
+<table>
+  <thead><tr><th>Parâmetro</th><th>Valor</th><th>Justificativa</th></tr></thead>
+  <tbody>
+    <tr><td>Comprimento (a) — sentido do tráfego</td><td>2,0 m</td><td>Cobre o comprimento mínimo de um automóvel ligeiro (≈ 3,5 m), com o veículo a metade sobre o laço</td></tr>
+    <tr><td>Largura (b) — perpendicular ao tráfego</td><td>0,9 m</td><td>Cerca de 80% da largura da faixa (≈ 1,1 m), evita interferência com laços adjacentes</td></tr>
+    <tr><td>Número de espiras (N)</td><td>4 espiras</td><td>Valor típico para maximizar indutância sem aumentar resistência do laço (FHWA, 2006)</td></tr>
+    <tr><td>Secção do condutor</td><td>1,5 mm²</td><td>Diâmetro do condutor d = 1,38 mm; resistência: ≤ 0,5 Ω total</td></tr>
+    <tr><td>Isolamento do cabo</td><td>XLPE a 1 kV</td><td>Resistente às variações de temperatura e ao betume</td></tr>
+  </tbody>
+</table>
+
+<h3>5.2.2 Comprimento Total do Cabo</h3>
+<div class="formula-box">
+  <div class="formula-title">Equação 5 — Comprimento total do condutor do laço</div>
+  P = 2 × (a + b) = 2 × (2,0 + 0,9) = 2 × 2,9 = 5,8 m  &nbsp; (perímetro de uma espira)<br><br>
+  L<sub>cabo</sub> = N × P = 4 × 5,8 = <strong>23,2 m</strong>
+</div>
+
+<h3>5.2.3 Cálculo da Indutância do Laço</h3>
+<p>
+  A auto-indutância de um laço rectangular de N espiras com condutor de raio r<sub>c</sub> é
+  calculada pela fórmula de Neumann (Hayt &amp; Buck, 2012, p. 309):
+</p>
+<div class="formula-box">
+  <div class="formula-title">Equação 6 — Auto-indutância de laço rectangular (N espiras)</div>
+  L = N² × L<sub>1</sub><br><br>
+  L<sub>1</sub> = (2µ<sub>0</sub>/π) × { a × [ln(2a/r<sub>c</sub>) – 1] + b × [ln(2b/r<sub>c</sub>) – 1] + 0,5×(a + b) }<br><br>
+  onde:<br>
+  &nbsp;&nbsp;µ<sub>0</sub> = 4π × 10⁻⁷ H/m &nbsp; (permeabilidade magnética do vácuo)<br>
+  &nbsp;&nbsp;a = 2,0 m &nbsp; (comprimento do laço)<br>
+  &nbsp;&nbsp;b = 0,9 m &nbsp; (largura do laço)<br>
+  &nbsp;&nbsp;r<sub>c</sub> = 0,000693 m &nbsp; (raio do condutor — secção 1,5 mm² → d = 1,38 mm)<br>
+  &nbsp;&nbsp;N = 4 espiras
+</div>
+
+<div class="formula-box">
+  <div class="formula-title">Cálculo numérico</div>
+  ln(2 × 2,0 / 0,000693) = ln(5772,0) = 8,660<br>
+  ln(2 × 0,9 / 0,000693) = ln(2597,4) = 7,862<br><br>
+
+  L<sub>1</sub> = (2 × 1,2566×10⁻⁶ / π) × { 2,0 × [8,660 – 1] + 0,9 × [7,862 – 1] + 0,5 × 2,9 }<br>
+  L<sub>1</sub> = 8,0 × 10⁻⁷ × { 2,0 × 7,660 + 0,9 × 6,862 + 1,45 }<br>
+  L<sub>1</sub> = 8,0 × 10⁻⁷ × { 15,320 + 6,176 + 1,45 }<br>
+  L<sub>1</sub> = 8,0 × 10⁻⁷ × 22,946<br>
+  L<sub>1</sub> = 18,36 × 10⁻⁶ H = 18,36 µH  &nbsp; (por espira)<br><br>
+
+  L<sub>total</sub> = N² × L<sub>1</sub> = 16 × 18,36 µH = <strong>293,8 µH ≈ 294 µH</strong>
+</div>
+
+<h3>5.2.4 Verificação de Compatibilidade com o Detector</h3>
+<table>
+  <thead><tr><th>Parâmetro</th><th>Laço calculado</th><th>Requisito CAME ZA3P</th><th>Resultado</th></tr></thead>
+  <tbody>
+    <tr><td>Indutância L</td><td>294 µH</td><td>20 – 2000 µH</td><td>✔ Compatível</td></tr>
+    <tr><td>Resistência total do cabo</td><td>≈ 0,31 Ω (1,5 mm², 23,2 m)</td><td>&lt; 5 Ω</td><td>✔ Compatível</td></tr>
+    <tr><td>Variação de indutância por veículo (ΔL/L)</td><td>2 – 10% típico</td><td>Sensibilidade mín. 0,2%</td><td>✔ Detectável</td></tr>
+  </tbody>
+</table>
+
+<p>
+  <strong>Conclusão:</strong> O laço de dimensões 2,0 m × 0,9 m com 4 espiras de cabo 1,5 mm² possui
+  uma indutância de <strong>294 µH</strong>, dentro da faixa de operação do detector CAME ZA3P
+  (20 – 2000 µH). A variação esperada de indutância quando um veículo passa sobre o laço (2 – 10%)
+  é muito superior à sensibilidade mínima do detector (0,2%), garantindo detecção fiável mesmo para
+  veículos ligeiros pequenos.
+</p>
+
+<!-- ---- 5.3 POTÊNCIA ---- -->
+<h2 id="sec5-3">5.3 Orçamento de Potência do Sistema</h2>
+
+<p>
+  O dimensionamento da fonte de alimentação deve contemplar o pico de consumo do sistema com um
+  factor de segurança de 1,25, conforme recomendado para instalações industriais (Rashid, 2014).
+</p>
+
+<table>
+  <thead>
+    <tr><th>Componente</th><th>Tensão</th><th>Corrente nominal</th><th>Potência nominal (W)</th><th>Potência de pico (W)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Câmara IP (via PoE)</td><td>48 V DC (PoE)</td><td>0,27 A</td><td>12,95</td><td>12,95</td></tr>
+    <tr><td>PLC Siemens LOGO! 8.3</td><td>24 V DC</td><td>0,23 A</td><td>5,5</td><td>5,5</td></tr>
+    <tr><td>Detector de laço CAME ZA3P</td><td>24 V DC</td><td>0,08 A</td><td>2,0</td><td>2,0</td></tr>
+    <tr><td>Motor FAAC 615 BPR</td><td>230 V AC</td><td>0,78 A (nom.)</td><td>50</td><td>180</td></tr>
+    <tr><td>Switch PoE (8 portas)</td><td>230 V AC</td><td>—</td><td>15</td><td>15</td></tr>
+    <tr class="bold"><td>Total</td><td>—</td><td>—</td><td>85,5</td><td>215,5</td></tr>
+  </tbody>
+</table>
+
+<div class="formula-box">
+  <div class="formula-title">Equação 7 — Potência da fonte de alimentação com factor de segurança</div>
+  P<sub>fonte</sub> = P<sub>pico</sub> × F<sub>segurança</sub> = 215,5 × 1,25 = <strong>269,4 W</strong><br><br>
+  → Seleccionar fonte de alimentação: <strong>300 W</strong> (valor comercial normalizado imediatamente acima)
+</div>
+
+<p>
+  <strong>Nota:</strong> O motor FAAC 615 BPR é alimentado directamente da rede 230 V AC. Os restantes
+  componentes (PLC, detector, câmara) são alimentados a 24 V DC por uma fonte de comutação estabilizada
+  de 24 V / 5 A (120 W) instalada no armário técnico. O switch PoE fornece 48 V para a câmara.
+</p>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 6 -->
+<h1 id="sec6">6. Distâncias e Posicionamento de Instalação</h1>
+
+<table>
+  <thead>
+    <tr><th>Componente</th><th>Parâmetro</th><th>Valor recomendado</th><th>Justificativa</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="4"><strong>Câmara IP</strong></td>
+      <td>Altura de montagem (h)</td>
+      <td>2,5 – 3,5 m</td>
+      <td>Garante visão da frente do veículo sem obstáculos; evita ângulo de visão excessivo</td>
+    </tr>
+    <tr>
+      <td>Distância horizontal ao ponto de paragem</td>
+      <td>3,0 – 4,0 m</td>
+      <td>Calculado na Secção 5.1 para ≥ 55 pixels na placa (lente 4 mm)</td>
+    </tr>
+    <tr>
+      <td>Ângulo horizontal (em relação à faixa)</td>
+      <td>15° – 25°</td>
+      <td>Reduz reflexos do sol e faróis na superfície da matrícula (Kaplan et al., 2011)</td>
+    </tr>
+    <tr>
+      <td>Ângulo vertical (inclinação para baixo)</td>
+      <td>15° – 30°</td>
+      <td>Garante captura da placa dianteira de veículos ligeiros e pesados</td>
+    </tr>
+    <tr>
+      <td rowspan="2"><strong>Laço Indutivo</strong></td>
+      <td>Distância do laço ao braço da cancela</td>
+      <td>0,5 – 1,0 m</td>
+      <td>O veículo deve estar parado no local de leitura antes da cancela abrir; laço antes do braço</td>
+    </tr>
+    <tr>
+      <td>Profundidade do rasgo no pavimento</td>
+      <td>30 – 50 mm</td>
+      <td>Protege o cabo de danos mecânicos; profundidade standard para betuminoso (FHWA, 2006)</td>
+    </tr>
+    <tr>
+      <td><strong>PLC / Armário</strong></td>
+      <td>Localização do armário técnico</td>
+      <td>≤ 20 m da cancela</td>
+      <td>Limita queda de tensão no cabo de 24 V DC e comprimento dos cabos de sinal</td>
+    </tr>
+    <tr>
+      <td><strong>Cancela / Braço</strong></td>
+      <td>Distância da cancela à faixa de rodagem oposta</td>
+      <td>Cobertura de 3,0 – 3,5 m</td>
+      <td>Largura standard de faixa; o braço de 3 m cobre a faixa com margem lateral</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- =========================================================== SECÇÃO 7 -->
+<h1 id="sec7">7. Interação Entre Componentes</h1>
+
+<p>
+  A sequência de eventos desde a detecção do veículo até ao fecho da cancela segue o diagrama
+  temporal apresentado abaixo.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Passo</th><th>Componente</th><th>Evento / Acção</th><th>Sinal</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="center bold">1</td><td>Laço Indutivo</td><td>Veículo sobre o laço → variação de indutância ΔL/L ≥ 2%</td><td>Saída relé CAME ZA3P: fechamento (NO → fechado)</td></tr>
+    <tr><td class="center bold">2</td><td>PLC (DI 0)</td><td>Entrada digital 0 activa (nível lógico 1)</td><td>DI 0 = TRUE → Modbus TCP: Discrete Input 0 = TRUE</td></tr>
+    <tr><td class="center bold">3</td><td>Módulo Desktop</td><td>PLCController lê DI 0 = TRUE → dispara callback</td><td>Thread Python: chama _on_veiculo_no_sensor()</td></tr>
+    <tr><td class="center bold">4</td><td>Câmara IP</td><td>Captura de frame via RTSP → processamento YOLO + OCR</td><td>Fluxo RTSP → OpenCV → YOLOv8 → EasyOCR</td></tr>
+    <tr><td class="center bold">5a</td><td>Módulo Desktop</td><td><strong>OCR sucesso:</strong> placa lida → registo na BD via API</td><td>HTTP POST → FastAPI → SQLite</td></tr>
+    <tr><td class="center bold">5b</td><td>PLC (Coil 0)</td><td>PLCController escreve Coil 0 = TRUE → PLC activa saída relé</td><td>Modbus TCP write_coil(0, True)</td></tr>
+    <tr><td class="center bold">6</td><td>Motor FAAC 615 BPR</td><td>Relé DO 0 do PLC fecha → entrada "abertura" do motor activa</td><td>230 V AC → motor inicia rotação → braço sobe em ≈ 4 s</td></tr>
+    <tr><td class="center bold">7</td><td>Laço Indutivo</td><td>Veículo sai do laço → indutância regressa ao valor nominal</td><td>Saída relé CAME ZA3P: abertura (NO → aberto)</td></tr>
+    <tr><td class="center bold">8</td><td>PLC (DI 0)</td><td>Entrada digital 0 desactiva → DI 0 = FALSE</td><td>Modbus TCP: Discrete Input 0 = FALSE</td></tr>
+    <tr><td class="center bold">9</td><td>Módulo Desktop</td><td>PLCController detecta DI 0 = FALSE → fecha cancela</td><td>Modbus TCP write_coil(0, False) → motor fecha braço</td></tr>
+    <tr><td class="center bold" style="color:#c62828">5b'</td><td colspan="3">
+      <strong>Alternativa — OCR falhou:</strong> Cancela permanece fechada → log de aviso →
+      Agente de segurança regista manualmente no Dashboard Web e abre a cancela pelo botão físico
+      (desencravamento manual da FAAC 615 BPR ou botão de comando externo ligado ao PLC).
+    </td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- =========================================================== REFERÊNCIAS -->
+<h1 id="refs">8. Referências Bibliográficas</h1>
+
+<div class="referencias">
+
+  <p>
+    CAME Group. (2022). <em>ZA3P — Single channel inductive loop detector: Installation and operating
+    manual</em> (Rev. 2.0). CAME S.p.A. Recuperado de https://www.came.com/en/products/accessories/detectors/ZA3P
+  </p>
+
+  <p>
+    FAAC Group. (2021). <em>615 BPR — Automatic barrier: Installation and use manual</em> (Ed. 2.1).
+    FAAC S.p.A. Recuperado de https://www.faac.co.uk/product/615-bpr/
+  </p>
+
+  <p>
+    Federal Highway Administration [FHWA]. (2006). <em>Traffic detector handbook</em> (3rd ed., Vol. I).
+    U.S. Department of Transportation. Publication No. FHWA-HRT-06-108.
+  </p>
+
+  <p>
+    Hayt, W. H., &amp; Buck, J. A. (2012). <em>Engineering electromagnetics</em> (8th ed.).
+    McGraw-Hill Education.
+  </p>
+
+  <p>
+    Hikvision. (2023). <em>DS-2CD2T47G2-L ColorVu fixed turret network camera — Datasheet</em>.
+    Hikvision Digital Technology Co., Ltd. Recuperado de
+    https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Pro-Series-EasyIP-/DS-2CD2T47G2-L/
+  </p>
+
+  <p>
+    Kaplan, I., Naci, U., &amp; Bora, U. (2011). License plate recognition system using artificial
+    neural network. <em>Procedia — Social and Behavioral Sciences</em>, <em>28</em>, 900–904.
+    https://doi.org/10.1016/j.sbspro.2011.11.165
+  </p>
+
+  <p>
+    Klein, L. A. (2006). <em>Sensor technologies and data requirements for ITS</em>. Artech House.
+  </p>
+
+  <p>
+    Openalpr. (2023). <em>OpenALPR documentation: Camera placement guide</em>. OpenALPR Technology, Inc.
+    Recuperado de http://doc.openalpr.com/camera_placement.html
+  </p>
+
+  <p>
+    Rashid, M. H. (2014). <em>Power electronics handbook</em> (4th ed.). Butterworth-Heinemann.
+    https://doi.org/10.1016/B978-0-12-382036-5.00001-9
+  </p>
+
+  <p>
+    Siemens AG. (2022). <em>LOGO! 8.3: Product manual</em> (Ed. 09/2022). Siemens AG.
+    Recuperado de https://support.industry.siemens.com/cs/ww/en/ps/6ED1052-1FB08-0BA1
+  </p>
+
+</div>
+
+<hr>
+<p style="font-size:9pt; color:#666; text-align:center; margin-top:6mm;">
+  Documento elaborado para fins académicos — TCC, Universidade Jean Piaget de Moçambique, 2026.<br>
+  Todas as especificações técnicas devem ser confirmadas com os fabricantes antes da aquisição.
+</p>
+
+<!-- BOTÕES FLUTUANTES -->
+<div class="fab-container">
+  <button class="fab fab-print" onclick="window.print()" title="Imprimir página">🖨</button>
+  <a class="fab fab-index" href="#indice" title="Ir ao Índice">☰</a>
+</div>
+
+</body>
+</html>
