@@ -11,11 +11,19 @@
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Registros de Acesso</h1>
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Histórico de entradas e saídas do campus</p>
         </div>
-        <button onclick="exportarCSV()"
-            class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
-            <i class="bi bi-file-earmark-arrow-down"></i>
-            <span>Exportar CSV</span>
-        </button>
+        <div class="flex items-center gap-2 flex-wrap">
+            <!-- Botão Registar Manualmente — visível apenas para operador/admin -->
+            <button id="btnRegistrarManual" onclick="abrirModalManual()" style="display:none"
+                class="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                <i class="bi bi-pencil-square"></i>
+                <span>Registrar Manualmente</span>
+            </button>
+            <button onclick="exportarCSV()"
+                class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                <i class="bi bi-file-earmark-arrow-down"></i>
+                <span>Exportar CSV</span>
+            </button>
+        </div>
     </div>
 
     <!-- Stats Cards -->
@@ -68,7 +76,7 @@
 
     <!-- Filters -->
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
             <div>
                 <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Placa</label>
                 <input id="filtroPlaca" type="text" placeholder="Ex: MPM123AB"
@@ -81,6 +89,15 @@
                     <option value="">Todos</option>
                     <option value="entrada">Entrada</option>
                     <option value="saida">Saída</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Origem</label>
+                <select id="filtroOrigem"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                    <option value="">Todas</option>
+                    <option value="automatico">Automático</option>
+                    <option value="manual">Manual</option>
                 </select>
             </div>
             <div>
@@ -117,14 +134,13 @@
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Veículo</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Proprietário</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Confiança</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Método</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Método / Origem</th>
                         <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="registrosTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
                     <tr>
-                        <td colspan="8" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="7" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">
                             <div class="flex justify-center mb-3">
                                 <div class="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
                             </div>
@@ -155,7 +171,95 @@
 
 </div>
 
-<!-- Detail Modal -->
+<!-- ============================================================ -->
+<!-- Modal: Registro Manual (criar / editar)                      -->
+<!-- ============================================================ -->
+<div id="modalManual" class="fixed inset-0 z-50 hidden">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="fecharModalManual()"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md pointer-events-auto">
+            <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+                <h3 id="modalManualTitulo" class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="bi bi-pencil-square text-orange-500"></i>
+                    Registrar Manualmente
+                </h3>
+                <button onclick="fecharModalManual()"
+                    class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+                    <i class="bi bi-x-lg text-lg"></i>
+                </button>
+            </div>
+            <div class="p-5 space-y-4">
+                <!-- Placa -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Placa <span class="text-red-500">*</span>
+                    </label>
+                    <input id="manualPlaca" type="text" placeholder="Ex: MPM123AB" maxlength="10"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono uppercase text-sm">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Formato moçambicano: XXX000XX</p>
+                </div>
+
+                <!-- Tipo de Movimento -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Tipo de Movimento <span class="text-red-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-green-500 dark:hover:border-green-500 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-green-900/20 transition-colors">
+                            <input type="radio" name="manualTipo" value="entrada" class="accent-green-600">
+                            <i class="bi bi-arrow-down-circle-fill text-green-600"></i>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Entrada</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-red-500 dark:hover:border-red-500 has-[:checked]:border-red-500 has-[:checked]:bg-red-50 dark:has-[:checked]:bg-red-900/20 transition-colors">
+                            <input type="radio" name="manualTipo" value="saida" class="accent-red-600">
+                            <i class="bi bi-arrow-up-circle-fill text-red-600"></i>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Saída</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Data/Hora (opcional) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Data/Hora
+                        <span class="text-xs font-normal text-gray-500 dark:text-gray-400">(deixe em branco para usar a hora atual)</span>
+                    </label>
+                    <input id="manualDataHora" type="datetime-local"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                </div>
+
+                <!-- Observações -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Observações
+                    </label>
+                    <textarea id="manualObservacoes" rows="3" maxlength="500"
+                        placeholder="Ex: OCR falhou — agente registou manualmente"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm resize-none"></textarea>
+                    <p class="mt-1 text-xs text-gray-400 text-right"><span id="obsCount">0</span>/500</p>
+                </div>
+
+                <!-- Erro -->
+                <div id="manualErro" class="hidden p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-400"></div>
+            </div>
+            <div class="flex items-center justify-end gap-3 p-5 border-t border-gray-200 dark:border-gray-700">
+                <button onclick="fecharModalManual()"
+                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="salvarRegistroManual()" id="btnSalvarManual"
+                    class="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                    <i class="bi bi-check-lg"></i>
+                    <span id="btnSalvarManualLabel">Registrar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Modal: Detalhe do Registro                                   -->
+<!-- ============================================================ -->
 <div id="modalDetalhe" class="fixed inset-0 z-50 hidden">
     <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="fecharModal()"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
@@ -184,13 +288,34 @@ let currentSkip = 0;
 let currentFiltros = {};
 let ultimosRegistros = [];
 let userIsAdmin = false;
+let userCanManual = false;
+
+// Estado do modal manual
+let modalManualModo = 'criar'; // 'criar' | 'editar'
+let registroEditandoId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    userIsAdmin = getUserRole() === 'admin';
+    const role = getUserRole();
+    userIsAdmin  = role === 'admin';
+    userCanManual = role === 'operador' || role === 'admin';
+
+    if (userCanManual) {
+        document.getElementById('btnRegistrarManual').style.display = '';
+    }
 
     // Enter key on placa filter
     document.getElementById('filtroPlaca').addEventListener('keydown', e => {
         if (e.key === 'Enter') aplicarFiltros();
+    });
+
+    // Contador de caracteres das observações
+    document.getElementById('manualObservacoes').addEventListener('input', function () {
+        document.getElementById('obsCount').textContent = this.value.length;
+    });
+
+    // Normaliza placa para maiúsculas enquanto digita
+    document.getElementById('manualPlaca').addEventListener('input', function () {
+        this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     });
 
     await Promise.all([carregarStats(), carregarRegistros()]);
@@ -217,7 +342,7 @@ async function carregarRegistros() {
     const tbody = document.getElementById('registrosTableBody');
     tbody.innerHTML = `
         <tr>
-            <td colspan="8" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">
+            <td colspan="7" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">
                 <div class="flex justify-center mb-3">
                     <div class="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
@@ -234,7 +359,7 @@ async function carregarRegistros() {
     } catch (e) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="px-5 py-12 text-center text-red-500 dark:text-red-400">
+                <td colspan="7" class="px-5 py-12 text-center text-red-500 dark:text-red-400">
                     <i class="bi bi-exclamation-circle text-3xl mb-2 block"></i>
                     <p>Erro ao carregar registros. Tente novamente.</p>
                 </td>
@@ -263,7 +388,7 @@ function renderRegistros(registros) {
     if (!registros || registros.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">
+                <td colspan="7" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">
                     <i class="bi bi-inbox text-4xl mb-2 block opacity-40"></i>
                     <p class="font-medium">Nenhum registro encontrado</p>
                     <p class="text-sm mt-1 opacity-70">Tente ajustar os filtros</p>
@@ -279,7 +404,12 @@ function renderRegistros(registros) {
         aluno:     'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
     };
 
-    tbody.innerHTML = registros.map((reg, idx) => {
+    // Filtragem por origem no cliente (o backend não expõe este filtro como query param ainda)
+    const filtroOrigem = currentFiltros.origem || '';
+
+    tbody.innerHTML = registros
+        .filter(reg => !filtroOrigem || reg.origem === filtroOrigem)
+        .map((reg, idx) => {
         const dt        = new Date(reg.data_hora);
         const dataStr   = dt.toLocaleDateString('pt-BR');
         const horaStr   = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -301,22 +431,44 @@ function renderRegistros(registros) {
                    <i class="bi bi-arrow-up-circle-fill"></i> Saída
                </span>`;
 
-        const conf      = (reg.confianca_ocr * 100).toFixed(1);
-        const confClass = reg.confianca_ocr >= 0.85 ? 'text-green-600 dark:text-green-400'
-                        : reg.confianca_ocr >= 0.65 ? 'text-yellow-600 dark:text-yellow-400'
-                        : 'text-red-600 dark:text-red-400';
-        const metodoMap = { easyocr: 'EasyOCR', tesseract: 'Tesseract', hibrido: 'Híbrido' };
-        const metodo    = metodoMap[reg.metodo_ocr] || reg.metodo_ocr;
+        const isManual = reg.origem === 'manual';
+        let metodoBadge;
+        if (isManual) {
+            metodoBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                <i class="bi bi-pencil-square"></i> Manual
+            </span>`;
+            if (reg.registrado_por) {
+                metodoBadge += `<div class="text-xs text-gray-400 mt-0.5">${reg.registrado_por.username}</div>`;
+            }
+        } else {
+            const conf      = reg.confianca_ocr != null ? (reg.confianca_ocr * 100).toFixed(1) + '%' : '–';
+            const confClass = reg.confianca_ocr == null ? 'text-gray-400'
+                            : reg.confianca_ocr >= 0.85 ? 'text-green-600 dark:text-green-400'
+                            : reg.confianca_ocr >= 0.65 ? 'text-yellow-600 dark:text-yellow-400'
+                            : 'text-red-600 dark:text-red-400';
+            const metodoMap = { easyocr: 'EasyOCR', tesseract: 'Tesseract', hibrido: 'Híbrido' };
+            const metodo    = metodoMap[reg.metodo_ocr] || reg.metodo_ocr || '–';
+            metodoBadge = `<span class="text-xs text-gray-500 dark:text-gray-400">${metodo}</span>
+                <span class="ml-1 text-xs font-semibold ${confClass}">${conf}</span>`;
+        }
 
-        const acoes = userIsAdmin
-            ? `<button onclick="event.stopPropagation(); deletarRegistro(${reg.id})"
-                   class="text-red-500 hover:text-red-700 dark:hover:text-red-400 p-1 rounded transition-colors" title="Deletar">
-                   <i class="bi bi-trash"></i>
-               </button>`
-            : '';
+        // Botões de ação
+        const acoes = [];
+        if (userCanManual && isManual) {
+            acoes.push(`<button onclick="event.stopPropagation(); editarRegistro(${idx})"
+                class="text-orange-500 hover:text-orange-700 dark:hover:text-orange-400 p-1 rounded transition-colors" title="Editar">
+                <i class="bi bi-pencil"></i>
+            </button>`);
+        }
+        if (userIsAdmin) {
+            acoes.push(`<button onclick="event.stopPropagation(); deletarRegistro(${reg.id})"
+                class="text-red-500 hover:text-red-700 dark:hover:text-red-400 p-1 rounded transition-colors" title="Deletar">
+                <i class="bi bi-trash"></i>
+            </button>`);
+        }
 
         return `
-        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors cursor-pointer" onclick="verDetalhe(${idx})">
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors cursor-pointer${isManual ? ' bg-orange-50/30 dark:bg-orange-900/5' : ''}" onclick="verDetalhe(${idx})">
             <td class="px-5 py-3.5 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900 dark:text-white">${dataStr}</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">${horaStr}</div>
@@ -329,14 +481,9 @@ function renderRegistros(registros) {
             <td class="px-5 py-3.5 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">${modelo}</td>
             <td class="px-5 py-3.5 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">${propNome}${catBadge}</td>
             <td class="px-5 py-3.5 whitespace-nowrap">${tipoBadge}</td>
-            <td class="px-5 py-3.5 whitespace-nowrap">
-                <span class="text-sm font-semibold ${confClass}">${conf}%</span>
-            </td>
-            <td class="px-5 py-3.5 whitespace-nowrap">
-                <span class="text-xs text-gray-500 dark:text-gray-400">${metodo}</span>
-            </td>
+            <td class="px-5 py-3.5 whitespace-nowrap">${metodoBadge}</td>
             <td class="px-5 py-3.5 whitespace-nowrap text-right" onclick="event.stopPropagation()">
-                ${acoes}
+                <div class="flex items-center justify-end gap-1">${acoes.join('')}</div>
             </td>
         </tr>`;
     }).join('');
@@ -370,6 +517,7 @@ function aplicarFiltros() {
     currentFiltros = {
         placa:      document.getElementById('filtroPlaca').value.trim(),
         tipo:       document.getElementById('filtroTipo').value,
+        origem:     document.getElementById('filtroOrigem').value,
         dataInicio: document.getElementById('filtroDataInicio').value,
         dataFim:    document.getElementById('filtroDataFim').value,
     };
@@ -377,7 +525,7 @@ function aplicarFiltros() {
 }
 
 function limparFiltros() {
-    ['filtroPlaca','filtroTipo','filtroDataInicio','filtroDataFim'].forEach(id => {
+    ['filtroPlaca','filtroTipo','filtroOrigem','filtroDataInicio','filtroDataFim'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
@@ -397,9 +545,60 @@ function verDetalhe(idx) {
     const prop     = veiculo?.proprietario;
     const placa    = formatarPlaca(reg.placa_detectada);
     const dataHora = new Date(reg.data_hora).toLocaleString('pt-BR');
-    const conf     = (reg.confianca_ocr * 100).toFixed(2);
-    const confClass= reg.confianca_ocr >= 0.85 ? 'text-green-600' : reg.confianca_ocr >= 0.65 ? 'text-yellow-600' : 'text-red-600';
     const isEntrada= reg.tipo_movimento === 'entrada';
+    const isManual = reg.origem === 'manual';
+
+    const ocrInfo = isManual
+        ? `<div><div class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Origem</div>
+           <div class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+               <i class="bi bi-pencil-square"></i> Registro Manual
+           </div></div>`
+        : `<div>
+               <div class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Confiança OCR</div>
+               <div class="font-semibold ${reg.confianca_ocr >= 0.85 ? 'text-green-600' : reg.confianca_ocr >= 0.65 ? 'text-yellow-600' : 'text-red-600'}">
+                   ${reg.confianca_ocr != null ? (reg.confianca_ocr * 100).toFixed(2) + '%' : '–'}
+               </div>
+           </div>
+           <div>
+               <div class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Método OCR</div>
+               <div class="font-medium text-gray-900 dark:text-white capitalize">${reg.metodo_ocr || '–'}</div>
+           </div>`;
+
+    const registradoPorHtml = (isManual && reg.registrado_por)
+        ? `<div class="border-t border-gray-200 dark:border-gray-700 pt-3">
+               <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Registado por</div>
+               <div class="flex items-center gap-2">
+                   <div class="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                       <i class="bi bi-person text-orange-600 dark:text-orange-400"></i>
+                   </div>
+                   <div>
+                       <div class="text-sm font-medium text-gray-900 dark:text-white">${reg.registrado_por.nome_completo}</div>
+                       <div class="text-xs text-gray-500 dark:text-gray-400">@${reg.registrado_por.username}</div>
+                   </div>
+               </div>
+           </div>`
+        : '';
+
+    const obsHtml = reg.observacoes
+        ? `<div class="border-t border-gray-200 dark:border-gray-700 pt-3">
+               <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Observações</div>
+               <p class="text-sm text-gray-700 dark:text-gray-300">${reg.observacoes}</p>
+           </div>`
+        : '';
+
+    const actionsHtml = [];
+    if (userCanManual && isManual) {
+        actionsHtml.push(`<button onclick="fecharModal(); editarRegistroById(${reg.id});"
+            class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm transition-colors">
+            <i class="bi bi-pencil mr-2"></i>Editar
+        </button>`);
+    }
+    if (userIsAdmin) {
+        actionsHtml.push(`<button onclick="deletarRegistro(${reg.id}); fecharModal();"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors">
+            <i class="bi bi-trash mr-2"></i>Deletar
+        </button>`);
+    }
 
     conteudo.innerHTML = `
         <div class="space-y-4 text-sm">
@@ -425,15 +624,11 @@ function verDetalhe(idx) {
                     <div class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">ID Registro</div>
                     <div class="font-medium text-gray-900 dark:text-white">#${reg.id}</div>
                 </div>
-                <div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Confiança OCR</div>
-                    <div class="font-semibold ${confClass}">${conf}%</div>
-                </div>
-                <div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Método OCR</div>
-                    <div class="font-medium text-gray-900 dark:text-white capitalize">${reg.metodo_ocr}</div>
-                </div>
+                ${ocrInfo}
             </div>
+
+            ${registradoPorHtml}
+            ${obsHtml}
 
             ${veiculo ? `
             <!-- Veículo -->
@@ -483,12 +678,9 @@ function verDetalhe(idx) {
                 </div>
             </div>` : ''}
 
-            ${userIsAdmin ? `
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-end">
-                <button onclick="deletarRegistro(${reg.id}); fecharModal();"
-                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors">
-                    <i class="bi bi-trash mr-2"></i>Deletar Registro
-                </button>
+            ${actionsHtml.length > 0 ? `
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-end gap-2">
+                ${actionsHtml.join('')}
             </div>` : ''}
         </div>
     `;
@@ -498,6 +690,130 @@ function verDetalhe(idx) {
 
 function fecharModal() {
     document.getElementById('modalDetalhe').classList.add('hidden');
+}
+
+// ─── Manual Modal ─────────────────────────────────────────────────────────────
+function abrirModalManual() {
+    modalManualModo = 'criar';
+    registroEditandoId = null;
+
+    document.getElementById('modalManualTitulo').innerHTML =
+        '<i class="bi bi-pencil-square text-orange-500"></i> Registrar Manualmente';
+    document.getElementById('btnSalvarManualLabel').textContent = 'Registrar';
+
+    // Limpa o formulário
+    document.getElementById('manualPlaca').value = '';
+    document.querySelectorAll('input[name="manualTipo"]').forEach(r => r.checked = false);
+    document.getElementById('manualDataHora').value = '';
+    document.getElementById('manualObservacoes').value = '';
+    document.getElementById('obsCount').textContent = '0';
+    document.getElementById('manualErro').classList.add('hidden');
+
+    document.getElementById('modalManual').classList.remove('hidden');
+    setTimeout(() => document.getElementById('manualPlaca').focus(), 100);
+}
+
+function editarRegistro(idx) {
+    const reg = ultimosRegistros[idx];
+    if (!reg) return;
+    preencherFormularioEdicao(reg);
+}
+
+async function editarRegistroById(id) {
+    // Procura na lista em memória primeiro
+    const reg = ultimosRegistros.find(r => r.id === id);
+    if (reg) { preencherFormularioEdicao(reg); return; }
+
+    // Se não estiver em memória, busca na API
+    try {
+        const reg = await apiRequest(`/registros/${id}`);
+        preencherFormularioEdicao(reg);
+    } catch (e) {
+        showToast('Erro ao carregar registro para edição', 'danger');
+    }
+}
+
+function preencherFormularioEdicao(reg) {
+    modalManualModo = 'editar';
+    registroEditandoId = reg.id;
+
+    document.getElementById('modalManualTitulo').innerHTML =
+        `<i class="bi bi-pencil text-orange-500"></i> Editar Registro #${reg.id}`;
+    document.getElementById('btnSalvarManualLabel').textContent = 'Guardar';
+
+    document.getElementById('manualPlaca').value = reg.placa_detectada || '';
+
+    const radio = document.querySelector(`input[name="manualTipo"][value="${reg.tipo_movimento}"]`);
+    if (radio) radio.checked = true;
+
+    if (reg.data_hora) {
+        // Converte para formato datetime-local (YYYY-MM-DDTHH:MM)
+        const dt = new Date(reg.data_hora);
+        const pad = n => String(n).padStart(2, '0');
+        document.getElementById('manualDataHora').value =
+            `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+    } else {
+        document.getElementById('manualDataHora').value = '';
+    }
+
+    const obs = reg.observacoes || '';
+    document.getElementById('manualObservacoes').value = obs;
+    document.getElementById('obsCount').textContent = obs.length;
+
+    document.getElementById('manualErro').classList.add('hidden');
+    document.getElementById('modalManual').classList.remove('hidden');
+    setTimeout(() => document.getElementById('manualPlaca').focus(), 100);
+}
+
+function fecharModalManual() {
+    document.getElementById('modalManual').classList.add('hidden');
+}
+
+async function salvarRegistroManual() {
+    const placa     = document.getElementById('manualPlaca').value.trim();
+    const tipoEl    = document.querySelector('input[name="manualTipo"]:checked');
+    const dataHora  = document.getElementById('manualDataHora').value;
+    const obs       = document.getElementById('manualObservacoes').value.trim();
+    const erroEl    = document.getElementById('manualErro');
+    const btnSalvar = document.getElementById('btnSalvarManual');
+
+    // Validação
+    erroEl.classList.add('hidden');
+    if (!placa) { mostrarErroManual('Informe a placa do veículo.'); return; }
+    if (!tipoEl) { mostrarErroManual('Selecione o tipo de movimento (Entrada ou Saída).'); return; }
+
+    const payload = {
+        placa_detectada: placa,
+        tipo_movimento:  tipoEl.value,
+        observacoes:     obs || null,
+    };
+    if (dataHora) payload.data_hora = dataHora.length === 16 ? dataHora + ':00' : dataHora;
+
+    btnSalvar.disabled = true;
+    btnSalvar.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> A guardar...';
+
+    try {
+        if (modalManualModo === 'criar') {
+            await apiRequest('/registros/manual', 'POST', payload);
+            showToast('Registro manual criado com sucesso', 'success');
+        } else {
+            await apiRequest(`/registros/${registroEditandoId}/manual`, 'PUT', payload);
+            showToast('Registro atualizado com sucesso', 'success');
+        }
+        fecharModalManual();
+        await Promise.all([carregarStats(), carregarRegistros()]);
+    } catch (e) {
+        mostrarErroManual(e.message || 'Erro ao guardar o registro.');
+    } finally {
+        btnSalvar.disabled = false;
+        btnSalvar.innerHTML = `<i class="bi bi-check-lg"></i> <span id="btnSalvarManualLabel">${modalManualModo === 'criar' ? 'Registrar' : 'Guardar'}</span>`;
+    }
+}
+
+function mostrarErroManual(msg) {
+    const el = document.getElementById('manualErro');
+    el.textContent = msg;
+    el.classList.remove('hidden');
 }
 
 // ─── Delete ───────────────────────────────────────────────────────────────────

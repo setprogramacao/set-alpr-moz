@@ -18,6 +18,8 @@ from shared.schemas import (
     DeteccaoResponse,
     RegistroAcessoResponse,
     RegistroAcessoDetalhado,
+    RegistroManualCreate,
+    RegistroManualUpdate,
     MessageResponse,
 )
 
@@ -187,6 +189,101 @@ def deletar_registro(
         mensagem=f"Registro {registro_id} deletado com sucesso",
         sucesso=True
     )
+
+
+# ============================================================================
+# REGISTRO MANUAL (operador / admin)
+# ============================================================================
+
+@router.post("/registros/manual", response_model=RegistroAcessoDetalhado)
+def criar_registro_manual(
+    dados: RegistroManualCreate,
+    db: Session = Depends(get_db),
+    usuario_atual: Usuario = Depends(obter_usuario_atual)
+):
+    """
+    Cria um registro de acesso manual
+
+    Usado quando o OCR falha e o agente de segurança precisa registar
+    a entrada/saída manualmente.
+
+    Requer: Nível operador ou admin
+    """
+    if usuario_atual.nivel_acesso not in ("operador", "admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Sem permissão. Requer nível operador ou admin."
+        )
+
+    # Tenta associar a um veículo cadastrado
+    veiculo = db.query(Veiculo).filter(Veiculo.placa == dados.placa_detectada).first()
+
+    registro = RegistroAcesso(
+        placa_detectada=dados.placa_detectada,
+        tipo_movimento=dados.tipo_movimento,
+        data_hora=dados.data_hora or datetime.now(),
+        confianca_ocr=None,
+        metodo_ocr=None,
+        origem="manual",
+        veiculo_id=veiculo.id if veiculo else None,
+        registrado_por_id=usuario_atual.id,
+        observacoes=dados.observacoes,
+    )
+    db.add(registro)
+    db.commit()
+    db.refresh(registro)
+
+    return RegistroAcessoDetalhado.model_validate(registro)
+
+
+@router.put("/registros/{registro_id}/manual", response_model=RegistroAcessoDetalhado)
+def editar_registro_manual(
+    registro_id: int,
+    dados: RegistroManualUpdate,
+    db: Session = Depends(get_db),
+    usuario_atual: Usuario = Depends(obter_usuario_atual)
+):
+    """
+    Edita um registro de acesso manual existente
+
+    Apenas registros com origem='manual' podem ser editados por esta rota.
+
+    Requer: Nível operador ou admin
+    """
+    if usuario_atual.nivel_acesso not in ("operador", "admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Sem permissão. Requer nível operador ou admin."
+        )
+
+    registro = db.query(RegistroAcesso).filter(RegistroAcesso.id == registro_id).first()
+    if not registro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Registro não encontrado")
+
+    if registro.origem != "manual":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Apenas registros manuais podem ser editados por esta rota."
+        )
+
+    if dados.placa_detectada is not None:
+        registro.placa_detectada = dados.placa_detectada
+        veiculo = db.query(Veiculo).filter(Veiculo.placa == dados.placa_detectada).first()
+        registro.veiculo_id = veiculo.id if veiculo else None
+
+    if dados.tipo_movimento is not None:
+        registro.tipo_movimento = dados.tipo_movimento
+
+    if dados.data_hora is not None:
+        registro.data_hora = dados.data_hora
+
+    if dados.observacoes is not None:
+        registro.observacoes = dados.observacoes
+
+    db.commit()
+    db.refresh(registro)
+
+    return RegistroAcessoDetalhado.model_validate(registro)
 
 
 # ============================================================================

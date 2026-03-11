@@ -112,6 +112,30 @@ def get_db_context():
 # INICIALIZAÇÃO DO BANCO DE DADOS
 # ============================================================================
 
+def aplicar_migracoes() -> None:
+    """
+    Aplica migrações incrementais no banco de dados.
+    Adiciona colunas novas sem destruir dados existentes.
+    """
+    from sqlalchemy import text, inspect as sa_inspect
+    insp = sa_inspect(engine)
+
+    # Migração: registros_acesso — novas colunas para registo manual
+    if 'registros_acesso' in insp.get_table_names():
+        colunas_existentes = {c['name'] for c in insp.get_columns('registros_acesso')}
+        novas_colunas = [
+            ("origem",             "VARCHAR(10) NOT NULL DEFAULT 'automatico'"),
+            ("registrado_por_id",  "INTEGER REFERENCES usuarios(id)"),
+            ("observacoes",        "VARCHAR(500)"),
+        ]
+        with engine.connect() as conn:
+            for nome_col, definicao in novas_colunas:
+                if nome_col not in colunas_existentes:
+                    conn.execute(text(f"ALTER TABLE registros_acesso ADD COLUMN {nome_col} {definicao}"))
+                    print(f"  ✓ Coluna '{nome_col}' adicionada a registros_acesso")
+            conn.commit()
+
+
 def init_db(criar_dados_exemplo: bool = False) -> None:
     """
     Inicializa o banco de dados
@@ -125,6 +149,9 @@ def init_db(criar_dados_exemplo: bool = False) -> None:
     # Cria todas as tabelas
     Base.metadata.create_all(bind=engine)
     print("✓ Tabelas criadas com sucesso")
+
+    # Aplica migrações incrementais
+    aplicar_migracoes()
 
     if criar_dados_exemplo:
         criar_dados_iniciais()

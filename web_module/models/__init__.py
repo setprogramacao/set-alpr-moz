@@ -79,12 +79,16 @@ class RegistroAcesso(Base):
     placa_detectada = Column(String(10), nullable=False, index=True)
     tipo_movimento = Column(String(10), nullable=False, index=True)  # entrada, saida
     data_hora = Column(DateTime, default=func.now(), nullable=False, index=True)
-    confianca_ocr = Column(Float, nullable=False)
-    metodo_ocr = Column(String(20), nullable=False)  # easyocr, tesseract, hibrido
+    confianca_ocr = Column(Float, nullable=True)
+    metodo_ocr = Column(String(20), nullable=True)  # easyocr, tesseract, hibrido, None (manual)
     imagem_path = Column(String(500), nullable=True)
+    origem = Column(String(10), nullable=False, default="automatico")  # automatico, manual
+    registrado_por_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True, index=True)
+    observacoes = Column(String(500), nullable=True)
 
     # Relacionamentos
     veiculo = relationship("Veiculo", back_populates="registros_acesso")
+    registrado_por = relationship("Usuario", foreign_keys=[registrado_por_id])
 
     def __repr__(self):
         return f"<RegistroAcesso(id={self.id}, placa='{self.placa_detectada}', tipo='{self.tipo_movimento}', data_hora='{self.data_hora}')>"

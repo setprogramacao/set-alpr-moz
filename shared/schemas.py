@@ -148,11 +148,26 @@ class RegistroAcessoCreate(RegistroAcessoBase):
     veiculo_id: Optional[int] = Field(None, description="ID do veículo (se cadastrado)")
 
 
+class RegistradoPorInfo(BaseModel):
+    """Informação resumida do usuário que registou manualmente"""
+    id: int
+    username: str
+    nome_completo: str
+
+    class Config:
+        from_attributes = True
+
+
 class RegistroAcessoResponse(RegistroAcessoBase):
     """Schema de resposta para Registro de Acesso"""
     id: int
     veiculo_id: Optional[int]
     data_hora: datetime
+    # Sobrescreve os campos do base para permitir null em registros manuais
+    confianca_ocr: Optional[float] = None
+    metodo_ocr: Optional[str] = None
+    origem: str = "automatico"
+    observacoes: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -161,9 +176,42 @@ class RegistroAcessoResponse(RegistroAcessoBase):
 class RegistroAcessoDetalhado(RegistroAcessoResponse):
     """Schema de Registro com dados completos do Veículo e Proprietário"""
     veiculo: Optional[VeiculoComProprietario] = None
+    registrado_por: Optional[RegistradoPorInfo] = None
 
     class Config:
         from_attributes = True
+
+
+# ============================================================================
+# SCHEMAS DE REGISTRO MANUAL
+# ============================================================================
+
+class RegistroManualCreate(BaseModel):
+    """Schema para criar registro manual de acesso"""
+    placa_detectada: str = Field(..., min_length=7, max_length=10, description="Placa do veículo")
+    tipo_movimento: Literal["entrada", "saida"] = Field(..., description="Tipo de movimento")
+    data_hora: Optional[datetime] = Field(None, description="Data/hora do evento (padrão: agora)")
+    observacoes: Optional[str] = Field(None, max_length=500, description="Observações sobre o registro")
+
+    @field_validator("placa_detectada")
+    @classmethod
+    def normalizar_placa(cls, v: str) -> str:
+        return v.upper().replace("-", "").replace(" ", "")
+
+
+class RegistroManualUpdate(BaseModel):
+    """Schema para editar registro manual de acesso"""
+    placa_detectada: Optional[str] = Field(None, min_length=7, max_length=10)
+    tipo_movimento: Optional[Literal["entrada", "saida"]] = None
+    data_hora: Optional[datetime] = None
+    observacoes: Optional[str] = Field(None, max_length=500)
+
+    @field_validator("placa_detectada")
+    @classmethod
+    def normalizar_placa(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        return v.upper().replace("-", "").replace(" ", "")
 
 
 # ============================================================================
