@@ -7,7 +7,7 @@ Instituição: Universidade Jean Piaget de Moçambique
 Curso: Engenharia Electrónica e de Telecomunicações
 """
 
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import messagebox
 import logging
 import logging.handlers
@@ -119,7 +119,7 @@ def main():
     # Cria janela principal
     logger.info("Inicializando interface gráfica...")
     try:
-        root = tk.Tk()
+        root = ctk.CTk()
 
         # Configura ícone (se existir)
         # icon_path = Path(__file__).parent / "assets" / "icon.ico"
