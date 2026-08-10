@@ -158,7 +158,7 @@ async def startup_event():
 
     # Inicializa banco (cria tabelas se não existirem)
     try:
-        init_db(criar_dados_exemplo=True)
+        init_db(criar_dados_exemplo=False)
         print("[OK] Banco de dados inicializado")
     except Exception as e:
         print(f"[ERRO] Erro ao inicializar banco: {e}")

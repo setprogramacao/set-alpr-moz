@@ -22,6 +22,17 @@ import time
 import threading
 import logging
 
+
+def configurar_saida_console():
+    """Permite imprimir acentos e simbolos no console Windows sem encerrar."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
+configurar_saida_console()
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",

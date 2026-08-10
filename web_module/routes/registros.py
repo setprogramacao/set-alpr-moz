@@ -13,6 +13,7 @@ from web_module.database import get_db
 from web_module.models import RegistroAcesso, Veiculo, Usuario
 from web_module.routes.auth import obter_usuario_atual
 from web_module.services.deteccao_service import processar_deteccao, obter_registros_hoje, contar_registros_hoje
+from web_module.services.audit_service import registrar_log
 from shared.schemas import (
     DeteccaoRequest,
     DeteccaoResponse,
@@ -182,6 +183,7 @@ def deletar_registro(
             detail="Registro não encontrado"
         )
 
+    registrar_log(db, usuario_atual.id, "deletar_registro", f"ID: {registro_id}")
     db.delete(registro)
     db.commit()
 
@@ -209,10 +211,10 @@ def criar_registro_manual(
 
     Requer: Nível operador ou admin
     """
-    if usuario_atual.nivel_acesso not in ("operador", "admin"):
+    if usuario_atual.nivel_acesso not in ("operador", "gestor", "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Sem permissão. Requer nível operador ou admin."
+            detail="Sem permissão. Requer nível operador, gestor ou admin."
         )
 
     # Tenta associar a um veículo cadastrado
@@ -230,6 +232,7 @@ def criar_registro_manual(
         observacoes=dados.observacoes,
     )
     db.add(registro)
+    registrar_log(db, usuario_atual.id, "criar_registro_manual", f"Placa: {dados.placa_detectada}, Tipo: {dados.tipo_movimento}")
     db.commit()
     db.refresh(registro)
 
@@ -248,12 +251,12 @@ def editar_registro_manual(
 
     Apenas registros com origem='manual' podem ser editados por esta rota.
 
-    Requer: Nível operador ou admin
+    Requer: Nível admin
     """
-    if usuario_atual.nivel_acesso not in ("operador", "admin"):
+    if usuario_atual.nivel_acesso != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Sem permissão. Requer nível operador ou admin."
+            detail="Sem permissão. Requer nível admin."
         )
 
     registro = db.query(RegistroAcesso).filter(RegistroAcesso.id == registro_id).first()
@@ -280,6 +283,7 @@ def editar_registro_manual(
     if dados.observacoes is not None:
         registro.observacoes = dados.observacoes
 
+    registrar_log(db, usuario_atual.id, "editar_registro_manual", f"ID: {registro_id}")
     db.commit()
     db.refresh(registro)
 

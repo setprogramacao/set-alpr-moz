@@ -129,7 +129,8 @@
                     class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                     <option value="">Selecionar nível...</option>
                     <option value="visualizador">Visualizador — Apenas leitura</option>
-                    <option value="operador">Gestor de Sistema — Pode gerir veículos e proprietários</option>
+                    <option value="operador">Operador — Leitura total + registo de movimentos manuais</option>
+                    <option value="gestor">Gestor de Sistema — Gestão de veículos e proprietários</option>
                     <option value="admin">Admin — Acesso total ao sistema</option>
                 </select>
             </div>
@@ -199,7 +200,8 @@
                 <select id="editarNivel"
                     class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                     <option value="visualizador">Visualizador</option>
-                    <option value="operador">Gestor de Sistema</option>
+                    <option value="operador">Operador</option>
+                    <option value="gestor">Gestor de Sistema</option>
                     <option value="admin">Admin</option>
                 </select>
             </div>
@@ -238,11 +240,17 @@
 
 {% block extra_js %}
 <script>
-    const ROLE_LABELS = { admin: 'Admin', operador: 'Gestor de Sistema', visualizador: 'Visualizador' };
+    const ROLE_LABELS = {
+        admin:        'Admin',
+        gestor:       'Gestor de Sistema',
+        operador:     'Operador',
+        visualizador: 'Visualizador',
+    };
     const ROLE_COLORS = {
-        admin:       'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-        operador:    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-        visualizador:'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+        admin:        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+        gestor:       'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+        operador:     'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+        visualizador: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
     };
 
     let isAdmin = false;
@@ -259,7 +267,7 @@
         }
 
         // Redireciona se não tiver permissão (visualizador não acede a esta página)
-        if (role === 'visualizador') {
+        if (role === 'visualizador' || role === 'operador') {
             showToast('Acesso negado. Sem permissão para aceder a esta página.', 'danger');
             setTimeout(() => window.location.href = '/', 2000);
             return;

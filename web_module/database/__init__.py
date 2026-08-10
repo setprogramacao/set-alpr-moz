@@ -132,7 +132,7 @@ def aplicar_migracoes() -> None:
             for nome_col, definicao in novas_colunas:
                 if nome_col not in colunas_existentes:
                     conn.execute(text(f"ALTER TABLE registros_acesso ADD COLUMN {nome_col} {definicao}"))
-                    print(f"  ✓ Coluna '{nome_col}' adicionada a registros_acesso")
+                    print(f"  [OK] Coluna '{nome_col}' adicionada a registros_acesso")
             conn.commit()
 
 
@@ -148,13 +148,14 @@ def init_db(criar_dados_exemplo: bool = False) -> None:
     """
     # Cria todas as tabelas
     Base.metadata.create_all(bind=engine)
-    print("✓ Tabelas criadas com sucesso")
+    print("[OK] Tabelas criadas com sucesso")
 
     # Aplica migrações incrementais
     aplicar_migracoes()
 
-    if criar_dados_exemplo:
-        criar_dados_iniciais()
+    # O sistema precisa do administrador e das configuracoes mesmo num banco
+    # limpo. Proprietarios e veiculos de demonstracao continuam opcionais.
+    criar_dados_iniciais(criar_exemplos=criar_dados_exemplo)
 
 
 def drop_db() -> None:
@@ -165,9 +166,9 @@ def drop_db() -> None:
     confirm = input("⚠️  ATENÇÃO: Isso vai apagar TODOS os dados! Digite 'CONFIRMAR' para continuar: ")
     if confirm == "CONFIRMAR":
         Base.metadata.drop_all(bind=engine)
-        print("✓ Todas as tabelas foram removidas")
+        print("[OK] Todas as tabelas foram removidas")
     else:
-        print("✗ Operação cancelada")
+        print("[CANCELADO] Operação cancelada")
 
 
 def reset_db(criar_dados_exemplo: bool = True) -> None:
@@ -179,10 +180,10 @@ def reset_db(criar_dados_exemplo: bool = True) -> None:
     """
     print("Resetando banco de dados...")
     Base.metadata.drop_all(bind=engine)
-    print("✓ Tabelas removidas")
+    print("[OK] Tabelas removidas")
 
     Base.metadata.create_all(bind=engine)
-    print("✓ Tabelas recriadas")
+    print("[OK] Tabelas recriadas")
 
     if criar_dados_exemplo:
         criar_dados_iniciais()
@@ -192,7 +193,7 @@ def reset_db(criar_dados_exemplo: bool = True) -> None:
 # DADOS INICIAIS
 # ============================================================================
 
-def criar_dados_iniciais() -> None:
+def criar_dados_iniciais(criar_exemplos: bool = True) -> None:
     """
     Cria dados iniciais do sistema:
     - Usuário administrador padrão
@@ -265,10 +266,11 @@ def criar_dados_iniciais() -> None:
                 db.add(config)
 
         db.commit()
-        print("✓ Configurações padrão criadas")
+        print("[OK] Configurações padrão criadas")
 
-        # Cria dados de exemplo (proprietários e veículos)
-        criar_dados_exemplo(db)
+        # Dados de demonstracao nao devem aparecer num banco de producao limpo.
+        if criar_exemplos:
+            criar_dados_exemplo(db)
 
 
 def criar_dados_exemplo(db: Session) -> None:
@@ -314,7 +316,7 @@ def criar_dados_exemplo(db: Session) -> None:
             db.add(prop)
 
         db.commit()
-        print("✓ Proprietários de exemplo criados")
+        print("[OK] Proprietários de exemplo criados")
 
         # Cria veículos de exemplo
         veiculos = [
@@ -345,7 +347,7 @@ def criar_dados_exemplo(db: Session) -> None:
             db.add(veiculo)
 
         db.commit()
-        print("✓ Veículos de exemplo criados")
+        print("[OK] Veículos de exemplo criados")
 
 
 # ============================================================================

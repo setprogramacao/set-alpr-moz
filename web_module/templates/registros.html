@@ -297,7 +297,7 @@ let registroEditandoId = null;
 document.addEventListener('DOMContentLoaded', async () => {
     const role = getUserRole();
     userIsAdmin  = role === 'admin';
-    userCanManual = role === 'operador' || role === 'admin';
+    userCanManual = role === 'operador' || role === 'gestor' || role === 'admin';
 
     if (userCanManual) {
         document.getElementById('btnRegistrarManual').style.display = '';
@@ -454,7 +454,7 @@ function renderRegistros(registros) {
 
         // Botões de ação
         const acoes = [];
-        if (userCanManual && isManual) {
+        if (userIsAdmin && isManual) {
             acoes.push(`<button onclick="event.stopPropagation(); editarRegistro(${idx})"
                 class="text-orange-500 hover:text-orange-700 dark:hover:text-orange-400 p-1 rounded transition-colors" title="Editar">
                 <i class="bi bi-pencil"></i>
@@ -587,7 +587,7 @@ function verDetalhe(idx) {
         : '';
 
     const actionsHtml = [];
-    if (userCanManual && isManual) {
+    if (userIsAdmin && isManual) {
         actionsHtml.push(`<button onclick="fecharModal(); editarRegistroById(${reg.id});"
             class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm transition-colors">
             <i class="bi bi-pencil mr-2"></i>Editar

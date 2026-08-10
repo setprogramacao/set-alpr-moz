@@ -10,6 +10,7 @@ from typing import Optional
 
 from web_module.database import get_db
 from web_module.models import Usuario
+from web_module.services.audit_service import registrar_log
 from web_module.services.auth_service import (
     autenticar_usuario,
     criar_token_acesso,
@@ -107,7 +108,7 @@ def verificar_gestor(usuario_atual: Usuario = Depends(obter_usuario_atual)) -> U
     """
     Dependency para verificar se usuário é Gestor de Sistema ou Admin.
 
-    Gestor de Sistema (operador) e Admin têm acesso a gestão de usuários,
+    Gestor de Sistema e Admin têm acesso a gestão de usuários,
     veículos e proprietários.
 
     Args:
@@ -119,7 +120,7 @@ def verificar_gestor(usuario_atual: Usuario = Depends(obter_usuario_atual)) -> U
     Raises:
         HTTPException: Se nível insuficiente
     """
-    if usuario_atual.nivel_acesso not in ["admin", "operador"]:
+    if usuario_atual.nivel_acesso not in ["admin", "gestor"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Acesso negado. Requer nível de Gestor de Sistema ou superior."
@@ -222,6 +223,8 @@ def criar_novo_usuario(
             senha=usuario_data.senha,
             nivel_acesso=usuario_data.nivel_acesso
         )
+        registrar_log(db, admin.id, "criar_usuario", f"Username: {usuario_data.username}, Nível: {usuario_data.nivel_acesso}")
+        db.commit()
         return UsuarioResponse.model_validate(usuario)
 
     except ValueError as e:
@@ -323,6 +326,7 @@ def atualizar_usuario(
         from services.auth_service import hash_senha
         usuario.senha_hash = hash_senha(usuario_data.senha)
 
+    registrar_log(db, usuario_atual.id, "editar_usuario", f"ID alvo: {user_id}, Username: {usuario.username}")
     db.commit()
     db.refresh(usuario)
 

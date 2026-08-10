@@ -10,6 +10,7 @@ from typing import Optional
 from web_module.database import get_db
 from web_module.models import Veiculo, Usuario
 from web_module.routes.auth import obter_usuario_atual
+from web_module.services.audit_service import registrar_log
 from shared.schemas import (
     VeiculoCreate,
     VeiculoUpdate,
@@ -44,10 +45,10 @@ def criar_veiculo(
     Requer: Autenticação (operador ou admin)
     """
     # Verifica permissão
-    if usuario_atual.nivel_acesso not in ["operador", "admin"]:
+    if usuario_atual.nivel_acesso not in ("gestor", "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Sem permissão. Requer nível operador ou admin."
+            detail="Sem permissão. Requer nível gestor ou admin."
         )
 
     # Valida placa
@@ -76,6 +77,7 @@ def criar_veiculo(
     )
 
     db.add(veiculo)
+    registrar_log(db, usuario_atual.id, "criar_veiculo", f"Placa: {placa_limpa}")
     db.commit()
     db.refresh(veiculo)
 
@@ -172,13 +174,13 @@ def atualizar_veiculo(
     """
     Atualiza dados do veículo
 
-    Requer: Autenticação (operador ou admin)
+    Requer: Nível gestor ou admin
     """
     # Verifica permissão
-    if usuario_atual.nivel_acesso not in ["operador", "admin"]:
+    if usuario_atual.nivel_acesso not in ("gestor", "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Sem permissão. Requer nível operador ou admin."
+            detail="Sem permissão. Requer nível gestor ou admin."
         )
 
     veiculo = db.query(Veiculo).filter(Veiculo.id == veiculo_id).first()
@@ -216,6 +218,7 @@ def atualizar_veiculo(
     if veiculo_data.observacoes is not None:
         veiculo.observacoes = veiculo_data.observacoes
 
+    registrar_log(db, usuario_atual.id, "editar_veiculo", f"ID: {veiculo_id}, Placa: {veiculo.placa}")
     db.commit()
     db.refresh(veiculo)
 
@@ -251,6 +254,7 @@ def deletar_veiculo(
         )
 
     placa = veiculo.placa
+    registrar_log(db, usuario_atual.id, "deletar_veiculo", f"ID: {veiculo_id}, Placa: {placa}")
     db.delete(veiculo)
     db.commit()
 

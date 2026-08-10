@@ -425,11 +425,11 @@ def contar_registros_hoje(db: Session) -> dict:
 
 def obter_veiculos_no_campus(db: Session) -> list[dict]:
     """
-    Obtém lista de veículos atualmente no campus
+    Obtém lista de todos os veículos atualmente no campus (cadastrados e não cadastrados).
 
     Lógica:
-    - Busca veículos com última movimentação = "entrada"
-    - Sem saída correspondente posterior
+    - Para veículos cadastrados: agrupa por veiculo_id, verifica se o último movimento é "entrada"
+    - Para veículos não cadastrados: agrupa por placa_detectada, verifica se o último movimento é "entrada"
 
     Args:
         db: Sessão do banco
@@ -439,35 +439,61 @@ def obter_veiculos_no_campus(db: Session) -> list[dict]:
     """
     from sqlalchemy import func
 
-    # Subconsulta para obter último registro de cada veículo
-    subquery = db.query(
+    agora = datetime.now()
+    resultado = []
+
+    # ── Veículos cadastrados (veiculo_id IS NOT NULL) ─────────────────────────
+    subq_cad = db.query(
         RegistroAcesso.veiculo_id,
         func.max(RegistroAcesso.data_hora).label("ultima_data")
+    ).filter(
+        RegistroAcesso.veiculo_id.isnot(None)
     ).group_by(RegistroAcesso.veiculo_id).subquery()
 
-    # Busca registros que sejam entrada e sejam os mais recentes
-    veiculos_no_campus = db.query(RegistroAcesso).join(
-        subquery,
+    for registro in db.query(RegistroAcesso).join(
+        subq_cad,
         and_(
-            RegistroAcesso.veiculo_id == subquery.c.veiculo_id,
-            RegistroAcesso.data_hora == subquery.c.ultima_data,
+            RegistroAcesso.veiculo_id == subq_cad.c.veiculo_id,
+            RegistroAcesso.data_hora == subq_cad.c.ultima_data,
             RegistroAcesso.tipo_movimento == "entrada"
         )
-    ).all()
+    ).all():
+        tempo = int((agora - registro.data_hora).total_seconds() / 60)
+        resultado.append({
+            "placa": registro.placa_detectada,
+            "cadastrado": True,
+            "veiculo": registro.veiculo,
+            "proprietario": registro.veiculo.proprietario if registro.veiculo else None,
+            "hora_entrada": registro.data_hora,
+            "tempo_permanencia_minutos": tempo,
+        })
 
-    resultado = []
-    agora = datetime.now()
+    # ── Veículos não cadastrados (veiculo_id IS NULL) ─────────────────────────
+    subq_nao = db.query(
+        RegistroAcesso.placa_detectada,
+        func.max(RegistroAcesso.data_hora).label("ultima_data")
+    ).filter(
+        RegistroAcesso.veiculo_id.is_(None)
+    ).group_by(RegistroAcesso.placa_detectada).subquery()
 
-    for registro in veiculos_no_campus:
-        if registro.veiculo:
-            tempo_permanencia = int((agora - registro.data_hora).total_seconds() / 60)  # minutos
-
-            resultado.append({
-                "veiculo": registro.veiculo,
-                "proprietario": registro.veiculo.proprietario,
-                "hora_entrada": registro.data_hora,
-                "tempo_permanencia_minutos": tempo_permanencia
-            })
+    for registro in db.query(RegistroAcesso).join(
+        subq_nao,
+        and_(
+            RegistroAcesso.placa_detectada == subq_nao.c.placa_detectada,
+            RegistroAcesso.data_hora == subq_nao.c.ultima_data,
+            RegistroAcesso.tipo_movimento == "entrada",
+            RegistroAcesso.veiculo_id.is_(None)
+        )
+    ).all():
+        tempo = int((agora - registro.data_hora).total_seconds() / 60)
+        resultado.append({
+            "placa": registro.placa_detectada,
+            "cadastrado": False,
+            "veiculo": None,
+            "proprietario": None,
+            "hora_entrada": registro.data_hora,
+            "tempo_permanencia_minutos": tempo,
+        })
 
     return resultado
 

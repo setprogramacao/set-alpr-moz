@@ -235,6 +235,7 @@ let currentPage = 0;
 let limit = 10;
 let proprietarios = [];
 let filtrosAtivos = {};
+let isAdmin = false;
 
 // Token de autenticação
 const getToken = () => localStorage.getItem('token') || '';
@@ -272,6 +273,15 @@ async function fetchComAuth(url, options = {}) {
 // Carregar dados iniciais
 async function carregarDados() {
     if (!verificarAuth()) return;
+
+    isAdmin = ['admin', 'gestor'].includes(getUserRole());
+
+    // Oculta botão "Novo Proprietário" se não for gestor ou admin
+    if (!isAdmin) {
+        const btnNovo = document.querySelector('button[onclick="abrirModalNovo()"]');
+        if (btnNovo) btnNovo.classList.add('hidden');
+    }
+
     await Promise.all([
         carregarProprietarios(),
         carregarEstatisticas()
@@ -343,12 +353,13 @@ function renderizarTabela() {
                 }
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
+                ${isAdmin ? `
                 <button onclick="editarProprietario(${p.id})" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
                     <i class="bi bi-pencil"></i>
                 </button>
                 <button onclick="deletarProprietario(${p.id}, '${p.nome}')" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
                     <i class="bi bi-trash"></i>
-                </button>
+                </button>` : '<span class="text-gray-400 dark:text-gray-600">—</span>'}
             </td>
         </tr>
     `).join('');

@@ -223,7 +223,7 @@ class UsuarioBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, description="Nome de usuário")
     email: EmailStr = Field(..., description="Email do usuário")
     nome_completo: str = Field(..., min_length=3, max_length=150, description="Nome completo")
-    nivel_acesso: Literal["admin", "operador", "visualizador"] = Field(..., description="Nível de acesso")
+    nivel_acesso: Literal["admin", "gestor", "operador", "visualizador"] = Field(..., description="Nível de acesso")
 
     @field_validator("username")
     @classmethod
@@ -257,7 +257,7 @@ class UsuarioUpdate(BaseModel):
     """Schema para atualizar usuário"""
     email: Optional[EmailStr] = None
     nome_completo: Optional[str] = Field(None, min_length=3, max_length=150)
-    nivel_acesso: Optional[Literal["admin", "operador", "visualizador"]] = None
+    nivel_acesso: Optional[Literal["admin", "gestor", "operador", "visualizador"]] = None
     ativo: Optional[bool] = None
     senha: Optional[str] = Field(None, min_length=8, max_length=100)
 
@@ -394,8 +394,10 @@ class EstatisticasDashboard(BaseModel):
 
 
 class VeiculoNoCampus(BaseModel):
-    """Schema para veículo atualmente no campus"""
-    veiculo: VeiculoComProprietario
+    """Schema para veículo atualmente no campus (cadastrado ou não)"""
+    placa: str = Field(..., description="Placa do veículo")
+    cadastrado: bool = Field(..., description="Se o veículo está cadastrado no sistema")
+    veiculo: Optional[VeiculoComProprietario] = Field(None, description="Dados do veículo (se cadastrado)")
     hora_entrada: datetime = Field(..., description="Hora da entrada")
     tempo_permanencia: int = Field(..., ge=0, description="Tempo de permanência em minutos")
     tempo_formatado: str = Field(..., description="Tempo formatado (ex: 2h 30min)")

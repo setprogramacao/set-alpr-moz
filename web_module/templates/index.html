@@ -339,23 +339,27 @@
 
             const catColors = { docente: 'blue', tecnico: 'green', visitante: 'amber', aluno: 'purple' };
             tbody.innerHTML = data.map(item => {
-                const cat = item.veiculo.proprietario.categoria;
-                const color = catColors[cat] || 'gray';
+                const placa = item.placa;
+                const proprietario = item.veiculo?.proprietario;
+                const nomeProprietario = proprietario?.nome ?? '—';
+                const cat = proprietario?.categoria ?? null;
+                const color = cat ? (catColors[cat] || 'gray') : 'gray';
+                const catBadge = cat
+                    ? `<span class="px-2 py-0.5 text-xs font-medium rounded-full
+                        ${color === 'blue'   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : ''}
+                        ${color === 'green'  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : ''}
+                        ${color === 'amber'  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : ''}
+                        ${color === 'purple' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : ''}
+                        ${color === 'gray'   ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400' : ''}
+                       ">${cat}</span>`
+                    : `<span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500">não cadastrado</span>`;
                 return `
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                         <td class="px-4 py-3">
-                            <span class="font-mono font-bold text-gray-900 dark:text-white tracking-widest text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">${item.veiculo.placa}</span>
+                            <span class="font-mono font-bold text-gray-900 dark:text-white tracking-widest text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">${placa}</span>
                         </td>
-                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300 text-sm">${item.veiculo.proprietario.nome}</td>
-                        <td class="px-4 py-3">
-                            <span class="px-2 py-0.5 text-xs font-medium rounded-full
-                                ${color === 'blue'   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : ''}
-                                ${color === 'green'  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : ''}
-                                ${color === 'amber'  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : ''}
-                                ${color === 'purple' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : ''}
-                                ${color === 'gray'   ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400' : ''}
-                            ">${cat}</span>
-                        </td>
+                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300 text-sm">${nomeProprietario}</td>
+                        <td class="px-4 py-3">${catBadge}</td>
                         <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">${item.tempo_formatado}</td>
                     </tr>
                 `;

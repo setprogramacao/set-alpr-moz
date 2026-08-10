@@ -150,11 +150,16 @@ def listar_veiculos_no_campus(
     for item in veiculos_no_campus:
         from shared.schemas import VeiculoComProprietario
 
-        veiculo_schema = VeiculoComProprietario.model_validate(item["veiculo"])
+        veiculo_schema = None
+        if item["veiculo"]:
+            veiculo_schema = VeiculoComProprietario.model_validate(item["veiculo"])
+
         tempo_minutos = item["tempo_permanencia_minutos"]
         tempo_formatado = formatar_tempo_permanencia(tempo_minutos)
 
         resultado.append(VeiculoNoCampus(
+            placa=item["placa"],
+            cadastrado=item["cadastrado"],
             veiculo=veiculo_schema,
             hora_entrada=item["hora_entrada"],
             tempo_permanencia=tempo_minutos,
@@ -183,64 +188,81 @@ def obter_alertas(
 
     Requer: Autenticação
     """
+    from shared.schemas import ProprietarioResponse, VeiculoResponse
+
     alertas = []
 
-    # Data de referência (últimos 7 dias)
-    sete_dias_atras = datetime.now() - timedelta(days=7)
     hoje_inicio = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Limiar de ausência: 7 dias (cobre fins-de-semana e feriados normais)
+    sete_dias_atras = datetime.now() - timedelta(days=7)
 
-    # 1. Docentes sem registros nos últimos 3 dias
-    tres_dias_atras = datetime.now() - timedelta(days=3)
-
+    # ── 1. Ausência prolongada ────────────────────────────────────────────────
+    # Apenas docentes com pelo menos 1 registo histórico que não aparecem há 7+ dias.
+    # Docentes recém-cadastrados (sem nenhum registo) são excluídos para evitar falsos positivos.
     docentes = db.query(Proprietario).filter(
-        and_(
-            Proprietario.categoria == "docente",
-            Proprietario.ativo == True
-        )
+        and_(Proprietario.categoria == "docente", Proprietario.ativo == True)
     ).all()
 
     for docente in docentes:
-        # Verifica se tem veículos cadastrados
         if not docente.veiculos:
             continue
 
-        # Busca último registro de qualquer veículo do docente
         veiculo_ids = [v.id for v in docente.veiculos]
 
         ultimo_registro = db.query(RegistroAcesso).filter(
             RegistroAcesso.veiculo_id.in_(veiculo_ids)
         ).order_by(desc(RegistroAcesso.data_hora)).first()
 
-        if not ultimo_registro or ultimo_registro.data_hora < tres_dias_atras:
-            from shared.schemas import ProprietarioResponse, VeiculoResponse
-
+        # Só alerta se já tem histórico E está ausente há mais de 7 dias
+        if ultimo_registro and ultimo_registro.data_hora < sete_dias_atras:
             alertas.append(AlertaProprietario(
                 proprietario=ProprietarioResponse.model_validate(docente),
-                veiculo=VeiculoResponse.model_validate(docente.veiculos[0]) if docente.veiculos else None,
+                veiculo=VeiculoResponse.model_validate(docente.veiculos[0]),
                 tipo_alerta="ausencia_prolongada",
-                descricao=f"Sem registros há mais de 3 dias (última: {ultimo_registro.data_hora.strftime('%d/%m/%Y') if ultimo_registro else 'nunca'})",
-                data_hora=ultimo_registro.data_hora if ultimo_registro else datetime.now(),
-                severidade="alta"
+                descricao=f"Sem registros há mais de 7 dias (última visita: {ultimo_registro.data_hora.strftime('%d/%m/%Y')})",
+                data_hora=ultimo_registro.data_hora,
+                severidade="media"
             ))
 
-    # 2. Permanências muito curtas hoje (menos de 1 hora para docentes)
-    veiculos_hoje = obter_veiculos_no_campus(db)
+    # ── 2. Permanência curta — visitas CONCLUÍDAS hoje ────────────────────────
+    # Verifica saídas de docentes registadas hoje cuja entrada correspondente
+    # foi há menos de 60 minutos. Não analisa veículos que ainda estão no campus.
+    saidas_hoje = db.query(RegistroAcesso).filter(
+        and_(
+            RegistroAcesso.data_hora >= hoje_inicio,
+            RegistroAcesso.tipo_movimento == "saida",
+            RegistroAcesso.veiculo_id.isnot(None)
+        )
+    ).all()
 
-    for item in veiculos_hoje:
-        veiculo = item["veiculo"]
-        proprietario = item["proprietario"]
-        tempo_minutos = item["tempo_permanencia_minutos"]
+    for saida in saidas_hoje:
+        if not saida.veiculo or not saida.veiculo.proprietario:
+            continue
+        proprietario = saida.veiculo.proprietario
+        if proprietario.categoria != "docente":
+            continue
 
-        # Se for docente e tempo < 60 minutos
-        if proprietario.categoria == "docente" and tempo_minutos < 60:
-            from shared.schemas import ProprietarioResponse, VeiculoResponse
+        # Busca a entrada imediatamente anterior a esta saída para o mesmo veículo
+        entrada = db.query(RegistroAcesso).filter(
+            and_(
+                RegistroAcesso.veiculo_id == saida.veiculo_id,
+                RegistroAcesso.tipo_movimento == "entrada",
+                RegistroAcesso.data_hora < saida.data_hora,
+                RegistroAcesso.data_hora >= hoje_inicio
+            )
+        ).order_by(desc(RegistroAcesso.data_hora)).first()
 
+        if not entrada:
+            continue
+
+        tempo_minutos = int((saida.data_hora - entrada.data_hora).total_seconds() / 60)
+        if tempo_minutos < 60:
             alertas.append(AlertaProprietario(
                 proprietario=ProprietarioResponse.model_validate(proprietario),
-                veiculo=VeiculoResponse.model_validate(veiculo),
+                veiculo=VeiculoResponse.model_validate(saida.veiculo),
                 tipo_alerta="permanencia_curta",
-                descricao=f"No campus há apenas {formatar_tempo_permanencia(tempo_minutos)}",
-                data_hora=item["hora_entrada"],
+                descricao=f"Visita concluída com apenas {formatar_tempo_permanencia(tempo_minutos)} no campus",
+                data_hora=saida.data_hora,
                 severidade="media"
             ))
 

@@ -538,6 +538,7 @@ function renderizarTabela() {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">
                     <div class="flex items-center justify-end gap-1">
+                        ${isAdmin ? `
                         <button onclick='editarVeiculo(${veiculoJson})'
                                 class="p-2 text-gray-500 hover:text-primary-800 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors" title="Editar">
                             <i class="bi bi-pencil-square"></i>
@@ -545,7 +546,7 @@ function renderizarTabela() {
                         <button onclick="deletarVeiculo(${v.id}, '${v.placa}')"
                                 class="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Excluir">
                             <i class="bi bi-trash"></i>
-                        </button>
+                        </button>` : '<span class="text-xs text-gray-400 dark:text-gray-600">—</span>'}
                     </div>
                 </td>
             </tr>`;
@@ -690,8 +691,18 @@ document.getElementById('formVeiculo').addEventListener('submit', async (e) => {
 // INICIALIZAÇÃO
 // ============================================================================
 
+let isAdmin = false;
+
 document.addEventListener('DOMContentLoaded', async () => {
     if (!verificarAuth()) return;
+
+    isAdmin = ['admin', 'gestor'].includes(getUserRole());
+
+    // Oculta botão "Novo Veículo" se não for gestor ou admin
+    if (!isAdmin) {
+        const btnNovo = document.querySelector('button[onclick="abrirModal()"]');
+        if (btnNovo) btnNovo.classList.add('hidden');
+    }
 
     // Carrega proprietários primeiro (necessário para filtro e formulário)
     await carregarProprietarios();

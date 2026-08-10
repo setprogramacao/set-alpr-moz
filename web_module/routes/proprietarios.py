@@ -3,13 +3,15 @@ Rotas de Proprietários - Sistema ALPR UNIPIAGET
 CRUD completo de proprietários de veículos
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import Optional
 
 from web_module.database import get_db
 from web_module.models import Proprietario, Usuario
 from web_module.routes.auth import obter_usuario_atual
+from web_module.services.audit_service import registrar_log
 from shared.schemas import (
     ProprietarioCreate,
     ProprietarioUpdate,
@@ -27,6 +29,7 @@ router = APIRouter()
 @router.post("/proprietarios", response_model=ProprietarioResponse, status_code=status.HTTP_201_CREATED)
 def criar_proprietario(
     proprietario_data: ProprietarioCreate,
+    response: Response,
     db: Session = Depends(get_db),
     usuario_atual: Usuario = Depends(obter_usuario_atual)
 ):
@@ -37,27 +40,30 @@ def criar_proprietario(
     - **categoria**: docente, tecnico, visitante, aluno
     - **departamento**: Departamento/Faculdade
     - **telefone**: Número de telefone moçambicano
-    - **email**: Email (único)
+    - **email**: Email usado para identificar e reutilizar um proprietário existente
 
-    Requer: Autenticação (operador ou admin)
+    Requer: Nível gestor ou admin
     """
     # Verifica permissão
-    if usuario_atual.nivel_acesso not in ["operador", "admin"]:
+    if usuario_atual.nivel_acesso not in ("gestor", "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Sem permissão. Requer nível operador ou admin."
+            detail="Sem permissão. Requer nível gestor ou admin."
         )
 
-    # Verifica se email já existe
+    # Um proprietario pode ter varios veiculos. Se o cliente repetir os dados
+    # ao cadastrar outro carro, reutiliza o registro existente em vez de criar
+    # uma pessoa duplicada ou bloquear o fluxo.
     if proprietario_data.email:
+        email_normalizado = str(proprietario_data.email).strip().lower()
         email_existente = db.query(Proprietario).filter(
-            Proprietario.email == proprietario_data.email
+            func.lower(Proprietario.email) == email_normalizado
         ).first()
         if email_existente:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Email {proprietario_data.email} já cadastrado"
-            )
+            response.status_code = status.HTTP_200_OK
+            return ProprietarioResponse.model_validate(email_existente)
+    else:
+        email_normalizado = None
 
     # Cria proprietário
     proprietario = Proprietario(
@@ -65,11 +71,12 @@ def criar_proprietario(
         categoria=proprietario_data.categoria,
         departamento=proprietario_data.departamento,
         telefone=proprietario_data.telefone,
-        email=proprietario_data.email,
+        email=email_normalizado,
         ativo=True
     )
 
     db.add(proprietario)
+    registrar_log(db, usuario_atual.id, "criar_proprietario", f"Nome: {proprietario_data.nome}")
     db.commit()
     db.refresh(proprietario)
 
@@ -151,13 +158,13 @@ def atualizar_proprietario(
     """
     Atualiza dados do proprietário
 
-    Requer: Autenticação (operador ou admin)
+    Requer: Nível gestor ou admin
     """
     # Verifica permissão
-    if usuario_atual.nivel_acesso not in ["operador", "admin"]:
+    if usuario_atual.nivel_acesso not in ("gestor", "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Sem permissão. Requer nível operador ou admin."
+            detail="Sem permissão. Requer nível gestor ou admin."
         )
 
     proprietario = db.query(Proprietario).filter(Proprietario.id == proprietario_id).first()
@@ -178,20 +185,23 @@ def atualizar_proprietario(
     if proprietario_data.telefone is not None:
         proprietario.telefone = proprietario_data.telefone
     if proprietario_data.email is not None:
+        email_normalizado = str(proprietario_data.email).strip().lower()
         # Verifica se novo email já existe
-        if proprietario_data.email != proprietario.email:
+        if email_normalizado != (proprietario.email or "").lower():
             email_existente = db.query(Proprietario).filter(
-                Proprietario.email == proprietario_data.email
+                func.lower(Proprietario.email) == email_normalizado,
+                Proprietario.id != proprietario_id,
             ).first()
             if email_existente:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Email {proprietario_data.email} já cadastrado"
+                    detail=f"Email {email_normalizado} já pertence a outro proprietário"
                 )
-        proprietario.email = proprietario_data.email
+        proprietario.email = email_normalizado
     if proprietario_data.ativo is not None:
         proprietario.ativo = proprietario_data.ativo
 
+    registrar_log(db, usuario_atual.id, "editar_proprietario", f"ID: {proprietario_id}, Nome: {proprietario.nome}")
     db.commit()
     db.refresh(proprietario)
 
@@ -227,6 +237,7 @@ def deletar_proprietario(
         )
 
     nome = proprietario.nome
+    registrar_log(db, usuario_atual.id, "deletar_proprietario", f"ID: {proprietario_id}, Nome: {nome}")
     db.delete(proprietario)
     db.commit()
 
